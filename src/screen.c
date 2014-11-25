@@ -1584,9 +1584,17 @@ win_update(wp)
 	     */
 	    if (VIsual_mode == Ctrl_V)
 	    {
-		colnr_T	fromc, toc;
+		colnr_T	    fromc, toc;
+#if defined(FEAT_VIRTUALEDIT) && defined(FEAT_LINEBREAK)
+		int	    save_ve_flags = ve_flags;
 
+		if (curwin->w_p_lbr)
+		    ve_flags = VE_ALL;
+#endif
 		getvcols(wp, &VIsual, &curwin->w_cursor, &fromc, &toc);
+#if defined(FEAT_VIRTUALEDIT) && defined(FEAT_LINEBREAK)
+		ve_flags = save_ve_flags;
+#endif
 		++toc;
 		if (curwin->w_curswant == MAXCOL)
 		    toc = MAXCOL;
@@ -2977,10 +2985,6 @@ win_line(wp, lnum, startrow, endrow, nochange)
 #endif
 #define WL_LINE		WL_SBR + 1	/* text in the line */
     int		draw_state = WL_START;	/* what to draw next */
-#if defined(FEAT_XIM) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM))
-    int		feedback_col = 0;
-    int		feedback_old_attr = -1;
-#endif
 
 #ifdef FEAT_CONCEAL
     int		syntax_flags	= 0;
@@ -3702,7 +3706,12 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		    char_attr = 0; /* was: hl_attr(HLF_AT); */
 #ifdef FEAT_DIFF
 		    if (diff_hlf != (hlf_T)0)
+		    {
 			char_attr = hl_attr(diff_hlf);
+			if (wp->w_p_cul && lnum == wp->w_cursor.lnum)
+			    char_attr = hl_combine_attr(char_attr,
+							    hl_attr(HLF_CUL));
+		    }
 #endif
 		    p_extra = NULL;
 		    c_extra = ' ';
@@ -3753,7 +3762,8 @@ win_line(wp, lnum, startrow, endrow, nochange)
 #ifdef FEAT_SYN_HL
 		    /* combine 'showbreak' with 'cursorline' */
 		    if (wp->w_p_cul && lnum == wp->w_cursor.lnum)
-			char_attr = hl_combine_attr(char_attr, HLF_CLN);
+			char_attr = hl_combine_attr(char_attr,
+							    hl_attr(HLF_CUL));
 #endif
 		}
 # endif
@@ -3852,7 +3862,7 @@ win_line(wp, lnum, startrow, endrow, nochange)
 			{
 			    shl->attr_cur = shl->attr;
 			}
-			else if (v >= (long)shl->endcol)
+			else if (v >= (long)shl->endcol && shl->lnum == lnum)
 			{
 			    shl->attr_cur = 0;
 			    next_search_hl(wp, shl, lnum, (colnr_T)v, cur);
@@ -3931,6 +3941,8 @@ win_line(wp, lnum, startrow, endrow, nochange)
 							      && n_extra == 0)
 		    diff_hlf = HLF_CHD;		/* changed line */
 		line_attr = hl_attr(diff_hlf);
+		if (wp->w_p_cul && lnum == wp->w_cursor.lnum)
+		    line_attr = hl_combine_attr(line_attr, hl_attr(HLF_CUL));
 	    }
 #endif
 
@@ -4440,6 +4452,10 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		    /* TODO: is passing p for start of the line OK? */
 		    n_extra = win_lbr_chartabsize(wp, line, p, (colnr_T)vcol,
 								    NULL) - 1;
+		    if (c == TAB && n_extra + col > W_WIDTH(wp))
+			n_extra = (int)wp->w_buffer->b_p_ts
+				       - vcol % (int)wp->w_buffer->b_p_ts - 1;
+
 		    c_extra = ' ';
 		    if (vim_iswhite(c))
 		    {
@@ -4494,7 +4510,7 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		    tab_len = (int)wp->w_buffer->b_p_ts
 					- vcol % (int)wp->w_buffer->b_p_ts - 1;
 #ifdef FEAT_LINEBREAK
-		    if (!wp->w_p_lbr)
+		    if (!wp->w_p_lbr || !wp->w_p_list)
 #endif
 		    /* tab amount depends on current column */
 			n_extra = tab_len;
@@ -4506,6 +4522,11 @@ win_line(wp, lnum, startrow, endrow, nochange)
 			int	i;
 			int	saved_nextra = n_extra;
 
+#ifdef FEAT_CONCEAL
+			if (is_concealing && vcol_off > 0)
+			    /* there are characters to conceal */
+			    tab_len += vcol_off;
+#endif
 			/* if n_extra > 0, it gives the number of chars, to
 			 * use for a tab, else we need to calculate the width
 			 * for a tab */
@@ -4531,6 +4552,12 @@ win_line(wp, lnum, startrow, endrow, nochange)
 #endif
 			}
 			p_extra = p_extra_free;
+#ifdef FEAT_CONCEAL
+			/* n_extra will be increased by FIX_FOX_BOGUSCOLS
+			 * macro below, so need to adjust for that here */
+			if (is_concealing && vcol_off > 0)
+			    n_extra -= vcol_off;
+#endif
 		    }
 #endif
 #ifdef FEAT_CONCEAL
@@ -4729,7 +4756,12 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		    {
 			diff_hlf = HLF_CHD;
 			if (attr == 0 || char_attr != attr)
+			{
 			    char_attr = hl_attr(diff_hlf);
+			    if (wp->w_p_cul && lnum == wp->w_cursor.lnum)
+				char_attr = hl_combine_attr(char_attr,
+							    hl_attr(HLF_CUL));
+			}
 		    }
 # endif
 		}
@@ -4826,54 +4858,13 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		&& !attr_pri)
 	    char_attr = extra_attr;
 
-#if defined(FEAT_XIM) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM))
-	/* XIM don't send preedit_start and preedit_end, but they send
-	 * preedit_changed and commit.  Thus Vim can't set "im_is_active", use
-	 * im_is_preediting() here. */
-	if (
-# ifndef FEAT_GUI_MACVIM
-		xic != NULL &&
-# endif
-		lnum == wp->w_cursor.lnum
-		&& (State & INSERT)
-# ifndef FEAT_GUI_MACVIM
-		&& !p_imdisable
-# endif
-		&& im_is_preediting()
-		&& draw_state == WL_LINE)
-	{
-	    colnr_T tcol;
-
-	    if (preedit_end_col == MAXCOL)
-		getvcol(curwin, &(wp->w_cursor), &tcol, NULL, NULL);
-	    else
-		tcol = preedit_end_col;
-	    if ((long)preedit_start_col <= vcol && vcol < (long)tcol)
-	    {
-		if (feedback_old_attr < 0)
-		{
-		    feedback_col = 0;
-		    feedback_old_attr = char_attr;
-		}
-		char_attr = im_get_feedback_attr(feedback_col);
-		if (char_attr < 0)
-		    char_attr = feedback_old_attr;
-		feedback_col++;
-	    }
-	    else if (feedback_old_attr >= 0)
-	    {
-		char_attr = feedback_old_attr;
-		feedback_old_attr = -1;
-		feedback_col = 0;
-	    }
-	}
-#endif
 	/*
 	 * Handle the case where we are in column 0 but not on the first
 	 * character of the line and the user wants us to show us a
 	 * special character (via 'listchars' option "precedes:<char>".
 	 */
 	if (lcs_prec_todo != NUL
+		&& wp->w_p_list
 		&& (wp->w_p_wrap ? wp->w_skipcol > 0 : wp->w_leftcol > 0)
 #ifdef FEAT_DIFF
 		&& filler_todo <= 0
@@ -10203,9 +10194,9 @@ draw_tabline()
 			break;
 		    screen_puts_len(NameBuff, len, 0, col,
 #if defined(FEAT_SYN_HL)
-					   hl_combine_attr(attr, hl_attr(HLF_T))
+					 hl_combine_attr(attr, hl_attr(HLF_T))
 #else
-					   attr
+					 attr
 #endif
 					       );
 		    col += len;

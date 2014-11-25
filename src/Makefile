@@ -1449,6 +1449,8 @@ BASIC_SRC = \
 	blowfish.c \
 	buffer.c \
 	charset.c \
+	crypt.c \
+	crypt_zip.c \
 	diff.c \
 	digraph.c \
 	edit.c \
@@ -1542,6 +1544,8 @@ OBJ_COMMON = \
 	objects/buffer.o \
 	objects/blowfish.o \
 	objects/charset.o \
+	objects/crypt.o \
+	objects/crypt_zip.o \
 	objects/diff.o \
 	objects/digraph.o \
 	objects/edit.o \
@@ -1614,6 +1618,8 @@ PRO_AUTO = \
 	blowfish.pro \
 	buffer.pro \
 	charset.pro \
+	crypt.pro \
+	crypt_zip.pro \
 	diff.pro \
 	digraph.pro \
 	edit.pro \
@@ -1781,10 +1787,11 @@ xxd/xxd$(EXEEXT): xxd/xxd.c
 languages:
 	@if test -n "$(MAKEMO)" -a -f $(PODIR)/Makefile; then \
 		cd $(PODIR); \
-		CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix); \
+		  CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix); \
 	fi
 	-@if test -n "$(MAKEMO)" -a -f $(PODIR)/Makefile; then \
-		cd $(PODIR); CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix) converted; \
+		cd $(PODIR); \
+		  CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix) converted; \
 	fi
 
 # Update the *.po files for changes in the sources.  Only run manually.
@@ -1800,13 +1807,12 @@ update-po:
 proto: $(PRO_AUTO) $(PRO_MANUAL)
 
 # Filter out arguments that cproto doesn't support.
-# Don't pass "-pthread" to cproto, it sees it as a list of individual flags.
-# Don't pass "-fstack-protector" to cproto, for the same reason.
-# Don't pass "-g" to cproto.
+# Don't pass "-pthread", "-fwrapv" and similar arguments to cproto, it sees
+# them as a list of individual flags.
 # The -E"gcc -E" argument must be separate to avoid problems with shell
 # quoting.
 CPROTO = cproto $(PROTO_FLAGS) -DPROTO \
-	 `echo '$(LINT_CFLAGS)' | sed -e 's/-pthread//g' -e 's/-fstack-protector//g' -e 's/\ -g\ / /g'`
+	 `echo '$(LINT_CFLAGS)' | sed -e 's/ -[a-z-]\+//g'`
 
 ### Would be nice if this would work for "normal" make.
 ### Currently it only works for (Free)BSD make.
@@ -1900,6 +1906,9 @@ test check:
 	cd testdir; $(MAKE) -f Makefile $(GUI_TESTTARGET) VIMPROG=../$(VIMTARGET) $(GUI_TESTARG) SCRIPTSOURCE=../$(SCRIPTSOURCE)
 	$(MAKE) -f Makefile unittest
 
+benchmark:
+	cd testdir; $(MAKE) -f Makefile benchmark VIMPROG=../$(VIMTARGET) SCRIPTSOURCE=../$(SCRIPTSOURCE)
+
 unittesttargets:
 	$(MAKE) -f Makefile $(UNITTEST_TARGETS)
 
@@ -1911,8 +1920,18 @@ unittest unittests: $(UNITTEST_TARGETS)
 # Run individual test, assuming that Vim was already compiled.
 test1 test2 test3 test4 test5 test6 test7 test8 test9 \
 	test_autoformat_join \
+	test_breakindent \
+	test_changelist \
 	test_eval \
+	test_insertcount \
+	test_listlbr \
+	test_listlbr_utf8 \
+	test_mapping \
 	test_options \
+	test_qf_title \
+	test_signs \
+	test_utf8 \
+	test_writefile \
 	test10 test11 test12 test13 test14 test15 test16 test17 test18 test19 \
 	test20 test21 test22 test23 test24 test25 test26 test27 test28 test29 \
 	test30 test31 test32 test33 test34 test35 test36 test37 test38 test39 \
@@ -2492,13 +2511,8 @@ lintinstall:
 
 auto/if_perl.c: if_perl.xs
 	$(PERL) -e 'unless ( $$] >= 5.005 ) { for (qw(na defgv errgv)) { print "#define PL_$$_ $$_\n" }}' > $@
-	-@if test -e $(PERLSITELIB)/ExtUtils/xsubpp; then \
-		$(PERL) $(PERLSITELIB)/ExtUtils/xsubpp -prototypes -typemap \
-			$(PERLLIB)/ExtUtils/typemap if_perl.xs >> $@; \
-	else \
-		$(PERL) $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap \
-			$(PERLLIB)/ExtUtils/typemap if_perl.xs >> $@; \
-	fi
+	$(PERL) $(PERL_XSUBPP) -prototypes -typemap \
+	    $(PERLLIB)/ExtUtils/typemap if_perl.xs >> $@
 
 auto/osdef.h: auto/config.h osdef.sh osdef1.h.in osdef2.h.in
 	CC="$(CC) $(OSDEF_CFLAGS)" srcdir=$(srcdir) sh $(srcdir)/osdef.sh
@@ -2544,6 +2558,12 @@ objects/buffer.o: buffer.c
 
 objects/charset.o: charset.c
 	$(CCC) -o $@ charset.c
+
+objects/crypt.o: crypt.c
+	$(CCC) -o $@ crypt.c
+
+objects/crypt_zip.o: crypt_zip.c
+	$(CCC) -o $@ crypt_zip.c
 
 objects/diff.o: diff.c
 	$(CCC) -o $@ diff.c
@@ -2918,6 +2938,14 @@ objects/charset.o: charset.c vim.h auto/config.h feature.h os_unix.h auto/osdef.
  ascii.h keymap.h term.h macros.h option.h structs.h regexp.h gui.h \
  gui_beval.h proto/gui_beval.pro ex_cmds.h proto.h globals.h farsi.h \
  arabic.h
+objects/crypt.o: crypt.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
+ ascii.h keymap.h term.h macros.h option.h structs.h regexp.h gui.h \
+ gui_beval.h proto/gui_beval.pro ex_cmds.h proto.h globals.h farsi.h \
+ arabic.h
+objects/crypt_zip.o: crypt_zip.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h option.h structs.h \
+ regexp.h gui.h gui_beval.h proto/gui_beval.pro ex_cmds.h proto.h \
+ globals.h farsi.h arabic.h
 objects/diff.o: diff.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ascii.h keymap.h term.h macros.h option.h structs.h regexp.h gui.h \
  gui_beval.h proto/gui_beval.pro ex_cmds.h proto.h globals.h farsi.h \

@@ -8,14 +8,14 @@
 # Copyright (C) 2001-13 MURAOKA Taro <koron.kaoriya@gmail.com>
 # THIS FILE IS DISTRIBUTED UNDER THE VIM LICENSE.
 #
-# Original translations.
+# generated from ja.po, DO NOT EDIT
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim 7.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-07-06 13:50+0900\n"
-"PO-Revision-Date: 2013-07-06 15:00+0900\n"
+"PO-Revision-Date: 2014-05-04 20:55+0900\n"
 "Last-Translator: MURAOKA Taro <koron.kaoriya@gmail.com>\n"
 "Language-Team: MURAOKA Taro <koron.kaoriya@gmail.com>\n"
 "Language: Japanese\n"

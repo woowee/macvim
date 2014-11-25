@@ -4050,7 +4050,7 @@ expand_by_function(type, base)
 	goto theend;
     }
     curwin->w_cursor = pos;	/* restore the cursor position */
-    check_cursor();
+    validate_cursor();
     if (!equalpos(curwin->w_cursor, pos))
     {
 	EMSG(_(e_compldel));
@@ -5288,7 +5288,7 @@ ins_complete(c)
 		return FAIL;
 	    }
 	    curwin->w_cursor = pos;	/* restore the cursor position */
-	    check_cursor();
+	    validate_cursor();
 	    if (!equalpos(curwin->w_cursor, pos))
 	    {
 		EMSG(_(e_compldel));
@@ -6150,6 +6150,12 @@ internal_format(textwidth, second_indent, flags, format_only, c)
     int		no_leader = FALSE;
     int		do_comments = (flags & INSCHAR_DO_COM);
 #endif
+#ifdef FEAT_LINEBREAK
+    int		has_lbr = curwin->w_p_lbr;
+
+    /* make sure win_lbr_chartabsize() counts correctly */
+    curwin->w_p_lbr = FALSE;
+#endif
 
     /*
      * When 'ai' is off we don't want a space under the cursor to be
@@ -6502,6 +6508,9 @@ internal_format(textwidth, second_indent, flags, format_only, c)
     if (save_char != NUL)		/* put back space after cursor */
 	pchar_cursor(save_char);
 
+#ifdef FEAT_LINEBREAK
+    curwin->w_p_lbr = has_lbr;
+#endif
     if (!format_only && haveto_redraw)
     {
 	update_topline();
@@ -6787,13 +6796,19 @@ stop_arrow()
 {
     if (arrow_used)
     {
+	Insstart = curwin->w_cursor;	/* new insertion starts here */
+	if (Insstart.col > Insstart_orig.col && !ins_need_undo)
+	    /* Don't update the original insert position when moved to the
+	     * right, except when nothing was inserted yet. */
+	    update_Insstart_orig = FALSE;
+	Insstart_textlen = (colnr_T)linetabsize(ml_get_curline());
+
 	if (u_save_cursor() == OK)
 	{
 	    arrow_used = FALSE;
 	    ins_need_undo = FALSE;
 	}
-	Insstart = curwin->w_cursor;	/* new insertion starts here */
-	Insstart_textlen = (colnr_T)linetabsize(ml_get_curline());
+
 	ai_col = 0;
 #ifdef FEAT_VREPLACE
 	if (State & VREPLACE_FLAG)
@@ -6920,8 +6935,14 @@ stop_insert(end_insert_pos, esc, nomove)
 	    }
 	    if (curwin->w_cursor.lnum != tpos.lnum)
 		curwin->w_cursor = tpos;
-	    else if (cc != NUL)
-		++curwin->w_cursor.col;	/* put cursor back on the NUL */
+	    else
+	    {
+		/* reset tpos, could have been invalidated in the loop above */
+		tpos = curwin->w_cursor;
+		tpos.col++;
+		if (cc != NUL && gchar_pos(&tpos) == NUL)
+		    ++curwin->w_cursor.col;	/* put cursor back on the NUL */
+	    }
 
 	    /* <C-S-Right> may have started Visual mode, adjust the position for
 	     * deleted characters. */
@@ -8408,7 +8429,7 @@ ins_esc(count, cmdchar, nomove)
 
 	    (void)start_redo_ins();
 	    if (cmdchar == 'r' || cmdchar == 'v')
-		stuffReadbuff(ESC_STR);	/* no ESC in redo buffer */
+		stuffRedoReadbuff(ESC_STR);	/* no ESC in redo buffer */
 	    ++RedrawingDisabled;
 	    disabled_redraw = TRUE;
 	    return FALSE;	/* repeat the insert */
@@ -9378,12 +9399,7 @@ ins_left()
     tpos = curwin->w_cursor;
     if (oneleft() == OK)
     {
-#if defined(FEAT_XIM) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM))
-	/* Only call start_arrow() when not busy with preediting, it will
-	 * break undo.  K_LEFT is inserted in im_correct_cursor(). */
-	if (!im_is_preediting())
-#endif
-	    start_arrow(&tpos);
+	start_arrow(&tpos);
 #ifdef FEAT_RIGHTLEFT
 	/* If exit reversed string, position is fixed */
 	if (revins_scol != -1 && (int)curwin->w_cursor.col >= revins_scol)

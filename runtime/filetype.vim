@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2014 Jul 09
+" Last Change:	2014 Sep 05
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -530,6 +530,9 @@ au BufNewFile,BufRead configure.in,configure.ac setf config
 " CUDA  Cumpute Unified Device Architecture
 au BufNewFile,BufRead *.cu			setf cuda
 
+" Dockerfile
+au BufNewFile,BufRead Dockerfile		setf dockerfile
+
 " WildPackets EtherPeek Decoder
 au BufNewFile,BufRead *.dcd			setf dcd
 
@@ -811,6 +814,9 @@ au BufNewFile,BufRead {,.}gitolite.rc,example.gitolite.rc	setf perl
 " Gnuplot scripts
 au BufNewFile,BufRead *.gpi			setf gnuplot
 
+" Go (Google)
+au BufNewFile,BufRead *.go			setf go
+
 " GrADS scripts
 au BufNewFile,BufRead *.gs			setf grads
 
@@ -989,7 +995,7 @@ au BufNewFile,BufRead *.java,*.jav		setf java
 au BufNewFile,BufRead *.jj,*.jjt		setf javacc
 
 " JavaScript, ECMAScript
-au BufNewFile,BufRead *.js,*.javascript,*.es,*.jsx,*.json   setf javascript
+au BufNewFile,BufRead *.js,*.javascript,*.es,*.jsx   setf javascript
 
 " Java Server Pages
 au BufNewFile,BufRead *.jsp			setf jsp
@@ -1006,6 +1012,9 @@ au BufNewFile,BufRead *.jgr			setf jgraph
 
 " Jovial
 au BufNewFile,BufRead *.jov,*.j73,*.jovial	setf jovial
+
+" JSON
+au BufNewFile,BufRead *.json,*.jsonp		setf json
 
 " Kixtart
 au BufNewFile,BufRead *.kix			setf kix
@@ -1095,6 +1104,9 @@ au BufNewFile,BufRead *.lou,*.lout		setf lout
 " Lua
 au BufNewFile,BufRead *.lua			setf lua
 
+" Luarocks
+au BufNewFile,BufRead *.rockspec		setf lua
+
 " Linden Scripting Language (Second Life)
 au BufNewFile,BufRead *.lsl			setf lsl
 
@@ -1142,7 +1154,7 @@ au BufNewFile,BufRead *.map			setf map
 au BufNewFile,BufRead *.markdown,*.mdown,*.mkd,*.mkdn,*.mdwn,README.md  setf markdown
 
 " Mason
-au BufNewFile,BufRead *.mason,*.mhtml		setf mason
+au BufNewFile,BufRead *.mason,*.mhtml,*.comp	setf mason
 
 " Matlab or Objective C
 au BufNewFile,BufRead *.m			call s:FTm()
@@ -2310,6 +2322,9 @@ au BufNewFile,BufRead vgrindefs			setf vgrindefs
 
 " VRML V1.0c
 au BufNewFile,BufRead *.wrl			setf vrml
+
+" Vroom (vim testing and executable documentation)
+au BufNewFile,BufRead *.vroom			setf vroom
 
 " Webmacro
 au BufNewFile,BufRead *.wm			setf webmacro

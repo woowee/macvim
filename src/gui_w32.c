@@ -25,16 +25,18 @@
 
 #include "vim.h"
 
-#ifdef FEAT_DIRECTX
+#if defined(FEAT_DIRECTX)
 # include "gui_dwrite.h"
 #endif
 
-#ifdef FEAT_DIRECTX
+#if defined(FEAT_DIRECTX)
 static DWriteContext *s_dwc = NULL;
 static int s_directx_enabled = 0;
 static int s_directx_load_attempted = 0;
 # define IS_ENABLE_DIRECTX() (s_directx_enabled && s_dwc != NULL)
+#endif
 
+#if defined(FEAT_DIRECTX) || defined(PROTO)
     int
 directx_enabled(void)
 {
@@ -50,7 +52,7 @@ directx_enabled(void)
 }
 #endif
 
-#ifdef FEAT_RENDER_OPTIONS
+#if defined(FEAT_RENDER_OPTIONS) || defined(PROTO)
     int
 gui_mch_set_rendering_options(char_u *s)
 {
@@ -74,7 +76,7 @@ gui_mch_set_rendering_options(char_u *s)
 	char_u  name[128];
 	char_u  value[128];
 
-	copy_option_part(&p, item, sizeof(item), ",");
+	copy_option_part(&p, item, sizeof(item), ","); 
 	if (p == NULL)
 	    break;
 	q = &item[0];
@@ -535,10 +537,6 @@ static void dyn_imm_load(void);
 # define pImmSetConversionStatus  ImmSetConversionStatus
 #endif
 
-#ifndef ETO_IGNORELANGUAGE
-# define ETO_IGNORELANGUAGE  0x1000
-#endif
-
 /* multi monitor support */
 typedef struct _MONITORINFOstruct
 {
@@ -593,6 +591,12 @@ gui_is_win32s(void)
 }
 
     static int
+has_caption(void)
+{
+    return GetWindowLong(s_hwnd, GWL_STYLE) & WS_CAPTION;
+}
+
+    static int
 get_caption_height(void)
 {
     /*
@@ -600,8 +604,13 @@ get_caption_height(void)
      * removed the margin also be removed.  So we must return -1 when
      * caption is diabled.
      */
-    return GetWindowLong(s_hwnd, GWL_STYLE) & WS_CAPTION ?
-	GetSystemMetrics(SM_CYCAPTION) : -1;
+    return has_caption() ? GetSystemMetrics(SM_CYCAPTION) : -1;
+}
+
+    static int
+get_caption_width_adjustment(void)
+{
+    return has_caption() ? 0 : -2;
 }
 
     void
@@ -622,6 +631,27 @@ gui_mch_show_caption(int show)
 		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 	gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
     }
+}
+
+/*
+ * Return TRUE when Visual Style is enabled.
+ */
+    static int
+is_visual_style_enabled(void)
+{
+    HANDLE hUxtheme;
+    static BOOL (WINAPI *pIsThemeActive)(void) = NULL;
+    static BOOL loaded = FALSE;
+
+    if (!loaded) {
+	hUxtheme = GetModuleHandle("uxtheme.dll");
+	if (hUxtheme != NULL)
+	    pIsThemeActive = (void*)GetProcAddress(hUxtheme, "IsThemeActive");
+	loaded = TRUE;
+    }
+    if (pIsThemeActive)
+	return pIsThemeActive();
+    return FALSE;
 }
 
 #ifdef FEAT_MENU
@@ -1719,7 +1749,7 @@ gui_mch_init(void)
 	    return FAIL;
     }
     s_textArea = CreateWindowEx(
-	WS_EX_CLIENTEDGE,
+	is_visual_style_enabled() ? 0 : WS_EX_CLIENTEDGE,
 	szTextAreaClass, "Vim text area",
 	WS_CHILD | WS_VISIBLE, 0, 0,
 	100,				/* Any value will do for now */
@@ -1729,6 +1759,14 @@ gui_mch_init(void)
 
     if (s_textArea == NULL)
 	return FAIL;
+
+    /* Try loading an icon from $RUNTIMEPATH/bitmaps/vim.ico. */
+    {
+	HANDLE	hIcon = NULL;
+
+	if (mch_icon_load(&hIcon) == OK && hIcon != NULL)
+	    SendMessage(s_hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+    }
 
 #ifdef FEAT_MENU
     s_menuBar = CreateMenu();
@@ -1768,7 +1806,9 @@ gui_mch_init(void)
     /*
      * Start out by adding the configured border width into the border offset
      */
-    gui.border_offset = gui.border_width + 2;	/*CLIENT EDGE*/
+    gui.border_offset = gui.border_width;
+    if (!is_visual_style_enabled())
+	gui.border_offset += 2;	    /*CLIENT EDGE*/
 
     /*
      * Set up for Intellimouse processing
@@ -1829,7 +1869,7 @@ gui_mch_init(void)
 
 #ifdef FEAT_RENDER_OPTIONS
     if (p_rop)
-        (void)gui_mch_set_rendering_options(p_rop);
+	(void)gui_mch_set_rendering_options(p_rop);
 #endif
 
 theend:
@@ -1878,34 +1918,28 @@ gui_mch_set_shellsize(int width, int height,
 	int direction)
 {
     RECT	workarea_rect;
+    RECT	window_rect;
     int		win_width, win_height;
-    WINDOWPLACEMENT wndpl;
 
     /* Try to keep window completely on screen. */
     /* Get position of the screen work area.  This is the part that is not
      * used by the taskbar or appbars. */
     get_work_area(&workarea_rect);
 
-    /* Get current position of our window.  Note that the .left and .top are
-     * relative to the work area.  */
-    wndpl.length = sizeof(WINDOWPLACEMENT);
-    GetWindowPlacement(s_hwnd, &wndpl);
-
     /* Resizing a maximized window looks very strange, unzoom it first.
      * But don't do it when still starting up, it may have been requested in
      * the shortcut. */
-    if (wndpl.showCmd == SW_SHOWMAXIMIZED && starting == 0)
-    {
+    if (IsZoomed(s_hwnd) && starting == 0)
 	ShowWindow(s_hwnd, SW_SHOWNORMAL);
-	/* Need to get the settings of the normal window. */
-	GetWindowPlacement(s_hwnd, &wndpl);
-    }
+
+    GetWindowRect(s_hwnd, &window_rect);
 
     /* compute the size of the outside of the window */
     win_width = width + (GetSystemMetrics(SM_CXFRAME) +
-                         GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
+			 GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+			+ get_caption_width_adjustment();
     win_height = height + (GetSystemMetrics(SM_CYFRAME) +
-                           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+			   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 			+ get_caption_height()
 #ifdef FEAT_MENU
 			+ gui_mswin_get_menu_height(FALSE)
@@ -1915,34 +1949,24 @@ gui_mch_set_shellsize(int width, int height,
     /* The following should take care of keeping Vim on the same monitor, no
      * matter if the secondary monitor is left or right of the primary
      * monitor. */
-    wndpl.rcNormalPosition.right = wndpl.rcNormalPosition.left + win_width;
-    wndpl.rcNormalPosition.bottom = wndpl.rcNormalPosition.top + win_height;
+    window_rect.right = window_rect.left + win_width;
+    window_rect.bottom = window_rect.top + win_height;
 
     /* If the window is going off the screen, move it on to the screen. */
-    if ((direction & RESIZE_HOR)
-	    && wndpl.rcNormalPosition.right > workarea_rect.right)
-	OffsetRect(&wndpl.rcNormalPosition,
-		workarea_rect.right - wndpl.rcNormalPosition.right, 0);
+    if ((direction & RESIZE_HOR) && window_rect.right > workarea_rect.right)
+	OffsetRect(&window_rect, workarea_rect.right - window_rect.right, 0);
 
-    if ((direction & RESIZE_HOR)
-	    && wndpl.rcNormalPosition.left < workarea_rect.left)
-	OffsetRect(&wndpl.rcNormalPosition,
-		workarea_rect.left - wndpl.rcNormalPosition.left, 0);
+    if ((direction & RESIZE_HOR) && window_rect.left < workarea_rect.left)
+	OffsetRect(&window_rect, workarea_rect.left - window_rect.left, 0);
 
-    if ((direction & RESIZE_VERT)
-	    && wndpl.rcNormalPosition.bottom > workarea_rect.bottom)
-	OffsetRect(&wndpl.rcNormalPosition,
-		0, workarea_rect.bottom - wndpl.rcNormalPosition.bottom);
+    if ((direction & RESIZE_VERT) && window_rect.bottom > workarea_rect.bottom)
+	OffsetRect(&window_rect, 0, workarea_rect.bottom - window_rect.bottom);
 
-    if ((direction & RESIZE_VERT)
-	    && wndpl.rcNormalPosition.top < workarea_rect.top)
-	OffsetRect(&wndpl.rcNormalPosition,
-		0, workarea_rect.top - wndpl.rcNormalPosition.top);
+    if ((direction & RESIZE_VERT) && window_rect.top < workarea_rect.top)
+	OffsetRect(&window_rect, 0, workarea_rect.top - window_rect.top);
 
-    /* set window position - we should use SetWindowPlacement rather than
-     * SetWindowPos as the MSDN docs say the coord systems returned by
-     * these two are not compatible. */
-    SetWindowPlacement(s_hwnd, &wndpl);
+    MoveWindow(s_hwnd, window_rect.left, window_rect.top,
+						win_width, win_height, TRUE);
 
     SetActiveWindow(s_hwnd);
     SetFocus(s_hwnd);
@@ -2604,12 +2628,6 @@ gui_mch_draw_string(
 		padding[i] = gui.char_width;
     }
 
-    /* On NT, tell the font renderer not to "help" us with Hebrew and Arabic
-     * text.  This doesn't work in 9x, so we have to deal with it manually on
-     * those systems. */
-    if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
-	foptions |= ETO_IGNORELANGUAGE;
-
     /*
      * We have to provide the padding argument because italic and bold versions
      * of fixed-width fonts are often one pixel or so wider than their normal
@@ -2625,7 +2643,7 @@ gui_mch_draw_string(
 	    if (text[n] >= 0x80)
 		break;
 
-#ifdef FEAT_DIRECTX
+#if defined(FEAT_DIRECTX)
     /* Quick hack to enable DirectWrite.  To use DirectWrite (antialias), it is
      * required that unicode drawing routine, currently.  So this forces it
      * enabled. */
@@ -2691,11 +2709,12 @@ gui_mch_draw_string(
 	    i += utfc_ptr2len_len(text + i, len - i);
 	    ++clen;
 	}
-#ifdef FEAT_DIRECTX
+#if defined(FEAT_DIRECTX)
 	if (IS_ENABLE_DIRECTX() && font_is_ttf_or_vector)
 	{
+	    /* Add one to "cells" for italics. */
 	    DWriteContext_DrawText(s_dwc, s_hdc, unicodebuf, wlen,
-		    TEXT_X(col), TEXT_Y(row), FILL_X(cells), FILL_Y(1),
+		    TEXT_X(col), TEXT_Y(row), FILL_X(cells + 1), FILL_Y(1),
 		    gui.char_width, gui.currFgColor);
 	}
 	else
@@ -2744,10 +2763,9 @@ gui_mch_draw_string(
 #endif
     {
 #ifdef FEAT_RIGHTLEFT
-	/* If we can't use ETO_IGNORELANGUAGE, we can't tell Windows not to
-	 * mess up RL text, so we have to draw it character-by-character.
-	 * Only do this if RL is on, since it's slow. */
-	if (curwin->w_p_rl && !(foptions & ETO_IGNORELANGUAGE))
+	/* Windows will mess up RL text, so we have to draw it character by
+	 * character.  Only do this if RL is on, since it's slow. */
+	if (curwin->w_p_rl)
 	    RevOut(s_hdc, TEXT_X(col), TEXT_Y(row),
 			 foptions, pcliprect, (char *)text, len, padding);
 	else
@@ -2831,14 +2849,15 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
 
     *screen_w = workarea_rect.right - workarea_rect.left
 		- (GetSystemMetrics(SM_CXFRAME) +
-                   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
+		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+		- get_caption_width_adjustment();
 
     /* FIXME: dirty trick: Because the gui_get_base_height() doesn't include
      * the menubar for MSwin, we subtract it from the screen height, so that
      * the window size can be made to fit on the screen. */
     *screen_h = workarea_rect.bottom - workarea_rect.top
 		- (GetSystemMetrics(SM_CYFRAME) +
-                   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+		   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 		- get_caption_height()
 #ifdef FEAT_MENU
 		- gui_mswin_get_menu_height(FALSE)
@@ -3470,13 +3489,13 @@ gui_mch_dialog(
 	GetWindowRect(s_hwnd, &rect);
 	maxDialogWidth = rect.right - rect.left
 				   - (GetSystemMetrics(SM_CXFRAME) +
-                                      GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
+				      GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
 	if (maxDialogWidth < DLG_MIN_MAX_WIDTH)
 	    maxDialogWidth = DLG_MIN_MAX_WIDTH;
 
 	maxDialogHeight = rect.bottom - rect.top
 				   - (GetSystemMetrics(SM_CYFRAME) +
-                                      GetSystemMetrics(SM_CXPADDEDBORDER)) * 4
+				      GetSystemMetrics(SM_CXPADDEDBORDER)) * 4
 				   - GetSystemMetrics(SM_CYCAPTION);
 	if (maxDialogHeight < DLG_MIN_MAX_HEIGHT)
 	    maxDialogHeight = DLG_MIN_MAX_HEIGHT;
@@ -3633,11 +3652,11 @@ gui_mch_dialog(
     /* Restrict the size to a maximum.  Causes a scrollbar to show up. */
     if (dlgheight > maxDialogHeight)
     {
-        msgheight = msgheight - (dlgheight - maxDialogHeight);
-        dlgheight = maxDialogHeight;
-        scroll_flag = WS_VSCROLL;
-        /* Make sure scrollbar doesn't appear in the middle of the dialog */
-        messageWidth = dlgwidth - DLG_ICON_WIDTH - 3 * dlgPaddingX;
+	msgheight = msgheight - (dlgheight - maxDialogHeight);
+	dlgheight = maxDialogHeight;
+	scroll_flag = WS_VSCROLL;
+	/* Make sure scrollbar doesn't appear in the middle of the dialog */
+	messageWidth = dlgwidth - DLG_ICON_WIDTH - 3 * dlgPaddingX;
     }
 
     add_word(PixelToDialogY(dlgheight));
