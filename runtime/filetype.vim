@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2014 Jul 09
+" Last Change:	2014 Nov 05
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -530,6 +530,9 @@ au BufNewFile,BufRead configure.in,configure.ac setf config
 " CUDA  Cumpute Unified Device Architecture
 au BufNewFile,BufRead *.cu			setf cuda
 
+" Dockerfile
+au BufNewFile,BufRead Dockerfile		setf dockerfile
+
 " WildPackets EtherPeek Decoder
 au BufNewFile,BufRead *.dcd			setf dcd
 
@@ -779,6 +782,9 @@ au BufNewFile,BufRead *.git/config,.gitconfig,.gitmodules setf gitconfig
 au BufNewFile,BufRead *.git/modules/*/COMMIT_EDITMSG setf gitcommit
 au BufNewFile,BufRead *.git/modules/*/config	setf gitconfig
 au BufNewFile,BufRead */.config/git/config	setf gitconfig
+if !empty($XDG_CONFIG_HOME)
+  au BufNewFile,BufRead $XDG_CONFIG_HOME/git/config	setf gitconfig
+endif
 au BufNewFile,BufRead git-rebase-todo		setf gitrebase
 au BufNewFile,BufRead .msg.[0-9]*
       \ if getline(1) =~ '^From.*# This line is ignored.$' |
@@ -810,6 +816,9 @@ au BufNewFile,BufRead {,.}gitolite.rc,example.gitolite.rc	setf perl
 
 " Gnuplot scripts
 au BufNewFile,BufRead *.gpi			setf gnuplot
+
+" Go (Google)
+au BufNewFile,BufRead *.go			setf go
 
 " GrADS scripts
 au BufNewFile,BufRead *.gs			setf grads
@@ -1007,6 +1016,9 @@ au BufNewFile,BufRead *.jgr			setf jgraph
 " Jovial
 au BufNewFile,BufRead *.jov,*.j73,*.jovial	setf jovial
 
+" JSON
+au BufNewFile,BufRead *.json,*.jsonp		setf json
+
 " Kixtart
 au BufNewFile,BufRead *.kix			setf kix
 
@@ -1095,6 +1107,9 @@ au BufNewFile,BufRead *.lou,*.lout		setf lout
 " Lua
 au BufNewFile,BufRead *.lua			setf lua
 
+" Luarocks
+au BufNewFile,BufRead *.rockspec		setf lua
+
 " Linden Scripting Language (Second Life)
 au BufNewFile,BufRead *.lsl			setf lsl
 
@@ -1139,10 +1154,10 @@ au BufNewFile,BufRead *.mv,*.mpl,*.mws		setf maple
 au BufNewFile,BufRead *.map			setf map
 
 " Markdown
-au BufNewFile,BufRead *.markdown,*.mdown,*.mkd,*.mkdn,*.mdwn,README.md  setf markdown
+au BufNewFile,BufRead *.markdown,*.mdown,*.mkd,*.mkdn,*.mdwn,*.md  setf markdown
 
 " Mason
-au BufNewFile,BufRead *.mason,*.mhtml		setf mason
+au BufNewFile,BufRead *.mason,*.mhtml,*.comp	setf mason
 
 " Matlab or Objective C
 au BufNewFile,BufRead *.m			call s:FTm()
@@ -1231,8 +1246,8 @@ au BufNewFile,BufRead *.mod
 	\   setf modsim3 |
 	\ endif
 
-" Modula 2
-au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.md,*.mi setf modula2
+" Modula 2  (.md removed in favor of Markdown)
+au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.mi	setf modula2
 
 " Modula 3 (.m3, .i3, .mg, .ig)
 au BufNewFile,BufRead *.[mi][3g]		setf modula3

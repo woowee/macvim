@@ -1,16 +1,14 @@
-# Makefile for VIM on Win32
 #
-# Info at http://www.mingw.org
-# Alternative x86 and 64-builds: http://mingw-w64.sourceforge.net
-# Also requires GNU make, which you can download from the same sites.
-# Get missing libraries from http://gnuwin32.sf.net.
+# Makefile for VIM on Win32, using MinGW
 #
-# Tested on Win32 NT 4 and Win95.
+# Also read INSTALLpc.txt!
 #
-# To make everything, just 'make -f Make_ming.mak'.
-# To make just e.g. gvim.exe, 'make -f Make_ming.mak gvim.exe'.
-# After a run, you can 'make -f Make_ming.mak clean' to clean up.
+# The old Make_ming.mak (maintained by Ron Aaron et al.) was merged into
+# Make_cyg_ming.mak.
+# This file contains MinGW specific settings. Common settings are contained
+# in Make_cyg_ming.mak.
 #
+<<<<<<< HEAD
 # NOTE: Sometimes 'GNU Make' will stop after building vimrun.exe -- I think
 # it's just run out of memory or something.  Run again, and it will continue
 # with 'xxd'.
@@ -92,102 +90,22 @@ SAFE_GETTEXT_DLL_OBJ = $(GETTEXT)/src/safe_gettext_dll/safe_gettext_dll.o
 #GETTEXT_DYNAMIC=gnu_gettext.dll
 INTLPATH=$(GETTEXT)/lib/mingw32
 INTLLIB=gnu_gettext
+=======
+# Last updated by Ken Takata.
+# Last Change: 2014 Oct 21
+>>>>>>> vim/master
 
-# If you are using gettext-0.10.35 from http://sourceforge.net/projects/gettext
-# or gettext-0.10.37 from http://sourceforge.net/projects/mingwrep/
-# uncomment the following, but I can't build a static version with them, ?-(|
-#GETTEXT=c:/gettext-0.10.37-20010430
-#STATIC_GETTEXT=USE_STATIC_GETTEXT
-#DYNAMIC_GETTEXT=DYNAMIC_GETTEXT
-#INTLPATH=$(GETTEXT)/lib
-#INTLLIB=intl
 
 # uncomment 'PERL' if you want a perl-enabled version
-#PERL=C:/perl
-ifdef PERL
-ifndef PERL_VER
-PERL_VER=56
-endif
-ifndef DYNAMIC_PERL
-DYNAMIC_PERL=yes
-endif
-# on Linux, for cross-compile, it's here:
-#PERLLIB=/home/ron/ActivePerl/lib
-# on NT, it's here:
-PERLLIB=$(PERL)/lib
-PERLLIBS=$(PERLLIB)/Core
-XSUBPPTRY=$(PERLLIB)/ExtUtils/xsubpp
-XSUBPP_EXISTS=$(shell perl -e "print 1 unless -e '$(XSUBPPTRY)'")
-ifeq "$(XSUBPP_EXISTS)" ""
-XSUBPP=perl $(XSUBPPTRY)
-else
-XSUBPP=xsubpp
-endif
-endif
+#PERL=c:/perl
 
 # uncomment 'LUA' if you want a Lua-enabled version
-#LUA=/usr/local
-ifdef LUA
-ifndef DYNAMIC_LUA
-DYNAMIC_LUA=yes
-endif
-
-ifndef LUA_VER
-LUA_VER=51
-endif
-
-ifeq (no,$(DYNAMIC_LUA))
-LUA_LIB = -L$(LUA)/lib -llua
-endif
-
-endif
+#LUA=c:/lua
 
 # uncomment 'MZSCHEME' if you want a MzScheme-enabled version
 #MZSCHEME=d:/plt
-ifdef MZSCHEME
-ifndef DYNAMIC_MZSCHEME
-DYNAMIC_MZSCHEME=yes
-endif
 
-ifndef MZSCHEME_VER
-MZSCHEME_VER=205_000
-endif
-
-ifndef MZSCHEME_PRECISE_GC
-MZSCHEME_PRECISE_GC=no
-endif
-
-# for version 4.x we need to generate byte-code for Scheme base
-ifndef MZSCHEME_GENERATE_BASE
-MZSCHEME_GENERATE_BASE=no
-endif
-
-ifndef MZSCHEME_USE_RACKET
-MZSCHEME_MAIN_LIB=mzsch
-else
-MZSCHEME_MAIN_LIB=racket
-endif
-
-ifeq (no,$(DYNAMIC_MZSCHEME))
-ifeq (yes,$(MZSCHEME_PRECISE_GC))
-MZSCHEME_LIB=-l$(MZSCHEME_MAIN_LIB)$(MZSCHEME_VER)
-else
-MZSCHEME_LIB = -l$(MZSCHEME_MAIN_LIB)$(MZSCHEME_VER) -lmzgc$(MZSCHEME_VER)
-endif
-# the modern MinGW can dynamically link to dlls directly.
-# point MZSCHEME_DLLS to where you put libmzschXXXXXXX.dll and libgcXXXXXXX.dll
-ifndef MZSCHEME_DLLS
-MZSCHEME_DLLS=$(MZSCHEME)
-endif
-MZSCHEME_LIBDIR=-L$(MZSCHEME_DLLS) -L$(MZSCHEME_DLLS)\lib
-endif
-
-endif
-
-# Python support -- works with the ActiveState python 2.0 release (and others
-# too, probably)
-#
-# uncomment 'PYTHON' to make python-enabled version
+# uncomment 'PYTHON' if you want a python-enabled version
 # Put the path to the python distro here.  If cross compiling from Linux, you
 # will also need to convert the header files to unix instead of dos format:
 #   for fil in *.h ; do vim -e -c 'set ff=unix|w|q' $fil
@@ -200,74 +118,15 @@ endif
 # on my NT box, it's here:
 #PYTHON=c:/python20
 
-ifdef PYTHON
-ifndef DYNAMIC_PYTHON
-DYNAMIC_PYTHON=yes
-endif
+# uncomment 'PYTHON3' if you want a python3-enabled version
+#PYTHON3=c:/python31
 
-ifndef PYTHON_VER
-PYTHON_VER=22
-endif
-
-ifeq (no,$(DYNAMIC_PYTHON))
-PYTHONLIB=-L$(PYTHON)/libs -lpython$(PYTHON_VER)
-endif
-# my include files are in 'win32inc' on Linux, and 'include' in the standard
-# NT distro (ActiveState)
-ifeq ($(CROSS),no)
-PYTHONINC=-I $(PYTHON)/include
-else
-PYTHONINC=-I $(PYTHON)/win32inc
-endif
-endif
-
-#PYTHON3: See comment for Python 2 above
-
-ifdef PYTHON3
-ifndef DYNAMIC_PYTHON3
-DYNAMIC_PYTHON3=yes
-endif
-
-ifndef PYTHON3_VER
-PYTHON3_VER=31
-endif
-
-ifeq (no,$(DYNAMIC_PYTHON3))
-PYTHON3LIB=-L$(PYTHON3)/libs -lPYTHON$(PYTHON3_VER)
-endif
-
-ifeq ($(CROSS),no)
-PYTHON3INC=-I $(PYTHON3)/include
-else
-PYTHON3INC=-I $(PYTHON3)/win32inc
-endif
-endif
-
-#	TCL interface:
-#	  TCL=[Path to TCL directory]
-#	  DYNAMIC_TCL=yes (to load the TCL DLL dynamically)
-#	  TCL_VER=[TCL version, eg 83, 84] (default is 83)
+# uncomment 'TCL' if you want a Tcl-enabled version
 #TCL=c:/tcl
-ifdef TCL
-ifndef DYNAMIC_TCL
-DYNAMIC_TCL=yes
-endif
-ifndef TCL_VER
-TCL_VER = 83
-endif
-TCLINC += -I$(TCL)/include
-endif
 
-
-#	Ruby interface:
-#	  RUBY=[Path to Ruby directory]
-#	  DYNAMIC_RUBY=yes (to load the Ruby DLL dynamically)
-#	  RUBY_VER=[Ruby version, eg 16, 17] (default is 16)
-#	  RUBY_VER_LONG=[Ruby version, eg 1.6, 1.7] (default is 1.6)
-#	    You must set RUBY_VER_LONG when changing RUBY_VER.
-#	    You must set RUBY_API_VER version to RUBY_VER_LONG.
-#	    Don't set ruby API version to RUBY_VER like 191.
+# uncomment 'RUBY' if you want a Ruby-enabled version
 #RUBY=c:/ruby
+<<<<<<< HEAD
 ifdef RUBY
 ifndef DYNAMIC_RUBY
 DYNAMIC_RUBY=yes
@@ -800,29 +659,10 @@ $(OUTDIR)/regexp.o:		regexp.c regexp_nfa.c $(INCL)
 
 $(OUTDIR)/if_mzsch.o:	if_mzsch.c $(INCL) if_mzsch.h $(MZ_EXTRA_DEP)
 	$(CC) -c $(CFLAGS) if_mzsch.c -o $(OUTDIR)/if_mzsch.o
+=======
+>>>>>>> vim/master
 
-mzscheme_base.c:
-	$(MZSCHEME)/mzc --c-mods mzscheme_base.c ++lib scheme/base
 
-pathdef.c: $(INCL)
-ifneq (sh.exe, $(SHELL))
-	@echo creating pathdef.c
-	@echo '/* pathdef.c */' > pathdef.c
-	@echo '#include "vim.h"' >> pathdef.c
-	@echo 'char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)";' >> pathdef.c
-	@echo 'char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)";' >> pathdef.c
-	@echo 'char_u *all_cflags = (char_u *)"$(CC) $(CFLAGS)";' >> pathdef.c
-	@echo 'char_u *all_lflags = (char_u *)"$(CC) $(CFLAGS) $(LFLAGS) -o $(TARGET) $(LIB) -lole32 -luuid $(LUA_LIB) $(MZSCHEME_LIBDIR) $(MZSCHEME_LIB) $(PYTHONLIB) $(PYTHON3LIB) $(RUBYLIB)";' >> pathdef.c
-	@echo 'char_u *compiled_user = (char_u *)"$(USERNAME)";' >> pathdef.c
-	@echo 'char_u *compiled_sys = (char_u *)"$(USERDOMAIN)";' >> pathdef.c
-else
-	@echo creating pathdef.c
-	@echo /* pathdef.c */ > pathdef.c
-	@echo #include "vim.h" >> pathdef.c
-	@echo char_u *default_vim_dir = (char_u *)"$(VIMRCLOC)"; >> pathdef.c
-	@echo char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR)"; >> pathdef.c
-	@echo char_u *all_cflags = (char_u *)"$(CC) $(CFLAGS)"; >> pathdef.c
-	@echo char_u *all_lflags = (char_u *)"$(CC) $(CFLAGS) $(LFLAGS) -o $(TARGET) $(LIB) -lole32 -luuid $(LUA_LIB) $(MZSCHEME_LIBDIR) $(MZSCHEME_LIB) $(PYTHONLIB) $(PYTHON3LIB) $(RUBYLIB)"; >> pathdef.c
-	@echo char_u *compiled_user = (char_u *)"$(USERNAME)"; >> pathdef.c
-	@echo char_u *compiled_sys = (char_u *)"$(USERDOMAIN)"; >> pathdef.c
-endif
+# Do not change this.
+UNDER_CYGWIN = no
+include Make_cyg_ming.mak

@@ -739,7 +739,6 @@ debuggy_find(file, fname, after, gap, fp)
     struct debuggy *bp;
     int		i;
     linenr_T	lnum = 0;
-    regmatch_T	regmatch;
     char_u	*name = fname;
     int		prev_got_int;
 
@@ -771,8 +770,6 @@ debuggy_find(file, fname, after, gap, fp)
 #endif
 		(bp->dbg_lnum > after && (lnum == 0 || bp->dbg_lnum < lnum)))))
 	{
-	    regmatch.regprog = bp->dbg_prog;
-	    regmatch.rm_ic = FALSE;
 	    /*
 	     * Save the value of got_int and reset it.  We don't want a
 	     * previous interruption cancel matching, only hitting CTRL-C
@@ -780,7 +777,7 @@ debuggy_find(file, fname, after, gap, fp)
 	     */
 	    prev_got_int = got_int;
 	    got_int = FALSE;
-	    if (vim_regexec(&regmatch, name, (colnr_T)0))
+	    if (vim_regexec_prog(&bp->dbg_prog, FALSE, name, (colnr_T)0))
 	    {
 		lnum = bp->dbg_lnum;
 		if (fp != NULL)
@@ -2464,6 +2461,9 @@ ex_listdo(eap)
 	 * great speed improvement. */
 	save_ei = au_event_disable(",Syntax");
 #endif
+#ifdef FEAT_CLIPBOARD
+    start_global_changes();
+#endif
 
     if (eap->cmdidx == CMD_windo
 	    || eap->cmdidx == CMD_tabdo
@@ -2590,6 +2590,9 @@ ex_listdo(eap)
 	apply_autocmds(EVENT_SYNTAX, curbuf->b_p_syn,
 					       curbuf->b_fname, TRUE, curbuf);
     }
+#endif
+#ifdef FEAT_CLIPBOARD
+    end_global_changes();
 #endif
 }
 
@@ -2750,8 +2753,8 @@ source_runtime(name, all)
  * used.
  * Returns OK when at least one match found, FAIL otherwise.
  *
- * If "name" is NULL calls callback for each entry in runtimepath. Cookie is 
- * passed by reference in this case, setting it to NULL indicates that callback 
+ * If "name" is NULL calls callback for each entry in runtimepath. Cookie is
+ * passed by reference in this case, setting it to NULL indicates that callback
  * has done its job.
  */
     int

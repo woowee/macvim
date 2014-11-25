@@ -37,11 +37,16 @@ SCRIPTS =	test3.out test4.out test5.out test6.out test7.out \
 		test105.out test106.out  test107.out\
 		test_autoformat_join.out \
 		test_breakindent.out \
+		test_changelist.out \
+		test_eval.out \
+		test_insertcount.out \
 		test_listlbr.out \
 		test_listlbr_utf8.out \
+		test_mapping.out \
+		test_options.out \
 		test_qf_title.out \
-		test_eval.out \
-		test_options.out
+		test_signs.out \
+		test_utf8.out
 
 SCRIPTS32 =	test50.out test70.out
 
@@ -96,7 +101,7 @@ $(TEST_OUTFILES): $(DOSTMP)\$(*B).out
 fixff:
 	-$(VIMPROG) -u dos.vim --noplugin "+argdo set ff=dos|upd" +q *.in *.ok
 	-$(VIMPROG) -u dos.vim --noplugin "+argdo set ff=unix|upd" +q \
-		dotest.in test60.ok test71.ok test74.ok
+		dotest.in test60.ok test71.ok test74.ok test100.ok
 
 report:
 	@ECHO ""
@@ -105,21 +110,41 @@ report:
 		ELSE ( ECHO ALL DONE )
 
 clean:
-	-IF EXIST *.out DEL *.out
-	-IF EXIST *.failed DEL *.failed
-	-IF EXIST $(DOSTMP) RD /s /q $(DOSTMP)
-	-IF EXIST test.in DEL test.in
-	-IF EXIST test.ok DEL test.ok
-	-IF EXIST test.log DEL test.log
-	-IF EXIST small.vim DEL small.vim
-	-IF EXIST tiny.vim DEL tiny.vim
-	-IF EXIST mbyte.vim DEL mbyte.vim
-	-IF EXIST mzscheme.vim DEL mzscheme.vim
-	-IF EXIST lua.vim DEL lua.vim
-	-IF EXIST X* DEL X*
-	-IF EXIST Xdir1 RD /s /q Xdir1
-	-IF EXIST Xfind RD /s /q Xfind
-	-IF EXIST viminfo DEL viminfo
+	-del *.out
+	-del *.failed
+	-if exist test.ok del test.ok
+	-if exist small.vim del small.vim
+	-if exist tiny.vim del tiny.vim
+	-if exist mbyte.vim del mbyte.vim
+	-if exist mzscheme.vim del mzscheme.vim
+	-if exist lua.vim del lua.vim
+	-del X*
+	-if exist Xdir1 rd /s /q Xdir1
+	-if exist Xfind rd /s /q Xfind
+	-if exist viminfo del viminfo
+	-del test.log
+	-if exist benchmark.out del benchmark.out
 
-clear_report:
-	-IF EXIST test.log DEL test.log
+.in.out:
+	-if exist $*.failed del $*.failed
+	copy $*.ok test.ok
+	$(VIMPROG) -u dos.vim -U NONE --noplugin -s dotest.in $*.in
+	@diff test.out $*.ok & if errorlevel 1 \
+		( move /y test.out $*.failed & echo $* FAILED >> test.log ) \
+		else ( move /y test.out $*.out )
+	-del X*
+	-del test.ok
+	-if exist Xdir1 rd /s /q Xdir1
+	-if exist Xfind rd /s /q Xfind
+	-if exist viminfo del viminfo
+
+nolog:
+	-del test.log
+
+benchmark:
+	bench_re_freeze.out
+
+bench_re_freeze.out: bench_re_freeze.vim
+	-if exist benchmark.out del benchmark.out
+	$(VIMPROG) -u dos.vim -U NONE --noplugin $*.in
+	@IF EXIST benchmark.out ( type benchmark.out )
