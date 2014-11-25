@@ -4448,9 +4448,6 @@ iconv_end()
 #  define g_return_if_fail(x) if (!(x)) return;
 # endif
 
-# if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM) || defined(PROTO)
-static int xim_has_preediting INIT(= FALSE);  /* IM current status */
-
 static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
 static int preedit_is_active   = FALSE;
 
@@ -4459,6 +4456,11 @@ static unsigned long im_commit_handler_id  = 0;
 static unsigned int  im_activatekey_keyval = GDK_VoidSymbol;
 static unsigned int  im_activatekey_state  = 0;
 # endif
+
+static GtkWidget *preedit_window = NULL;
+static GtkWidget *preedit_label = NULL;
+
+static void im_preedit_window_set_position(void);
 
 static GtkWidget *preedit_window = NULL;
 static GtkWidget *preedit_label = NULL;
@@ -4563,6 +4565,27 @@ im_add_to_input(char_u *str, int len)
     if (p_mh) /* blank out the pointer if necessary */
 	gui_mch_mousehide(TRUE);
 # endif
+}
+
+     static void
+im_preedit_window_set_position(void)
+{
+    int x, y, w, h, sw, sh;
+
+    if (preedit_window == NULL)
+	return;
+
+    sw = gdk_screen_get_width(gtk_widget_get_screen(preedit_window));
+    sh = gdk_screen_get_height(gtk_widget_get_screen(preedit_window));
+    gdk_window_get_origin(gui.drawarea->window, &x, &y);
+    gtk_window_get_size(GTK_WINDOW(preedit_window), &w, &h);
+    x = x + FILL_X(gui.col);
+    y = y + FILL_Y(gui.row);
+    if (x + w > sw)
+	x = sw - w;
+    if (y + h > sh)
+	y = sh - h;
+    gtk_window_move(GTK_WINDOW(preedit_window), x, y);
 }
 
      static void
@@ -4856,13 +4879,6 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 	xim_has_preediting = TRUE;
 	im_show_preedit();
     }
-
-# ifndef FEAT_GUI_MACVIM
-    g_free(preedit_string);
-
-    if (gtk_main_level() > 0)
-	gtk_main_quit();
-# endif
 }
 
     void
