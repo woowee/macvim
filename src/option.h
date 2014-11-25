@@ -668,9 +668,6 @@ EXTERN long	p_re;		/* 'regexpengine' */
 EXTERN char_u	*p_rop;		/* 'renderoptions' */
 #endif
 EXTERN long	p_report;	/* 'report' */
-#ifdef FEAT_RENDER_OPTIONS
-EXTERN char_u	*p_rop;		/* 'renderoptions' */
-#endif
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 EXTERN long	p_pvh;		/* 'previewheight' */
 #endif

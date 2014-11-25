@@ -121,12 +121,6 @@
 # include <wchar.h>
 #endif
 
-#if defined(FEAT_UIMFEP) || defined(PROTO)
-static int uimfep_lastmode = 1;
-static void uimfep_set_active __ARGS((int active));
-static int uimfep_get_status __ARGS((void));
-#endif
-
 #if 0
 /* This has been disabled, because several people reported problems with the
  * wcwidth() and iswprint() library functions, esp. for Hebrew. */
@@ -4452,41 +4446,22 @@ iconv_end()
 # if defined(FEAT_GUI_GTK) || defined(PROTO)
 static int xim_has_preediting INIT(= FALSE);  /* IM current status */
 
-/*
- * Set preedit_start_col to the current cursor position.
- */
-    static void
-init_preedit_start_col(void)
-{
-    if (State & CMDLINE)
-	preedit_start_col = cmdline_getvcol_cursor();
-    else if (curwin != NULL)
-	getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
-    /* Prevent that preediting marks the buffer as changed. */
-    xim_changed_while_preediting = curbuf->b_changed;
-}
-
 static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
 static int preedit_is_active   = FALSE;
-static int im_preedit_cursor   = 0;	/* cursor offset in characters       */
-static int im_preedit_trailing = 0;	/* number of characters after cursor */
 
 static unsigned long im_commit_handler_id  = 0;
 static unsigned int  im_activatekey_keyval = GDK_VoidSymbol;
 static unsigned int  im_activatekey_state  = 0;
 
+static GtkWidget *preedit_window = NULL;
+static GtkWidget *preedit_label = NULL;
+
+static void im_preedit_window_set_position(void);
+
     void
 im_set_active(int active)
 {
     int was_active;
-
-#ifdef FEAT_UIMFEP
-    if (!gui.in_use)
-    {
-	uimfep_set_active(active);
-	return;
-    }
-#endif
 
     was_active = !!im_get_status();
     im_is_active = (active && !p_imdisable);
@@ -4535,6 +4510,8 @@ im_set_position(int row, int col)
 	area.height = gui.char_height;
 
 	gtk_im_context_set_cursor_location(xic, &area);
+
+	im_preedit_window_set_position();
     }
 }
 
@@ -4565,42 +4542,95 @@ im_add_to_input(char_u *str, int len)
 	gui_mch_mousehide(TRUE);
 }
 
+     static void
+im_preedit_window_set_position(void)
+{
+    int x, y, w, h, sw, sh;
+
+    if (preedit_window == NULL)
+	return;
+
+    sw = gdk_screen_get_width(gtk_widget_get_screen(preedit_window));
+    sh = gdk_screen_get_height(gtk_widget_get_screen(preedit_window));
+    gdk_window_get_origin(gui.drawarea->window, &x, &y);
+    gtk_window_get_size(GTK_WINDOW(preedit_window), &w, &h);
+    x = x + FILL_X(gui.col);
+    y = y + FILL_Y(gui.row);
+    if (x + w > sw)
+	x = sw - w;
+    if (y + h > sh)
+	y = sh - h;
+    gtk_window_move(GTK_WINDOW(preedit_window), x, y);
+}
+
+    static void
+im_preedit_window_open()
+{
+    char *preedit_string;
+    char buf[8];
+    PangoAttrList *attr_list;
+    PangoLayout *layout;
+    GdkColor color;
+    gint w, h;
+
+    if (preedit_window == NULL)
+    {
+	preedit_window = gtk_window_new(GTK_WINDOW_POPUP);
+	preedit_label = gtk_label_new("");
+	gtk_container_add(GTK_CONTAINER(preedit_window), preedit_label);
+    }
+
+    gtk_widget_modify_font(preedit_label, gui.norm_font);
+
+    vim_snprintf(buf, sizeof(buf), "#%06X", gui.norm_pixel);
+    gdk_color_parse(buf, &color);
+    gtk_widget_modify_fg(preedit_label, GTK_STATE_NORMAL, &color);
+
+    vim_snprintf(buf, sizeof(buf), "#%06X", gui.back_pixel);
+    gdk_color_parse(buf, &color);
+    gtk_widget_modify_bg(preedit_window, GTK_STATE_NORMAL, &color);
+
+    gtk_im_context_get_preedit_string(xic, &preedit_string, &attr_list, NULL);
+
+    if (preedit_string[0] != NUL)
+    {
+	gtk_label_set_text(GTK_LABEL(preedit_label), preedit_string);
+	gtk_label_set_attributes(GTK_LABEL(preedit_label), attr_list);
+
+	layout = gtk_label_get_layout(GTK_LABEL(preedit_label));
+	pango_layout_get_pixel_size(layout, &w, &h);
+	h = MAX(h, gui.char_height);
+	gtk_window_resize(GTK_WINDOW(preedit_window), w, h);
+
+	gtk_widget_show_all(preedit_window);
+
+	im_preedit_window_set_position();
+    }
+
+    g_free(preedit_string);
+    pango_attr_list_unref(attr_list);
+}
+
+    static void
+im_preedit_window_close()
+{
+    if (preedit_window != NULL)
+	gtk_widget_hide(preedit_window);
+}
+
+    static void
+im_show_preedit()
+{
+    im_preedit_window_open();
+
+    if (p_mh) /* blank out the pointer if necessary */
+	gui_mch_mousehide(TRUE);
+}
+
     static void
 im_delete_preedit(void)
 {
-    char_u bskey[]  = {CSI, 'k', 'b'};
-    char_u delkey[] = {CSI, 'k', 'D'};
-
-    if (State & NORMAL)
-    {
-	im_preedit_cursor = 0;
-	return;
-    }
-    for (; im_preedit_cursor > 0; --im_preedit_cursor)
-	add_to_input_buf(bskey, (int)sizeof(bskey));
-
-    for (; im_preedit_trailing > 0; --im_preedit_trailing)
-	add_to_input_buf(delkey, (int)sizeof(delkey));
-}
-
-/*
- * Move the cursor left by "num_move_back" characters.
- * Note that ins_left() checks im_is_preediting() to avoid breaking undo for
- * these K_LEFT keys.
- */
-    static void
-im_correct_cursor(int num_move_back)
-{
-    char_u backkey[] = {CSI, 'k', 'l'};
-
-    if (State & NORMAL)
-	return;
-#  ifdef FEAT_RIGHTLEFT
-    if ((State & CMDLINE) == 0 && curwin != NULL && curwin->w_p_rl)
-	backkey[2] = 'r';
-#  endif
-    for (; num_move_back > 0; --num_move_back)
-	add_to_input_buf(backkey, (int)sizeof(backkey));
+    im_preedit_window_close();
 }
 
 static int xim_expected_char = NUL;
@@ -4613,6 +4643,8 @@ static int xim_ignored_char = FALSE;
 im_show_info(void)
 {
     int	    old_vgetc_busy;
+    int	    old_row = gui.row;
+    int	    old_col = gui.col;
 
     old_vgetc_busy = vgetc_busy;
     vgetc_busy = TRUE;
@@ -4621,6 +4653,8 @@ im_show_info(void)
     if ((State & NORMAL) || (State & INSERT))
 	setcursor();
     out_flush();
+    gui.row = old_row;
+    gui.col = old_col;
 }
 
 /*
@@ -4634,48 +4668,10 @@ im_commit_cb(GtkIMContext *context UNUSED,
 {
     int		slen = (int)STRLEN(str);
     int		add_to_input = TRUE;
-    int		clen;
-    int		len = slen;
-    int		commit_with_preedit = TRUE;
-    char_u	*im_str;
 
 #ifdef XIM_DEBUG
     xim_log("im_commit_cb(): %s\n", str);
 #endif
-
-    /* The imhangul module doesn't reset the preedit string before
-     * committing.  Call im_delete_preedit() to work around that. */
-    im_delete_preedit();
-
-    /* Indicate that preediting has finished. */
-    if (preedit_start_col == MAXCOL)
-    {
-	init_preedit_start_col();
-	commit_with_preedit = FALSE;
-    }
-
-    /* The thing which setting "preedit_start_col" to MAXCOL means that
-     * "preedit_start_col" will be set forcedly when calling
-     * preedit_changed_cb() next time.
-     * "preedit_start_col" should not reset with MAXCOL on this part. Vim
-     * is simulating the preediting by using add_to_input_str(). when
-     * preedit begin immediately before committed, the typebuf is not
-     * flushed to screen, then it can't get correct "preedit_start_col".
-     * Thus, it should calculate the cells by adding cells of the committed
-     * string. */
-    if (input_conv.vc_type != CONV_NONE)
-    {
-	im_str = string_convert(&input_conv, (char_u *)str, &len);
-	g_return_if_fail(im_str != NULL);
-    }
-    else
-	im_str = (char_u *)str;
-
-    clen = mb_string2cells(im_str, len);
-
-    if (input_conv.vc_type != CONV_NONE)
-	vim_free(im_str);
-    preedit_start_col += clen;
 
     /* Is this a single character that matches a keypad key that's just
      * been pressed?  If so, we don't want it to be entered as such - let
@@ -4699,15 +4695,6 @@ im_commit_cb(GtkIMContext *context UNUSED,
 
     if (add_to_input)
 	im_add_to_input((char_u *)str, slen);
-
-    /* Inserting chars while "im_is_active" is set does not cause a change of
-     * buffer.  When the chars are committed the buffer must be marked as
-     * changed. */
-    if (!commit_with_preedit)
-	preedit_start_col = MAXCOL;
-
-    /* This flag is used in changed() at next call. */
-    xim_changed_while_preediting = TRUE;
 
     if (gtk_main_level() > 0)
 	gtk_main_quit();
@@ -4741,7 +4728,6 @@ im_preedit_end_cb(GtkIMContext *context UNUSED, gpointer data UNUSED)
     im_delete_preedit();
 
     /* Indicate that preediting has finished */
-    preedit_start_col = MAXCOL;
     xim_has_preediting = FALSE;
 
 #if 0
@@ -4796,15 +4782,8 @@ im_preedit_end_cb(GtkIMContext *context UNUSED, gpointer data UNUSED)
 im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
 {
     char    *preedit_string = NULL;
-    int	    cursor_index    = 0;
-    int	    num_move_back   = 0;
-    char_u  *str;
-    char_u  *p;
-    int	    i;
 
-    gtk_im_context_get_preedit_string(context,
-				      &preedit_string, NULL,
-				      &cursor_index);
+    gtk_im_context_get_preedit_string(context, &preedit_string, NULL, NULL);
 
 #ifdef XIM_DEBUG
     xim_log("im_preedit_changed_cb(): %s\n", preedit_string);
@@ -4812,164 +4791,21 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data UNUSED)
 
     g_return_if_fail(preedit_string != NULL); /* just in case */
 
-    /* If preedit_start_col is MAXCOL set it to the current cursor position. */
-    if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')
-    {
-	xim_has_preediting = TRUE;
-
-	/* Urgh, this breaks if the input buffer isn't empty now */
-	init_preedit_start_col();
-    }
-    else if (cursor_index == 0 && preedit_string[0] == '\0')
+    if (preedit_string[0] == NUL)
     {
 	xim_has_preediting = FALSE;
-
-	/* If at the start position (after typing backspace)
-	 * preedit_start_col must be reset. */
-	preedit_start_col = MAXCOL;
+	im_delete_preedit();
     }
-
-    im_delete_preedit();
-
-    /*
-     * Compute the end of the preediting area: "preedit_end_col".
-     * According to the documentation of gtk_im_context_get_preedit_string(),
-     * the cursor_pos output argument returns the offset in bytes.  This is
-     * unfortunately not true -- real life shows the offset is in characters,
-     * and the GTK+ source code agrees with me.  Will file a bug later.
-     */
-    if (preedit_start_col != MAXCOL)
-	preedit_end_col = preedit_start_col;
-    str = (char_u *)preedit_string;
-    for (p = str, i = 0; *p != NUL; p += utf_byte2len(*p), ++i)
+    else
     {
-	int is_composing;
-
-	is_composing = ((*p & 0x80) != 0 && utf_iscomposing(utf_ptr2char(p)));
-	/*
-	 * These offsets are used as counters when generating <BS> and <Del>
-	 * to delete the preedit string.  So don't count composing characters
-	 * unless 'delcombine' is enabled.
-	 */
-	if (!is_composing || p_deco)
-	{
-	    if (i < cursor_index)
-		++im_preedit_cursor;
-	    else
-		++im_preedit_trailing;
-	}
-	if (!is_composing && i >= cursor_index)
-	{
-	    /* This is essentially the same as im_preedit_trailing, except
-	     * composing characters are not counted even if p_deco is set. */
-	    ++num_move_back;
-	}
-	if (preedit_start_col != MAXCOL)
-	    preedit_end_col += utf_ptr2cells(p);
-    }
-
-    if (p > str)
-    {
-	im_add_to_input(str, (int)(p - str));
-	im_correct_cursor(num_move_back);
+	xim_has_preediting = TRUE;
+	im_show_preedit();
     }
 
     g_free(preedit_string);
 
     if (gtk_main_level() > 0)
 	gtk_main_quit();
-}
-
-/*
- * Translate the Pango attributes at iter to Vim highlighting attributes.
- * Ignore attributes not supported by Vim highlighting.  This shouldn't have
- * too much impact -- right now we handle even more attributes than necessary
- * for the IM modules I tested with.
- */
-    static int
-translate_pango_attributes(PangoAttrIterator *iter)
-{
-    PangoAttribute  *attr;
-    int		    char_attr = HL_NORMAL;
-
-    attr = pango_attr_iterator_get(iter, PANGO_ATTR_UNDERLINE);
-    if (attr != NULL && ((PangoAttrInt *)attr)->value
-						 != (int)PANGO_UNDERLINE_NONE)
-	char_attr |= HL_UNDERLINE;
-
-    attr = pango_attr_iterator_get(iter, PANGO_ATTR_WEIGHT);
-    if (attr != NULL && ((PangoAttrInt *)attr)->value >= (int)PANGO_WEIGHT_BOLD)
-	char_attr |= HL_BOLD;
-
-    attr = pango_attr_iterator_get(iter, PANGO_ATTR_STYLE);
-    if (attr != NULL && ((PangoAttrInt *)attr)->value
-						   != (int)PANGO_STYLE_NORMAL)
-	char_attr |= HL_ITALIC;
-
-    attr = pango_attr_iterator_get(iter, PANGO_ATTR_BACKGROUND);
-    if (attr != NULL)
-    {
-	const PangoColor *color = &((PangoAttrColor *)attr)->color;
-
-	/* Assume inverse if black background is requested */
-	if ((color->red | color->green | color->blue) == 0)
-	    char_attr |= HL_INVERSE;
-    }
-
-    return char_attr;
-}
-
-/*
- * Retrieve the highlighting attributes at column col in the preedit string.
- * Return -1 if not in preediting mode or if col is out of range.
- */
-    int
-im_get_feedback_attr(int col)
-{
-    char	    *preedit_string = NULL;
-    PangoAttrList   *attr_list	    = NULL;
-    int		    char_attr	    = -1;
-
-    if (xic == NULL)
-	return char_attr;
-
-    gtk_im_context_get_preedit_string(xic, &preedit_string, &attr_list, NULL);
-
-    if (preedit_string != NULL && attr_list != NULL)
-    {
-	int idx;
-
-	/* Get the byte index as used by PangoAttrIterator */
-	for (idx = 0; col > 0 && preedit_string[idx] != '\0'; --col)
-	    idx += utfc_ptr2len((char_u *)preedit_string + idx);
-
-	if (preedit_string[idx] != '\0')
-	{
-	    PangoAttrIterator	*iter;
-	    int			start, end;
-
-	    char_attr = HL_NORMAL;
-	    iter = pango_attr_list_get_iterator(attr_list);
-
-	    /* Extract all relevant attributes from the list. */
-	    do
-	    {
-		pango_attr_iterator_range(iter, &start, &end);
-
-		if (idx >= start && idx < end)
-		    char_attr |= translate_pango_attributes(iter);
-	    }
-	    while (pango_attr_iterator_next(iter));
-
-	    pango_attr_iterator_destroy(iter);
-	}
-    }
-
-    if (attr_list != NULL)
-	pango_attr_list_unref(attr_list);
-    g_free(preedit_string);
-
-    return char_attr;
 }
 
     void
@@ -5012,7 +4848,6 @@ im_shutdown(void)
     }
     im_is_active = FALSE;
     im_commit_handler_id = 0;
-    preedit_start_col = MAXCOL;
     xim_has_preediting = FALSE;
 }
 
@@ -5167,7 +5002,6 @@ xim_reset(void)
 	}
     }
 
-    preedit_start_col = MAXCOL;
     xim_has_preediting = FALSE;
 }
 
@@ -5272,21 +5106,6 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
 	{
 	    int imresult = gtk_im_context_filter_keypress(xic, event);
 
-	    /* Some XIM send following sequence:
-	     * 1. preedited string.
-	     * 2. committed string.
-	     * 3. line changed key.
-	     * 4. preedited string.
-	     * 5. remove preedited string.
-	     * if 3, Vim can't move back the above line for 5.
-	     * thus, this part should not parse the key. */
-	    if (!imresult && preedit_start_col != MAXCOL
-					       && event->keyval == GDK_Return)
-	    {
-		im_synthesize_keypress(GDK_Return, 0U);
-		return FALSE;
-	    }
-
 	    /* If XIM tried to commit a keypad key as a single char.,
 	     * ignore it so we can use the keypad key 'raw', for mappings. */
 	    if (xim_expected_char != NUL && xim_ignored_char)
@@ -5308,10 +5127,6 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
     int
 im_get_status(void)
 {
-#ifdef FEAT_UIMFEP
-    if (!gui.in_use)
-	return uimfep_get_status();
-#endif
 #  ifdef FEAT_EVAL
     if (p_imsf[0] != NUL)
     {
@@ -5365,13 +5180,7 @@ im_set_active(active)
     int		active;
 {
     if (xic == NULL)
-    {
-#ifdef FEAT_UIMFEP
-	if (!gui.in_use)
-	    uimfep_set_active(active);
-#endif
 	return;
-    }
 
     /* If 'imdisable' is set, XIM is never active. */
     if (p_imdisable)
@@ -5806,11 +5615,6 @@ xim_real_init(x11_window, x11_display)
     int
 im_get_status()
 {
-#ifdef FEAT_UIMFEP
-    if (!gui.in_use)
-	return uimfep_get_status();
-#endif
-
     return xim_has_focus;
 }
 
@@ -6383,66 +6187,3 @@ string_convert_ext(vcp, ptr, lenp, unconvlenp)
     return retval;
 }
 #endif
-
-#if defined(FEAT_UIMFEP)
-    static void
-uimfep_set_active(int active)
-{
-    int mustfree = 0;
-    char_u *setmode;
-    setmode = vim_getenv("UIM_FEP_SETMODE", &mustfree);
-    if (setmode != NULL)
-    {
-	FILE *fp = fopen(setmode, "w");
-	if (fp)
-	{
-	    fprintf(fp, "%d\n", active ? uimfep_lastmode : 0);
-	    fflush(fp);
-	    fclose(fp);
-	}
-    }
-    if (mustfree)
-	vim_free(setmode);
-}
-
-    static int
-uimfep_get_status(void)
-{
-    int mustfree = 0;
-    int mode = 0;
-    char_u *getmode;
-    getmode = vim_getenv("UIM_FEP_GETMODE", &mustfree);
-    if (getmode != NULL)
-    {
-	FILE *fp = fopen(getmode, "r");
-	if (fp)
-	{
-	    char_u buf[99];
-	    if (fgets(buf, sizeof(buf), fp))
-		mode = atoi(buf);
-	    fclose(fp);
-	}
-    }
-    if (mustfree)
-	vim_free(getmode);
-    if (mode != 0)
-	uimfep_lastmode = mode;
-    return mode != 0;
-}
-
-# if defined(USE_IM_CONTROL) && (!defined(FEAT_XIM) \
-	&& !defined(FEAT_MBYTE_IME) && !defined(GLOBAL_IME))
-    void
-im_set_active(int active)
-{
-    uimfep_set_active(active);
-}
-
-    int
-im_get_status(void)
-{
-    return uimfep_get_status();
-}
-# endif
-
-#endif /* defined(FEAT_UIMFEP) */

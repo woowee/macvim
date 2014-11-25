@@ -392,7 +392,6 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'kp'	options.txt	/*'kp'*
 'langmap'	options.txt	/*'langmap'*
 'langmenu'	options.txt	/*'langmenu'*
-'langnoremap'	options.txt	/*'langnoremap'*
 'laststatus'	options.txt	/*'laststatus'*
 'lazyredraw'	options.txt	/*'lazyredraw'*
 'lbr'	options.txt	/*'lbr'*
@@ -406,7 +405,6 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'listchars'	options.txt	/*'listchars'*
 'lm'	options.txt	/*'lm'*
 'lmap'	options.txt	/*'lmap'*
-'lnr'	options.txt	/*'lnr'*
 'loadplugins'	options.txt	/*'loadplugins'*
 'lpl'	options.txt	/*'lpl'*
 'ls'	options.txt	/*'ls'*
@@ -3601,7 +3599,7 @@ E201	autocmd.txt	/*E201*
 E202	options.txt	/*E202*
 E203	autocmd.txt	/*E203*
 E204	autocmd.txt	/*E204*
-E205	if_pyth.txt	/*E205*
+E205	options.txt	/*E205*
 E206	options.txt	/*E206*
 E207	editing.txt	/*E207*
 E208	message.txt	/*E208*
@@ -5475,7 +5473,6 @@ edit-dialogs	editing.txt	/*edit-dialogs*
 edit-files	editing.txt	/*edit-files*
 edit-intro	editing.txt	/*edit-intro*
 edit-no-break	usr_25.txt	/*edit-no-break*
-edit-paragraph-join	usr_25.txt	/*edit-paragraph-join*
 editing.txt	editing.txt	/*editing.txt*
 efm-%>	quickfix.txt	/*efm-%>*
 efm-entries	quickfix.txt	/*efm-entries*

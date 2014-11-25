@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim バージョン 7.4.  Last change: 2013 Jun 29
+*quickref.txt*  For Vim バージョン 7.4.  Last change: 2014 Aug 06
 
 
 		  VIMリファレンスマニュアル    by Bram Moolenaar
@@ -639,6 +639,8 @@
 'bioskey'	  'biosk'   MS-DOS専用: 文字入力にbiosコールを使う
 'bomb'			    ファイルの先頭にBOMを付加する
 'breakat'	  'brk'     'linebreak' がオンのとき、改行を引き起こす文字
+'breakindent'	  'bri'     折り返された行でインデントを繰り返す
+'breakindentopt'  'briopt'  'breakindent' のための設定
 'browsedir'	  'bsdir'   ブラウズを始めるディレクトリ
 'bufhidden'	  'bh'      ウィンドウに繋がったバッファがなくなった時の動作
 'buflisted'	  'bl'      バッファリストにバッファを表示するかどうか
@@ -846,6 +848,7 @@
 'regexpengine'	  're'	    デフォルトで使用する正規表現エンジン
 'relativenumber'  'rnu'	    相対行番号を表示する
 'remap'			    再帰的マッピングを有効にする
+'renderoptions'	  'rop'	    Windows でのテキストレンダリングの設定
 'report'		    変更された行の数の方向が出る最小値
 'restorescreen'	  'rs'      Win32: 終了時スクリーンを更新する
 'revins'	  'ri'      挿入モードで入力方向が逆になる

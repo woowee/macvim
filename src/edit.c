@@ -9361,12 +9361,7 @@ ins_left()
     tpos = curwin->w_cursor;
     if (oneleft() == OK)
     {
-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
-	/* Only call start_arrow() when not busy with preediting, it will
-	 * break undo.  K_LEFT is inserted in im_correct_cursor(). */
-	if (!im_is_preediting())
-#endif
-	    start_arrow(&tpos);
+	start_arrow(&tpos);
 #ifdef FEAT_RIGHTLEFT
 	/* If exit reversed string, position is fixed */
 	if (revins_scol != -1 && (int)curwin->w_cursor.col >= revins_scol)

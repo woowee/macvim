@@ -140,6 +140,7 @@ static void _OnPaint( HWND hwnd);
 static void clear_rect(RECT *rcp);
 static int gui_mswin_get_menu_height(int fix_window);
 static int get_caption_height(void);
+static int get_caption_width_adjustment(void);
 
 static WORD		s_dlgfntheight;		/* height of the dialog font */
 static WORD		s_dlgfntwidth;		/* width of the dialog font */
@@ -2931,7 +2932,8 @@ gui_mswin_get_valid_dimensions(
 
     base_width = gui_get_base_width()
 	+ (GetSystemMetrics(SM_CXFRAME) +
-           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
+           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+	+ get_caption_width_adjustment();
     base_height = gui_get_base_height()
 	+ (GetSystemMetrics(SM_CYFRAME) +
            GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
@@ -3319,7 +3321,8 @@ gui_mch_newfont()
     GetWindowRect(s_hwnd, &rect);
     gui_resize_shell(rect.right - rect.left
 			- (GetSystemMetrics(SM_CXFRAME) +
-                           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
+                           GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+			- get_caption_width_adjustment(),
 		     rect.bottom - rect.top
 			- (GetSystemMetrics(SM_CYFRAME) +
                            GetSystemMetrics(SM_CXPADDEDBORDER)) * 2

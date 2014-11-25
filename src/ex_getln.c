@@ -94,9 +94,6 @@ static void	draw_cmdline __ARGS((int start, int len));
 static void	save_cmdline __ARGS((struct cmdline_info *ccp));
 static void	restore_cmdline __ARGS((struct cmdline_info *ccp));
 static int	cmdline_paste __ARGS((int regname, int literally, int remcr));
-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
-static void	redrawcmd_preedit __ARGS((void));
-#endif
 #ifdef FEAT_WILDMENU
 static void	cmdline_del __ARGS((int from));
 #endif
@@ -2501,106 +2498,6 @@ cmdline_at_end()
 }
 #endif
 
-#if (defined(FEAT_XIM) && (defined(FEAT_GUI_GTK))) || defined(PROTO)
-/*
- * Return the virtual column number at the current cursor position.
- * This is used by the IM code to obtain the start of the preedit string.
- */
-    colnr_T
-cmdline_getvcol_cursor()
-{
-    if (ccline.cmdbuff == NULL || ccline.cmdpos > ccline.cmdlen)
-	return MAXCOL;
-
-# ifdef FEAT_MBYTE
-    if (has_mbyte)
-    {
-	colnr_T	col;
-	int	i = 0;
-
-	for (col = 0; i < ccline.cmdpos; ++col)
-	    i += (*mb_ptr2len)(ccline.cmdbuff + i);
-
-	return col;
-    }
-    else
-# endif
-	return ccline.cmdpos;
-}
-#endif
-
-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
-/*
- * If part of the command line is an IM preedit string, redraw it with
- * IM feedback attributes.  The cursor position is restored after drawing.
- */
-    static void
-redrawcmd_preedit()
-{
-    if ((State & CMDLINE)
-	    && xic != NULL
-	    /* && im_get_status()  doesn't work when using SCIM */
-	    && !p_imdisable
-	    && im_is_preediting())
-    {
-	int	cmdpos = 0;
-	int	cmdspos;
-	int	old_row;
-	int	old_col;
-	colnr_T	col;
-
-	old_row = msg_row;
-	old_col = msg_col;
-	cmdspos = ((ccline.cmdfirstc != NUL) ? 1 : 0) + ccline.cmdindent;
-
-# ifdef FEAT_MBYTE
-	if (has_mbyte)
-	{
-	    for (col = 0; col < preedit_start_col
-			  && cmdpos < ccline.cmdlen; ++col)
-	    {
-		cmdspos += (*mb_ptr2cells)(ccline.cmdbuff + cmdpos);
-		cmdpos  += (*mb_ptr2len)(ccline.cmdbuff + cmdpos);
-	    }
-	}
-	else
-# endif
-	{
-	    cmdspos += preedit_start_col;
-	    cmdpos  += preedit_start_col;
-	}
-
-	msg_row = cmdline_row + (cmdspos / (int)Columns);
-	msg_col = cmdspos % (int)Columns;
-	if (msg_row >= Rows)
-	    msg_row = Rows - 1;
-
-	for (col = 0; cmdpos < ccline.cmdlen; ++col)
-	{
-	    int char_len;
-	    int char_attr;
-
-	    char_attr = im_get_feedback_attr(col);
-	    if (char_attr < 0)
-		break; /* end of preedit string */
-
-# ifdef FEAT_MBYTE
-	    if (has_mbyte)
-		char_len = (*mb_ptr2len)(ccline.cmdbuff + cmdpos);
-	    else
-# endif
-		char_len = 1;
-
-	    msg_outtrans_len_attr(ccline.cmdbuff + cmdpos, char_len, char_attr);
-	    cmdpos += char_len;
-	}
-
-	msg_row = old_row;
-	msg_col = old_col;
-    }
-}
-#endif /* FEAT_XIM && FEAT_GUI_GTK */
-
 /*
  * Allocate a new command line buffer.
  * Assigns the new buffer to ccline.cmdbuff and ccline.cmdbufflen.
@@ -3335,9 +3232,6 @@ cursorcmd()
     }
 
     windgoto(msg_row, msg_col);
-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
-    redrawcmd_preedit();
-#endif
 #ifdef MCH_CURSOR_SHAPE
     mch_update_cursor();
 #endif

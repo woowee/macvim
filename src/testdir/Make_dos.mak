@@ -104,9 +104,9 @@ fixff:
 		dotest.in test60.ok test71.ok test74.ok test100.ok
 
 report:
-	@ECHO ""
-	@ECHO Test results:
-	@IF EXIST test.log ( TYPE test.log & ECHO TEST FAILURE & EXIT /b 1 ) \
+	@echo ""
+	@echo Test results:
+	@IF EXIST test.log ( type test.log & echo TEST FAILURE & exit /b 1 ) \
 		ELSE ( ECHO ALL DONE )
 
 clean:
