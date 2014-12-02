@@ -151,7 +151,7 @@ typedef int perl_key;
 #define symbol_from_dll dlsym
 #define close_dll dlclose
 # if defined(MACOS_X_UNIX)
-#  define DYNAMIC_PERL_DLL "/System/Library/Perl/lib/5.10/libperl.dylib"
+#  define DYNAMIC_PERL_DLL "/System/Library/Perl/lib/5.16/libperl.dylib"
 # else
 #  define DYNAMIC_PERL_DLL "libperl.so"
 # endif
