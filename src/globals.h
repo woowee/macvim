@@ -870,11 +870,12 @@ EXTERN int* (*iconv_errno) (void);
 #endif /* FEAT_MBYTE */
 
 #ifdef FEAT_XIM
-# if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM)
-#  ifndef FEAT_GUI_MACVIM
+# ifndef FEAT_GUI_MACVIM
+#  ifdef FEAT_GUI_GTK
 EXTERN GtkIMContext	*xic INIT(= NULL);
-# else
+#  else
 EXTERN XIC		xic INIT(= NULL);
+#  endif
 # endif
 # ifdef FEAT_GUI
 EXTERN guicolor_T	xim_fg_color INIT(= INVALCOLOR);

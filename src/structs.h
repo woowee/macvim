@@ -1809,6 +1809,12 @@ struct file_buffer
 				 * the file. NULL when not using encryption. */
 #endif
 
+#ifdef FEAT_ODB_EDITOR
+    uint32_t    b_odb_server_id;    /* FourCC of the ODB server (0 if none) */
+    void        *b_odb_token;       /* NSAppleEventDescriptor (optional) */
+    char_u      *b_odb_fname;       /* Custom file name (optional) */
+#endif
+
 }; /* file_buffer */
 
 

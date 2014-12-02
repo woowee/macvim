@@ -1276,7 +1276,9 @@ utf_char2cells(c)
 	{0xfe68, 0xfe6b},
 	{0xff01, 0xff60},
 	{0xffe0, 0xffe6},
-	{0x10000, 0x1fffd},
+	{0x1f200, 0x1f200},
+	{0x1f210, 0x1f231},
+	{0x1f240, 0x1f248},
 	{0x20000, 0x2fffd},
 	{0x30000, 0x3fffd}
     };
@@ -4448,6 +4450,9 @@ iconv_end()
 #  define g_return_if_fail(x) if (!(x)) return;
 # endif
 
+# if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM) || defined(PROTO)
+static int xim_has_preediting INIT(= FALSE);  /* IM current status */
+
 static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
 static int preedit_is_active   = FALSE;
 
@@ -4455,12 +4460,6 @@ static unsigned long im_commit_handler_id  = 0;
 # ifndef FEAT_GUI_MACVIM
 static unsigned int  im_activatekey_keyval = GDK_VoidSymbol;
 static unsigned int  im_activatekey_state  = 0;
-# endif
-
-static GtkWidget *preedit_window = NULL;
-static GtkWidget *preedit_label = NULL;
-
-static void im_preedit_window_set_position(void);
 
 static GtkWidget *preedit_window = NULL;
 static GtkWidget *preedit_label = NULL;
@@ -4499,8 +4498,6 @@ im_set_active(int active)
 {
     if (gui.in_use)
 	gui_im_set_active(active);
-    else
-	uimfep_set_active(active);
 }
 # endif
 
@@ -4536,7 +4533,6 @@ im_set_position(int row, int col)
 	im_preedit_window_set_position();
     }
 }
-# endif
 
 #  if 0 || defined(PROTO) /* apparently only used in gui_x11.c */
     void
@@ -4561,57 +4557,36 @@ im_add_to_input(char_u *str, int len)
     if (input_conv.vc_type != CONV_NONE)
 	vim_free(str);
 
-# ifndef FEAT_GUI_MACVIM
     if (p_mh) /* blank out the pointer if necessary */
 	gui_mch_mousehide(TRUE);
+}
+
+     static void
+im_preedit_window_set_position(void)
+{
+    int x, y, w, h, sw, sh;
+
+    if (preedit_window == NULL)
+	return;
+
+    sw = gdk_screen_get_width(gtk_widget_get_screen(preedit_window));
+    sh = gdk_screen_get_height(gtk_widget_get_screen(preedit_window));
+    gdk_window_get_origin(gui.drawarea->window, &x, &y);
+    gtk_window_get_size(GTK_WINDOW(preedit_window), &w, &h);
+    x = x + FILL_X(gui.col);
+    y = y + FILL_Y(gui.row);
+    if (x + w > sw)
+	x = sw - w;
+    if (y + h > sh)
+	y = sh - h;
+    gtk_window_move(GTK_WINDOW(preedit_window), x, y);
+}
 # endif
-}
-
-     static void
-im_preedit_window_set_position(void)
-{
-    int x, y, w, h, sw, sh;
-
-    if (preedit_window == NULL)
-	return;
-
-    sw = gdk_screen_get_width(gtk_widget_get_screen(preedit_window));
-    sh = gdk_screen_get_height(gtk_widget_get_screen(preedit_window));
-    gdk_window_get_origin(gui.drawarea->window, &x, &y);
-    gtk_window_get_size(GTK_WINDOW(preedit_window), &w, &h);
-    x = x + FILL_X(gui.col);
-    y = y + FILL_Y(gui.row);
-    if (x + w > sw)
-	x = sw - w;
-    if (y + h > sh)
-	y = sh - h;
-    gtk_window_move(GTK_WINDOW(preedit_window), x, y);
-}
-
-     static void
-im_preedit_window_set_position(void)
-{
-    int x, y, w, h, sw, sh;
-
-    if (preedit_window == NULL)
-	return;
-
-    sw = gdk_screen_get_width(gtk_widget_get_screen(preedit_window));
-    sh = gdk_screen_get_height(gtk_widget_get_screen(preedit_window));
-    gdk_window_get_origin(gui.drawarea->window, &x, &y);
-    gtk_window_get_size(GTK_WINDOW(preedit_window), &w, &h);
-    x = x + FILL_X(gui.col);
-    y = y + FILL_Y(gui.row);
-    if (x + w > sw)
-	x = sw - w;
-    if (y + h > sh)
-	y = sh - h;
-    gtk_window_move(GTK_WINDOW(preedit_window), x, y);
-}
 
     static void
 im_preedit_window_open()
 {
+# ifndef FEAT_GUI_MACVIM
     char *preedit_string;
     char buf[8];
     PangoAttrList *attr_list;
@@ -4655,13 +4630,16 @@ im_preedit_window_open()
 
     g_free(preedit_string);
     pango_attr_list_unref(attr_list);
+# endif
 }
 
     static void
 im_preedit_window_close()
 {
+# ifndef FEAT_GUI_MACVIM
     if (preedit_window != NULL)
 	gtk_widget_hide(preedit_window);
+# endif
 }
 
     static void
@@ -4669,8 +4647,10 @@ im_show_preedit()
 {
     im_preedit_window_open();
 
+# ifndef FEAT_GUI_MACVIM
     if (p_mh) /* blank out the pointer if necessary */
 	gui_mch_mousehide(TRUE);
+# endif
 }
 
     static void
@@ -4806,9 +4786,6 @@ im_preedit_end_macvim()
 im_preedit_abandon_macvim()
 {
     /* Abandon preedit text, don't send any backspace sequences. */
-    im_preedit_cursor = 0;
-    im_preedit_trailing = 0;
-
     im_preedit_end_macvim();
 }
 #endif
@@ -4862,6 +4839,7 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
     char    *preedit_string = NULL;
 
     gtk_im_context_get_preedit_string(context, &preedit_string, NULL, NULL);
+#endif
 
 #ifdef XIM_DEBUG
     xim_log("im_preedit_changed_cb(): %s\n", preedit_string);
@@ -4879,6 +4857,13 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 	xim_has_preediting = TRUE;
 	im_show_preedit();
     }
+
+# ifndef FEAT_GUI_MACVIM
+    g_free(preedit_string);
+
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+# endif
 }
 
     void
@@ -5240,7 +5225,7 @@ im_get_status(void)
     if (gui.in_use)
 	return gui_im_get_status();
     else
-	return uimfep_get_status();
+    return im_is_active;
 }
 # endif
 

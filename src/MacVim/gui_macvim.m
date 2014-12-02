@@ -73,7 +73,7 @@ macvim_early_init()
 	if ([lang isEqualToString:@"Japanese"])
             vim_setenv((char_u*)"LANG", (char_u*)"ja_JP.UTF-8");
 
-	if (mch_isdir("/opt/local/share/terminfo") == FALSE)
+	if (mch_isdir((char_u*)"/opt/local/share/terminfo") == FALSE)
             vim_setenv((char_u*)"TERMINFO", (char_u*)"/usr/share/terminfo");
     }
 
@@ -1280,11 +1280,7 @@ im_set_control(int enable)
 
 
     void
-#if defined(FEAT_UIMFEP)
 gui_im_set_active(int active)
-#else // FEAT_UIMFEP
-im_set_active(int active)
-#endif // FEAT_UIMFEP
 {
     // Don't enable IM if imdisableactivate is true.
     if (p_imdisableactivate && active)
@@ -1299,11 +1295,7 @@ im_set_active(int active)
 
 
     int
-#if defined(FEAT_UIMFEP)
 gui_im_get_status(void)
-#else // FEAT_UIMFEP
-im_get_status(void)
-#endif // FEAT_UIMFEP
 {
     return [[MMBackend sharedInstance] imState];
 }
