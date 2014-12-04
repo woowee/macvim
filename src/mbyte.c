@@ -4455,6 +4455,9 @@ static int xim_has_preediting INIT(= FALSE);  /* IM current status */
 
 static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
 static int preedit_is_active   = FALSE;
+static int im_preedit_start    = 0;	/* start offset in characters        */
+static int im_preedit_cursor   = 0;	/* cursor offset in characters       */
+static int im_preedit_trailing = 0;	/* number of characters after cursor */
 
 static unsigned long im_commit_handler_id  = 0;
 # ifndef FEAT_GUI_MACVIM
@@ -4533,6 +4536,7 @@ im_set_position(int row, int col)
 	im_preedit_window_set_position();
     }
 }
+# endif
 
 #  if 0 || defined(PROTO) /* apparently only used in gui_x11.c */
     void
@@ -4557,10 +4561,51 @@ im_add_to_input(char_u *str, int len)
     if (input_conv.vc_type != CONV_NONE)
 	vim_free(str);
 
+# ifndef FEAT_GUI_MACVIM
     if (p_mh) /* blank out the pointer if necessary */
 	gui_mch_mousehide(TRUE);
+# endif
 }
 
+    static void
+im_delete_preedit(void)
+{
+    char_u bskey[]  = {CSI, 'k', 'b'};
+    char_u delkey[] = {CSI, 'k', 'D'};
+
+    if (State & NORMAL)
+    {
+	im_preedit_cursor = 0;
+	return;
+    }
+    for (; im_preedit_cursor > 0; --im_preedit_cursor)
+	add_to_input_buf(bskey, (int)sizeof(bskey));
+
+    for (; im_preedit_trailing > 0; --im_preedit_trailing)
+	add_to_input_buf(delkey, (int)sizeof(delkey));
+}
+
+/*
+ * Move the cursor left by "num_move_back" characters.
+ * Note that ins_left() checks im_is_preediting() to avoid breaking undo for
+ * these K_LEFT keys.
+ */
+    static void
+im_correct_cursor(int num_move_back)
+{
+    char_u backkey[] = {CSI, 'k', 'l'};
+
+    if (State & NORMAL)
+	return;
+#  ifdef FEAT_RIGHTLEFT
+    if ((State & CMDLINE) == 0 && curwin != NULL && curwin->w_p_rl)
+	backkey[2] = 'r';
+#  endif
+    for (; num_move_back > 0; --num_move_back)
+	add_to_input_buf(backkey, (int)sizeof(backkey));
+}
+
+# ifndef FEAT_GUI_MACVIM
      static void
 im_preedit_window_set_position(void)
 {
@@ -4581,12 +4626,10 @@ im_preedit_window_set_position(void)
 	y = sh - h;
     gtk_window_move(GTK_WINDOW(preedit_window), x, y);
 }
-# endif
 
     static void
 im_preedit_window_open()
 {
-# ifndef FEAT_GUI_MACVIM
     char *preedit_string;
     char buf[8];
     PangoAttrList *attr_list;
@@ -4630,16 +4673,13 @@ im_preedit_window_open()
 
     g_free(preedit_string);
     pango_attr_list_unref(attr_list);
-# endif
 }
 
     static void
 im_preedit_window_close()
 {
-# ifndef FEAT_GUI_MACVIM
     if (preedit_window != NULL)
 	gtk_widget_hide(preedit_window);
-# endif
 }
 
     static void
@@ -4647,19 +4687,10 @@ im_show_preedit()
 {
     im_preedit_window_open();
 
-# ifndef FEAT_GUI_MACVIM
     if (p_mh) /* blank out the pointer if necessary */
 	gui_mch_mousehide(TRUE);
-# endif
 }
 
-    static void
-im_delete_preedit(void)
-{
-    im_preedit_window_close();
-}
-
-# ifndef FEAT_GUI_MACVIM
 static int xim_expected_char = NUL;
 static int xim_ignored_char = FALSE;
 # endif
@@ -4786,6 +4817,9 @@ im_preedit_end_macvim()
 im_preedit_abandon_macvim()
 {
     /* Abandon preedit text, don't send any backspace sequences. */
+    im_preedit_cursor = 0;
+    im_preedit_trailing = 0;
+
     im_preedit_end_macvim();
 }
 #endif
@@ -4837,9 +4871,18 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 {
 # ifndef FEAT_GUI_MACVIM
     char    *preedit_string = NULL;
+    int	    cursor_index    = 0;
+# endif
+    int	    num_move_back   = 0;
+    char_u  *str;
+    char_u  *p;
+    int	    i;
 
-    gtk_im_context_get_preedit_string(context, &preedit_string, NULL, NULL);
-#endif
+# ifndef FEAT_GUI_MACVIM
+    gtk_im_context_get_preedit_string(context,
+				      &preedit_string, NULL,
+				      &cursor_index);
+# endif
 
 #ifdef XIM_DEBUG
     xim_log("im_preedit_changed_cb(): %s\n", preedit_string);
@@ -4847,15 +4890,38 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 
     g_return_if_fail(preedit_string != NULL); /* just in case */
 
-    if (preedit_string[0] == NUL)
+    im_delete_preedit();
+
+    str = (char_u *)preedit_string;
+    for (p = str, i = 0; *p != NUL; p += utf_byte2len(*p), ++i)
     {
-	xim_has_preediting = FALSE;
-	im_delete_preedit();
+	int is_composing;
+
+	is_composing = ((*p & 0x80) != 0 && utf_iscomposing(utf_ptr2char(p)));
+	/*
+	 * These offsets are used as counters when generating <BS> and <Del>
+	 * to delete the preedit string.  So don't count composing characters
+	 * unless 'delcombine' is enabled.
+	 */
+	if (!is_composing || p_deco)
+	{
+	    if (i < cursor_index)
+		++im_preedit_cursor;
+	    else
+		++im_preedit_trailing;
+	}
+	if (!is_composing && i >= cursor_index)
+	{
+	    /* This is essentially the same as im_preedit_trailing, except
+	     * composing characters are not counted even if p_deco is set. */
+	    ++num_move_back;
+	}
     }
-    else
+
+    if (p > str)
     {
-	xim_has_preediting = TRUE;
-	im_show_preedit();
+	im_add_to_input(str, (int)(p - str));
+	im_correct_cursor(num_move_back);
     }
 
 # ifndef FEAT_GUI_MACVIM
@@ -4865,6 +4931,21 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 	gtk_main_quit();
 # endif
 }
+
+# ifdef FEAT_GUI_MACVIM
+/*
+ * Retrieve the highlighting attributes at column col in the preedit string.
+ * Return -1 if not in preediting mode or if col is out of range.
+ */
+    int
+im_get_feedback_attr(int col)
+{
+    if (col >= im_preedit_start && col < im_preedit_cursor)
+	return HL_THICKUNDERLINE;
+    else
+	return HL_UNDERLINE;
+}
+# endif
 
     void
 xim_init(void)
@@ -5192,10 +5273,10 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
 }
 # endif
 
-# ifndef FEAT_GUI_MACVIM
     int
 im_get_status(void)
 {
+# ifndef FEAT_GUI_MACVIM
 #  ifdef FEAT_EVAL
     if (p_imsf[0] != NUL)
     {
@@ -5217,17 +5298,13 @@ im_get_status(void)
     }
 #  endif
     return im_is_active;
-}
 # else /* FEAT_GUI_MACVIM */
-    int
-im_get_status(void)
-{
     if (gui.in_use)
 	return gui_im_get_status();
     else
-    return im_is_active;
-}
+	return im_is_active;
 # endif
+}
 
     int
 preedit_get_status(void)
