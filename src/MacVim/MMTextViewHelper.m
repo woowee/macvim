@@ -187,6 +187,11 @@ KeyboardInputSourcesEqual(TISInputSourceRef a, TISInputSourceRef b)
         // with Ctrl-6 or Ctrl-^ when IM is active.
         [self doKeyDown:@"\x1e"];
         string = nil;
+#if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_10)
+    } else if ((flags & NSShiftKeyMask) && [string isEqualToString:@" "]) {
+        // HACK! for Yosemite - Fix for Shift+Space inputing
+        // do nothing
+#endif
     } else {
         // HACK!  interpretKeyEvents: may call insertText: or
         // doCommandBySelector:, or it may swallow the key (most likely the
