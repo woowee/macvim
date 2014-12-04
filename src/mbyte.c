@@ -4453,6 +4453,20 @@ iconv_end()
 # if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM) || defined(PROTO)
 static int xim_has_preediting INIT(= FALSE);  /* IM current status */
 
+#  ifdef FEAT_GUI_MACVIM
+/*
+ * Set preedit_start_col to the current cursor position.
+ */
+    static void
+init_preedit_start_col(void)
+{
+    if (State & CMDLINE)
+	preedit_start_col = cmdline_getvcol_cursor();
+    else if (curwin != NULL)
+	getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
+}
+#  endif
+
 static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
 static int preedit_is_active   = FALSE;
 static int im_preedit_start    = 0;	/* start offset in characters        */
@@ -4756,6 +4770,14 @@ im_commit_cb(GtkIMContext *context UNUSED,
     if (add_to_input)
 	im_add_to_input((char_u *)str, slen);
 
+#  ifdef FEAT_GUI_MACVIM
+    /* Inserting chars while "im_is_active" is set does not cause a change of
+     * buffer.  When the chars are committed the buffer must be marked as
+     * changed. */
+    if (!commit_with_preedit)
+	preedit_start_col = MAXCOL;
+#  endif
+
     if (gtk_main_level() > 0)
 	gtk_main_quit();
 }
@@ -4799,6 +4821,9 @@ im_preedit_end_macvim()
     im_delete_preedit();
 
     /* Indicate that preediting has finished */
+# ifdef FEAT_GUI_MACVIM
+    preedit_start_col = MAXCOL;
+# endif
     xim_has_preediting = FALSE;
 
 #if 0
@@ -4882,6 +4907,8 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
     gtk_im_context_get_preedit_string(context,
 				      &preedit_string, NULL,
 				      &cursor_index);
+# else
+    im_preedit_start = start_index;
 # endif
 
 #ifdef XIM_DEBUG
@@ -4890,8 +4917,38 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 
     g_return_if_fail(preedit_string != NULL); /* just in case */
 
+# ifdef FEAT_GUI_MACVIM
+    /* If preedit_start_col is MAXCOL set it to the current cursor position. */
+    if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')
+    {
+	xim_has_preediting = TRUE;
+
+	/* Urgh, this breaks if the input buffer isn't empty now */
+	init_preedit_start_col();
+    }
+    else if (cursor_index == 0 && preedit_string[0] == '\0')
+    {
+	xim_has_preediting = FALSE;
+
+	/* If at the start position (after typing backspace)
+	 * preedit_start_col must be reset. */
+	preedit_start_col = MAXCOL;
+    }
+# endif
+
     im_delete_preedit();
 
+# ifdef FEAT_GUI_MACVIM
+    /*
+     * Compute the end of the preediting area: "preedit_end_col".
+     * According to the documentation of gtk_im_context_get_preedit_string(),
+     * the cursor_pos output argument returns the offset in bytes.  This is
+     * unfortunately not true -- real life shows the offset is in characters,
+     * and the GTK+ source code agrees with me.  Will file a bug later.
+     */
+    if (preedit_start_col != MAXCOL)
+	preedit_end_col = preedit_start_col;
+# endif
     str = (char_u *)preedit_string;
     for (p = str, i = 0; *p != NUL; p += utf_byte2len(*p), ++i)
     {
@@ -4916,6 +4973,10 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 	     * composing characters are not counted even if p_deco is set. */
 	    ++num_move_back;
 	}
+# ifdef FEAT_GUI_MACVIM
+	if (preedit_start_col != MAXCOL)
+	    preedit_end_col += utf_ptr2cells(p);
+# endif
     }
 
     if (p > str)
@@ -4991,6 +5052,9 @@ im_shutdown(void)
 # endif
     im_is_active = FALSE;
     im_commit_handler_id = 0;
+# ifdef FEAT_GUI_MACVIM
+    preedit_start_col = MAXCOL;
+# endif
     xim_has_preediting = FALSE;
 }
 
@@ -5149,6 +5213,9 @@ xim_reset(void)
     }
 # endif
 
+# ifdef FEAT_GUI_MACVIM
+    preedit_start_col = MAXCOL;
+# endif
     xim_has_preediting = FALSE;
 }
 

@@ -76,6 +76,7 @@ void im_set_active __ARGS((int active));
 void xim_set_focus __ARGS((int focus));
 void im_set_position __ARGS((int row, int col));
 void xim_set_preedit __ARGS((void));
+int im_get_feedback_attr __ARGS((int col));
 void xim_init __ARGS((void));
 void im_shutdown __ARGS((void));
 int im_xim_isvalid_imactivate __ARGS((void));

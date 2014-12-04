@@ -2506,6 +2506,34 @@ cmdline_at_end()
 }
 #endif
 
+#if defined(FEAT_GUI_MACVIM)
+/*
+ * Return the virtual column number at the current cursor position.
+ * This is used by the IM code to obtain the start of the preedit string.
+ */
+    colnr_T
+cmdline_getvcol_cursor()
+{
+    if (ccline.cmdbuff == NULL || ccline.cmdpos > ccline.cmdlen)
+	return MAXCOL;
+
+# ifdef FEAT_MBYTE
+    if (has_mbyte)
+    {
+	colnr_T	col;
+	int	i = 0;
+
+	for (col = 0; i < ccline.cmdpos; ++col)
+	    i += (*mb_ptr2len)(ccline.cmdbuff + i);
+
+	return col;
+    }
+    else
+# endif
+	return ccline.cmdpos;
+}
+#endif
+
 /*
  * Allocate a new command line buffer.
  * Assigns the new buffer to ccline.cmdbuff and ccline.cmdbufflen.

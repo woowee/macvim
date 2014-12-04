@@ -876,6 +876,16 @@ EXTERN GtkIMContext	*xic INIT(= NULL);
 #  else
 EXTERN XIC		xic INIT(= NULL);
 #  endif
+# else
+/*
+ * Start and end column of the preedit area in virtual columns from the start
+ * of the text line.  When there is no preedit area they are set to MAXCOL.
+ * "preedit_end_col" is needed for coloring the preedited string.  Drawing the
+ * color between "preedit_start_col" and curpos did not work, because some XIM
+ * set the cursor position to the first char of the string.
+ */
+EXTERN colnr_T		preedit_start_col INIT(= MAXCOL);
+EXTERN colnr_T		preedit_end_col INIT(= MAXCOL);
 # endif
 # ifdef FEAT_GUI
 EXTERN guicolor_T	xim_fg_color INIT(= INVALCOLOR);

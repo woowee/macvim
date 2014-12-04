@@ -2985,6 +2985,10 @@ win_line(wp, lnum, startrow, endrow, nochange)
 #endif
 #define WL_LINE		WL_SBR + 1	/* text in the line */
     int		draw_state = WL_START;	/* what to draw next */
+#if defined(FEAT_GUI_MACVIM)
+    int		feedback_col = 0;
+    int		feedback_old_attr = -1;
+#endif
 
 #ifdef FEAT_CONCEAL
     int		syntax_flags	= 0;
@@ -4858,6 +4862,39 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		&& !attr_pri)
 	    char_attr = extra_attr;
 
+#if defined(FEAT_GUI_MACVIM)
+	if (
+		lnum == wp->w_cursor.lnum
+		&& (State & INSERT)
+		&& im_is_preediting()
+		&& draw_state == WL_LINE)
+	{
+	    colnr_T tcol;
+
+	    if (preedit_end_col == MAXCOL)
+		getvcol(curwin, &(wp->w_cursor), &tcol, NULL, NULL);
+	    else
+		tcol = preedit_end_col;
+	    if ((long)preedit_start_col <= vcol && vcol < (long)tcol)
+	    {
+		if (feedback_old_attr < 0)
+		{
+		    feedback_col = 0;
+		    feedback_old_attr = char_attr;
+		}
+		char_attr = im_get_feedback_attr(feedback_col);
+		if (char_attr < 0)
+		    char_attr = feedback_old_attr;
+		feedback_col++;
+	    }
+	    else if (feedback_old_attr >= 0)
+	    {
+		char_attr = feedback_old_attr;
+		feedback_old_attr = -1;
+		feedback_col = 0;
+	    }
+	}
+#endif
 	/*
 	 * Handle the case where we are in column 0 but not on the first
 	 * character of the line and the user wants us to show us a
