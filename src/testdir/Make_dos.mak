@@ -64,13 +64,13 @@ DOSTMP_INFILES = $(DOSTMP_OUTFILES:.out=.in)
 
 .SUFFIXES: .in .out
 
-nongui:	clear_report $(SCRIPTS16) $(SCRIPTS) report
+nongui:	clean_report $(SCRIPTS16) $(SCRIPTS) report
 
-small:	clear_report report
+small:	clean_report report
 
-gui:	clear_report $(SCRIPTS16) $(SCRIPTS) $(SCRIPTS_GUI) report
+gui:	clean_report $(SCRIPTS16) $(SCRIPTS) $(SCRIPTS_GUI) report
 
-win32:	clear_report $(SCRIPTS16) $(SCRIPTS) $(SCRIPTS32) report
+win32:	clean_report $(SCRIPTS16) $(SCRIPTS) $(SCRIPTS32) report
 
 $(DOSTMP_INFILES): $(*B).in
 	IF NOT EXIST $(DOSTMP)\NUL MD $(DOSTMP)
