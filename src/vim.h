@@ -819,7 +819,8 @@ extern char *(*dyn_libintl_textdomain)(const char *domainname);
 #define EXPAND_HISTORY		41
 #define EXPAND_USER		42
 #define EXPAND_SYNTIME		43
-#define EXPAND_MACACTION	44
+#define EXPAND_USER_ADDR_TYPE	44
+#define EXPAND_MACACTION	45
 
 /* Values for exmode_active (0 is no exmode) */
 #define EXMODE_NORMAL		1
@@ -1044,6 +1045,7 @@ extern char *(*dyn_libintl_textdomain)(const char *domainname);
 #define RE_MAGIC	1	/* 'magic' option */
 #define RE_STRING	2	/* match in string instead of buffer text */
 #define RE_STRICT	4	/* don't allow [abc] without ] */
+#define RE_AUTO		8	/* automatic engine selection */
 
 #ifdef FEAT_SYN_HL
 /* values for reg_do_extmatch */
@@ -2023,7 +2025,7 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 
 #ifndef FEAT_VIRTUALEDIT
 # define getvvcol(w, p, s, c, e) getvcol(w, p, s, c, e)
-# define virtual_active() 0
+# define virtual_active() FALSE
 # define virtual_op FALSE
 #endif
 
@@ -2067,6 +2069,20 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 #ifdef _MSC_VER
 /* Avoid useless warning "conversion from X to Y of greater size". */
  #pragma warning(disable : 4312)
+/* Avoid warning for old style function declarators */
+ #pragma warning(disable : 4131)
+/* Avoid warning for conversion to type with smaller range */
+ #pragma warning(disable : 4244)
+/* Avoid warning for conversion to larger size */
+ #pragma warning(disable : 4306)
+/* Avoid warning for unreferenced formal parameter */
+ #pragma warning(disable : 4100)
+/* Avoid warning for differs in indirection to slightly different base type */
+ #pragma warning(disable : 4057)
+/* Avoid warning for constant conditional expression */
+ #pragma warning(disable : 4127)
+/* Avoid warning for assignment within conditional */
+ #pragma warning(disable : 4706)
 #endif
 
 /* Note: a NULL argument for vim_realloc() is not portable, don't use it. */
@@ -2302,7 +2318,7 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 #define AUTOLOAD_CHAR '#'
 
 #ifdef FEAT_EVAL
-# define SET_NO_HLSEARCH(flag) no_hlsearch = (flag); set_vim_var_nr(VV_HLSEARCH, !no_hlsearch)
+# define SET_NO_HLSEARCH(flag) no_hlsearch = (flag); set_vim_var_nr(VV_HLSEARCH, !no_hlsearch && p_hls)
 #else
 # define SET_NO_HLSEARCH(flag) no_hlsearch = (flag)
 #endif
