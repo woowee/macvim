@@ -1223,6 +1223,20 @@ struct dictvar_S
     dict_T	*dv_used_prev;	/* previous dict in used dicts list */
 };
 
+/* structure used for explicit stack while garbage collecting hash tables */
+typedef struct ht_stack_S
+{
+    hashtab_T		*ht;
+    struct ht_stack_S	*prev;
+} ht_stack_T;
+
+/* structure used for explicit stack while garbage collecting lists */
+typedef struct list_stack_S
+{
+    list_T		*list;
+    struct list_stack_S	*prev;
+} list_stack_T;
+
 /* values for b_syn_spell: what to do with toplevel text */
 #define SYNSPL_DEFAULT	0	/* spell check if @Spell not defined */
 #define SYNSPL_TOP	1	/* spell check toplevel text */
@@ -1805,6 +1819,7 @@ struct file_buffer
     cryptstate_T *b_cryptstate;	/* Encryption state while reading or writing
 				 * the file. NULL when not using encryption. */
 #endif
+    int		b_mapped_ctrl_c; /* modes where CTRL-C is mapped */
 
 }; /* file_buffer */
 

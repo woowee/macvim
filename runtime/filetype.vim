@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2014 Sep 05
+" Last Change:	2015 Jan 14
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -782,6 +782,9 @@ au BufNewFile,BufRead *.git/config,.gitconfig,.gitmodules setf gitconfig
 au BufNewFile,BufRead *.git/modules/*/COMMIT_EDITMSG setf gitcommit
 au BufNewFile,BufRead *.git/modules/*/config	setf gitconfig
 au BufNewFile,BufRead */.config/git/config	setf gitconfig
+if !empty($XDG_CONFIG_HOME)
+  au BufNewFile,BufRead $XDG_CONFIG_HOME/git/config	setf gitconfig
+endif
 au BufNewFile,BufRead git-rebase-todo		setf gitrebase
 au BufNewFile,BufRead .msg.[0-9]*
       \ if getline(1) =~ '^From.*# This line is ignored.$' |
@@ -1049,6 +1052,9 @@ au BufNewFile,BufRead *.ldif			setf ldif
 " Ld loader
 au BufNewFile,BufRead *.ld			setf ld
 
+" Less
+au BufNewFile,BufRead *.less			setf less
+
 " Lex
 au BufNewFile,BufRead *.lex,*.l,*.lxx,*.l++	setf lex
 
@@ -1151,7 +1157,7 @@ au BufNewFile,BufRead *.mv,*.mpl,*.mws		setf maple
 au BufNewFile,BufRead *.map			setf map
 
 " Markdown
-au BufNewFile,BufRead *.markdown,*.mdown,*.mkd,*.mkdn,*.mdwn,README.md  setf markdown
+au BufNewFile,BufRead *.markdown,*.mdown,*.mkd,*.mkdn,*.mdwn,*.md  setf markdown
 
 " Mason
 au BufNewFile,BufRead *.mason,*.mhtml,*.comp	setf mason
@@ -1243,8 +1249,8 @@ au BufNewFile,BufRead *.mod
 	\   setf modsim3 |
 	\ endif
 
-" Modula 2
-au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.md,*.mi setf modula2
+" Modula 2  (.md removed in favor of Markdown)
+au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.mi	setf modula2
 
 " Modula 3 (.m3, .i3, .mg, .ig)
 au BufNewFile,BufRead *.[mi][3g]		setf modula3
@@ -1853,7 +1859,7 @@ au BufNewFile,BufRead sgml.catalog*		call s:StarSetf('catalog')
 
 " Shell scripts (sh, ksh, bash, bash2, csh); Allow .profile_foo etc.
 " Gentoo ebuilds are actually bash scripts
-au BufNewFile,BufRead .bashrc*,bashrc,bash.bashrc,.bash_profile*,.bash_logout*,*.bash,*.ebuild call SetFileTypeSH("bash")
+au BufNewFile,BufRead .bashrc*,bashrc,bash.bashrc,.bash_profile*,.bash_logout*,.bash_aliases*,*.bash,*.ebuild call SetFileTypeSH("bash")
 au BufNewFile,BufRead .kshrc*,*.ksh call SetFileTypeSH("ksh")
 au BufNewFile,BufRead */etc/profile,.profile*,*.sh,*.env call SetFileTypeSH(getline(1))
 
@@ -2021,6 +2027,10 @@ func! s:FTRules()
   endif
   if path =~ '^/etc/ufw/'
     setf conf  " Better than hog
+    return
+  endif
+  if path =~ '^/\(etc\|usr/share\)/polkit-1/rules\.d'
+    setf javascript
     return
   endif
   try
@@ -2499,6 +2509,8 @@ au BufNewFile,BufRead */etc/yum.conf		setf dosini
 
 " Zimbu
 au BufNewFile,BufRead *.zu			setf zimbu
+" Zimbu Templates
+au BufNewFile,BufRead *.zut			setf zimbutempl
 
 " Zope
 "   dtml (zope dynamic template markup language), pt (zope page template),
