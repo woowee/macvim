@@ -1920,8 +1920,8 @@ void do_luaeval(char_u *str, typval_T *arg, typval_T *rettv)
 int set_ref_in_lua(int copyID)
 {
     switch (dynamic_lua_version) {
-    case DYNAMIC_LUA_VER51: return set_ref_in_lua51(copyID); return;
-    case DYNAMIC_LUA_VER52: return set_ref_in_lua52(copyID); return;
+    case DYNAMIC_LUA_VER51: return set_ref_in_lua51(copyID);
+    case DYNAMIC_LUA_VER52: return set_ref_in_lua52(copyID);
     }
 }
 
