@@ -1,4 +1,5 @@
 :VimProcBang	vimproc.txt	/*:VimProcBang*
+:VimProcInstall	vimproc.txt	/*:VimProcInstall*
 :VimProcRead	vimproc.txt	/*:VimProcRead*
 g:stderrencoding	vimproc.txt	/*g:stderrencoding*
 g:stdinencoding	vimproc.txt	/*g:stdinencoding*

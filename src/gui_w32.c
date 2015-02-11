@@ -654,6 +654,70 @@ is_visual_style_enabled(void)
     return FALSE;
 }
 
+    static int
+has_caption(void)
+{
+    return GetWindowLong(s_hwnd, GWL_STYLE) & WS_CAPTION;
+}
+
+    static int
+get_caption_height(void)
+{
+    /*
+     * A window's caption includes extra 1 dot margin.  When caption is
+     * removed the margin also be removed.  So we must return -1 when
+     * caption is diabled.
+     */
+    return has_caption() ? GetSystemMetrics(SM_CYCAPTION) : -1;
+}
+
+    static int
+get_caption_width_adjustment(void)
+{
+    return has_caption() ? 0 : -2;
+}
+
+    void
+gui_mch_show_caption(int show)
+{
+    LONG style, newstyle;
+
+    /* Remove caption when title is null. */
+    style = newstyle = GetWindowLong(s_hwnd, GWL_STYLE);
+    if (show && !(style & WS_CAPTION))
+	newstyle = style | WS_CAPTION;
+    else if (!show && (style & WS_CAPTION))
+	newstyle = style & ~WS_CAPTION;
+    if (newstyle != style)
+    {
+	SetWindowLong(s_hwnd, GWL_STYLE, newstyle);
+	SetWindowPos(s_hwnd, NULL, 0, 0, 0, 0,
+		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
+	gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
+    }
+}
+
+/*
+ * Return TRUE when Visual Style is enabled.
+ */
+    static int
+is_visual_style_enabled(void)
+{
+    HANDLE hUxtheme;
+    static BOOL (WINAPI *pIsThemeActive)(void) = NULL;
+    static BOOL loaded = FALSE;
+
+    if (!loaded) {
+	hUxtheme = GetModuleHandle("uxtheme.dll");
+	if (hUxtheme != NULL)
+	    pIsThemeActive = (void*)GetProcAddress(hUxtheme, "IsThemeActive");
+	loaded = TRUE;
+    }
+    if (pIsThemeActive)
+	return pIsThemeActive();
+    return FALSE;
+}
+
 #ifdef FEAT_MENU
 /*
  * Figure out how high the menu bar is at the moment.

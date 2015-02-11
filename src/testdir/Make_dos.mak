@@ -77,24 +77,19 @@ $(DOSTMP_INFILES): $(*B).in
 	IF EXIST $@ DEL $@
 	$(VIMPROG) -u dos.vim --noplugin "+set ff=dos|f $@|wq" $(*B).in
 
-$(DOSTMP_OUTFILES): $*.in
+$(TEST_OUTFILES): $(DOSTMP)\$(*B).in
 	-@IF EXIST test.out DEL test.out
 	MOVE $(*B).in $(*B).in.bak
-	COPY $*.in $(*B).in
+	COPY $(DOSTMP)\$(*B).in $(*B).in
 	COPY $(*B).ok test.ok
 	$(VIMPROG) -u dos.vim -U NONE --noplugin -s dotest.in $(*B).in
-	-@IF EXIST test.out MOVE /y test.out $@
-	-@IF EXIST $(*B).in.bak \
-		( DEL $(*B).in & MOVE $(*B).in.bak $(*B).in )
-	-@IF EXIST test.in DEL test.in
+	-@IF EXIST test.out MOVE /y test.out $(DOSTMP)\$(*B).out
+	-@IF EXIST $(*B).in.bak MOVE /y $(*B).in.bak $(*B).in
 	-@IF EXIST X* DEL X*
 	-@IF EXIST test.ok DEL test.ok
 	-@IF EXIST Xdir1 RD /s /q Xdir1
 	-@IF EXIST Xfind RD /s /q Xfind
 	-@IF EXIST viminfo DEL viminfo
-
-$(TEST_OUTFILES): $(DOSTMP)\$(*B).out
-	IF EXIST test.out DEL test.out
 	$(VIMPROG) -u dos.vim --noplugin "+set ff=unix|f test.out|wq" \
 		$(DOSTMP)\$(*B).out
 	@diff test.out $*.ok & IF ERRORLEVEL 1 \
@@ -115,20 +110,26 @@ report:
 		ELSE ( ECHO ALL DONE )
 
 clean:
-	-del *.out
-	-del *.failed
+	-if exists *.out del *.out
+	-if exists *.failed del *.failed
 	-if exist test.ok del test.ok
+	-if exist $(DOSTMP) rd /s /q $(DOSTMP)
+	-if exist test.in del test.in
+	-if exist test.ok del test.ok
+	-if exist test.log del test.log
 	-if exist small.vim del small.vim
 	-if exist tiny.vim del tiny.vim
 	-if exist mbyte.vim del mbyte.vim
 	-if exist mzscheme.vim del mzscheme.vim
 	-if exist lua.vim del lua.vim
-	-del X*
+	-if exist X* del X*
 	-if exist Xdir1 rd /s /q Xdir1
 	-if exist Xfind rd /s /q Xfind
 	-if exist viminfo del viminfo
-	-del test.log
 	-if exist benchmark.out del benchmark.out
+
+clean_report:
+	-if exist test.log del test.log
 
 .in.out:
 	-if exist $*.failed del $*.failed
