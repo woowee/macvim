@@ -3192,11 +3192,11 @@ static void fill_breakat_flags __ARGS((void));
 static int opt_strings_flags __ARGS((char_u *val, char **values, unsigned *flagp, int list));
 static int check_opt_strings __ARGS((char_u *val, char **values, int));
 static int check_opt_wim __ARGS((void));
-#ifdef FEAT_LINEBREAK
-static int briopt_check __ARGS((win_T *wp));
-#endif
 #ifdef FEAT_FULLSCREEN
 static int check_fuoptions __ARGS((char_u *, unsigned *, int *));
+#endif
+#ifdef FEAT_LINEBREAK
+static int briopt_check __ARGS((win_T *wp));
 #endif
 
 /*

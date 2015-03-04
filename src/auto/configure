@@ -843,7 +843,6 @@ with_gnome_includes
 with_gnome_libs
 with_gnome
 with_motif_lib
-enable_uimfep
 with_tlib
 enable_largefile
 enable_acl
@@ -1507,7 +1506,6 @@ Optional Features:
   --enable-carbon-check   If auto-select GUI, check for Carbon default=yes
   --enable-macvim-check   If auto-select GUI, check for MacVim default=yes
   --disable-gtktest       Do not try to compile and run a test GTK program
-  --disable-uimfep        Don't support UIMFEP.
   --disable-largefile     omit support for large files
   --disable-acl           Don't check for ACL support.
   --disable-gpm           Don't use gpm (Linux mouse daemon).
@@ -5845,15 +5843,6 @@ $as_echo "OK" >&6; }
       vi_cv_perllib=`$vi_cv_path_perl -MConfig -e 'print $Config{privlibexp}'`
       vi_cv_perlsitelib=`$vi_cv_path_perl -MConfig -e 'print $Config{sitelibexp}'`
 
-
-      vi_cv_perl_extutils=unknown_perl_extutils_path
-      for extutils_rel_path in ExtUtils vendor_perl/ExtUtils; do
-	xsubpp_path="$vi_cv_perllib/$extutils_rel_path/xsubpp"
-	if test -f "$xsubpp_path"; then
-	  vi_cv_perl_xsubpp="$xsubpp_path"
-	fi
-      done
-
       vi_cv_perl_extutils=unknown_perl_extutils_path
       for extutils_rel_path in ExtUtils vendor_perl/ExtUtils; do
 	xsubpp_path="$vi_cv_perllib/$extutils_rel_path/xsubpp"
@@ -9974,26 +9963,6 @@ $as_echo "no GUI selected; hangul input has been disabled" >&6; }
   fi
 fi
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking --disable-uimfep argument" >&5
-$as_echo_n "checking --disable-uimfep argument... " >&6; }
-# Check whether --enable-uimfep was given.
-if test "${enable_uimfep+set}" = set; then :
-  enableval=$enable_uimfep;
-else
-  enable_uimfep="yes"
-fi
-
-if test "$enable_uimfep" = "yes"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-  $as_echo "#define FEAT_UIMFEP 1" >>confdefs.h
-
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-fi
-
-
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether toupper is broken" >&5
 $as_echo_n "checking whether toupper is broken... " >&6; }
@@ -11933,7 +11902,7 @@ else
     We can't simply define LARGE_OFF_T to be 9223372036854775807,
     since some C++ compilers masquerading as C compilers
     incorrectly reject 9223372036854775807.  */
-#define LARGE_OFF_T ((((off_t) 1 << 31) << 31) - 1 + (((off_t) 1 << 31) << 31))
+#define LARGE_OFF_T (((off_t) 1 << 62) - 1 + ((off_t) 1 << 62))
   int off_t_is_large[(LARGE_OFF_T % 2147483629 == 721
 		       && LARGE_OFF_T % 2147483647 == 1)
 		      ? 1 : -1];
@@ -11979,7 +11948,7 @@ else
     We can't simply define LARGE_OFF_T to be 9223372036854775807,
     since some C++ compilers masquerading as C compilers
     incorrectly reject 9223372036854775807.  */
-#define LARGE_OFF_T ((((off_t) 1 << 31) << 31) - 1 + (((off_t) 1 << 31) << 31))
+#define LARGE_OFF_T (((off_t) 1 << 62) - 1 + ((off_t) 1 << 62))
   int off_t_is_large[(LARGE_OFF_T % 2147483629 == 721
 		       && LARGE_OFF_T % 2147483647 == 1)
 		      ? 1 : -1];
@@ -12003,7 +11972,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
     We can't simply define LARGE_OFF_T to be 9223372036854775807,
     since some C++ compilers masquerading as C compilers
     incorrectly reject 9223372036854775807.  */
-#define LARGE_OFF_T ((((off_t) 1 << 31) << 31) - 1 + (((off_t) 1 << 31) << 31))
+#define LARGE_OFF_T (((off_t) 1 << 62) - 1 + ((off_t) 1 << 62))
   int off_t_is_large[(LARGE_OFF_T % 2147483629 == 721
 		       && LARGE_OFF_T % 2147483647 == 1)
 		      ? 1 : -1];
@@ -12048,7 +12017,7 @@ else
     We can't simply define LARGE_OFF_T to be 9223372036854775807,
     since some C++ compilers masquerading as C compilers
     incorrectly reject 9223372036854775807.  */
-#define LARGE_OFF_T ((((off_t) 1 << 31) << 31) - 1 + (((off_t) 1 << 31) << 31))
+#define LARGE_OFF_T (((off_t) 1 << 62) - 1 + ((off_t) 1 << 62))
   int off_t_is_large[(LARGE_OFF_T % 2147483629 == 721
 		       && LARGE_OFF_T % 2147483647 == 1)
 		      ? 1 : -1];
@@ -12072,7 +12041,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
     We can't simply define LARGE_OFF_T to be 9223372036854775807,
     since some C++ compilers masquerading as C compilers
     incorrectly reject 9223372036854775807.  */
-#define LARGE_OFF_T ((((off_t) 1 << 31) << 31) - 1 + (((off_t) 1 << 31) << 31))
+#define LARGE_OFF_T (((off_t) 1 << 62) - 1 + ((off_t) 1 << 62))
   int off_t_is_large[(LARGE_OFF_T % 2147483629 == 721
 		       && LARGE_OFF_T % 2147483647 == 1)
 		      ? 1 : -1];
