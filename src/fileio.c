@@ -2346,6 +2346,10 @@ rewind_retry:
 		/* First try finding a NL, for Dos and Unix */
 		if (try_dos || try_unix)
 		{
+		    /* Reset the carriage return counter. */
+		    if (try_mac)
+			try_mac = 1;
+
 		    for (p = ptr; p < ptr + size; ++p)
 		    {
 			if (*p == NL)
@@ -2357,6 +2361,8 @@ rewind_retry:
 				fileformat = EOL_UNIX;
 			    break;
 			}
+			else if (*p == CAR && try_mac)
+			    try_mac++;
 		    }
 
 		    /* Don't give in to EOL_UNIX if EOL_MAC is more likely */
@@ -2380,6 +2386,10 @@ rewind_retry:
 				fileformat = EOL_MAC;
 			}
 		    }
+		    else if (fileformat == EOL_UNKNOWN && try_mac == 1)
+			/* Looking for CR but found no end-of-line markers at
+			 * all: use the default format. */
+			fileformat = default_fileformat();
 		}
 
 		/* No NL found: may use Mac format */
@@ -8764,21 +8774,22 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
 	is_buflocal = FALSE;
 	buflocal_nr = 0;
 
-	if (patlen >= 7 && STRNCMP(pat, "<buffer", 7) == 0
+	if (patlen >= 8 && STRNCMP(pat, "<buffer", 7) == 0
 						    && pat[patlen - 1] == '>')
 	{
-	    /* Error will be printed only for addition. printing and removing
-	     * will proceed silently. */
+	    /* "<buffer...>": Error will be printed only for addition.
+	     * printing and removing will proceed silently. */
 	    is_buflocal = TRUE;
 	    if (patlen == 8)
+		/* "<buffer>" */
 		buflocal_nr = curbuf->b_fnum;
 	    else if (patlen > 9 && pat[7] == '=')
 	    {
-		/* <buffer=abuf> */
-		if (patlen == 13 && STRNICMP(pat, "<buffer=abuf>", 13))
+		if (patlen == 13 && STRNICMP(pat, "<buffer=abuf>", 13) == 0)
+		    /* "<buffer=abuf>" */
 		    buflocal_nr = autocmd_bufnr;
-		/* <buffer=123> */
 		else if (skipdigits(pat + 8) == pat + patlen - 1)
+		    /* "<buffer=123>" */
 		    buflocal_nr = atoi((char *)pat + 8);
 	    }
 	}
@@ -9477,6 +9488,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
 #ifdef FEAT_PROFILE
     proftime_T	wait_time;
 #endif
+    int		did_save_redobuff = FALSE;
 
     /*
      * Quickly return if there are no autocommands for this event or
@@ -9677,7 +9689,11 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     if (!autocmd_busy)
     {
 	save_search_patterns();
-	saveRedobuff();
+	if (!ins_compl_active())
+	{
+	    saveRedobuff();
+	    did_save_redobuff = TRUE;
+	}
 	did_filetype = keep_filetype;
     }
 
@@ -9777,7 +9793,8 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
     if (!autocmd_busy)
     {
 	restore_search_patterns();
-	restoreRedobuff();
+	if (did_save_redobuff)
+	    restoreRedobuff();
 	did_filetype = FALSE;
 	while (au_pending_free_buf != NULL)
 	{
