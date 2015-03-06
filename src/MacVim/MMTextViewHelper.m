@@ -188,7 +188,9 @@ KeyboardInputSourcesEqual(TISInputSourceRef a, TISInputSourceRef b)
         [self doKeyDown:@"\x1e"];
         string = nil;
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_10)
-    } else if ((flags & NSShiftKeyMask) && [string isEqualToString:@" "]) {
+    } else if ([[NSUserDefaults standardUserDefaults]
+                boolForKey:MMIgnoreShiftSpaceKey]
+            && (flags & NSShiftKeyMask) && [string isEqualToString:@" "]) {
         // HACK! for Yosemite - Fix for Shift+Space inputing
         // do nothing
 #endif

@@ -54,6 +54,7 @@ extern NSString *MMUseInlineImKey;
 #endif // INCLUDE_OLD_IM_CODE
 extern NSString *MMSuppressTerminationAlertKey;
 extern NSString *MMNativeFullScreenKey;
+extern NSString *MMIgnoreShiftSpaceKey;
 
 
 // Enum for MMUntitledWindowKey

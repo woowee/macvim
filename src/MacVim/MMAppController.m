@@ -226,6 +226,7 @@ fsEventCallback(ConstFSEventStreamRef streamRef,
 #endif // INCLUDE_OLD_IM_CODE
         [NSNumber numberWithBool:NO],   MMSuppressTerminationAlertKey,
         [NSNumber numberWithBool:YES],  MMNativeFullScreenKey,
+        [NSNumber numberWithBool:YES],  MMIgnoreShiftSpaceKey,
         nil];
 
     [[NSUserDefaults standardUserDefaults] registerDefaults:dict];
