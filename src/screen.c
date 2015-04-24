@@ -2214,7 +2214,7 @@ draw_signcolumn(wp)
 {
     return (wp->w_buffer->b_signlist != NULL
 # ifdef FEAT_NETBEANS_INTG
-			    || netbeans_active()
+				|| wp->w_buffer->b_has_sign_column
 # endif
 		    );
 }
@@ -2740,6 +2740,28 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
     }
 
 #ifdef FEAT_SYN_HL
+    /* Show colorcolumn in the fold line, but let cursorcolumn override it. */
+    if (wp->w_p_cc_cols)
+    {
+	int i = 0;
+	int j = wp->w_p_cc_cols[i];
+	int old_txtcol = txtcol;
+
+	while (j > -1)
+	{
+	    txtcol += j;
+	    if (wp->w_p_wrap)
+		txtcol -= wp->w_skipcol;
+	    else
+		txtcol -= wp->w_leftcol;
+	    if (txtcol >= 0 && txtcol < W_WIDTH(wp))
+		ScreenAttrs[off + txtcol] = hl_combine_attr(
+				    ScreenAttrs[off + txtcol], hl_attr(HLF_MC));
+	    txtcol = old_txtcol;
+	    j = wp->w_p_cc_cols[++i];
+	}
+    }
+
     /* Show 'cursorcolumn' in the fold line. */
     if (wp->w_p_cuc)
     {
@@ -3984,17 +4006,22 @@ win_line(wp, lnum, startrow, endrow, nochange)
 
 	    /* Decide which of the highlight attributes to use. */
 	    attr_pri = TRUE;
-	    if (area_attr != 0)
-		char_attr = area_attr;
-	    else if (search_attr != 0)
-		char_attr = search_attr;
 #ifdef LINE_ATTR
+	    if (area_attr != 0)
+		char_attr = hl_combine_attr(line_attr, area_attr);
+	    else if (search_attr != 0)
+		char_attr = hl_combine_attr(line_attr, search_attr);
 		/* Use line_attr when not in the Visual or 'incsearch' area
 		 * (area_attr may be 0 when "noinvcur" is set). */
 	    else if (line_attr != 0 && ((fromcol == -10 && tocol == MAXCOL)
 				|| vcol < fromcol || vcol_prev < fromcol_prev
 				|| vcol >= tocol))
 		char_attr = line_attr;
+#else
+	    if (area_attr != 0)
+		char_attr = area_attr;
+	    else if (search_attr != 0)
+		char_attr = search_attr;
 #endif
 	    else
 	    {
@@ -4303,14 +4330,16 @@ win_line(wp, lnum, startrow, endrow, nochange)
 #endif
 	    ++ptr;
 
-	    /* 'list' : change char 160 to lcs_nbsp. */
-	    if (wp->w_p_list && (c == 160
+	    /* 'list': change char 160 to lcs_nbsp and space to lcs_space. */
+	    if (wp->w_p_list
+		    && (((c == 160
 #ifdef FEAT_MBYTE
-			|| (mb_utf8 && mb_c == 160)
+			  || (mb_utf8 && mb_c == 160)
 #endif
-			) && lcs_nbsp)
+			 ) && lcs_nbsp)
+			|| (c == ' ' && lcs_space && ptr <= line + trailcol)))
 	    {
-		c = lcs_nbsp;
+		c = (c == ' ') ? lcs_space : lcs_nbsp;
 		if (area_attr == 0 && search_attr == 0)
 		{
 		    n_attr = 1;
@@ -4480,11 +4509,15 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		 */
 		if (wp->w_p_lbr && vim_isbreak(c) && !vim_isbreak(*ptr))
 		{
+# ifdef FEAT_MBYTE
+		    int mb_off = has_mbyte ? (*mb_head_off)(line, ptr - 1) : 0;
+# endif
 		    char_u *p = ptr - (
 # ifdef FEAT_MBYTE
-				has_mbyte ? mb_l :
+				mb_off +
 # endif
 				1);
+
 		    /* TODO: is passing p for start of the line OK? */
 		    n_extra = win_lbr_chartabsize(wp, line, p, (colnr_T)vcol,
 								    NULL) - 1;
@@ -4492,7 +4525,11 @@ win_line(wp, lnum, startrow, endrow, nochange)
 			n_extra = (int)wp->w_buffer->b_p_ts
 				       - vcol % (int)wp->w_buffer->b_p_ts - 1;
 
+# ifdef FEAT_MBYTE
+		    c_extra = mb_off > 0 ? MB_FILLER_CHAR : ' ';
+# else
 		    c_extra = ' ';
+# endif
 		    if (vim_iswhite(c))
 		    {
 #ifdef FEAT_CONCEAL
@@ -10677,7 +10714,7 @@ number_width(wp)
 	/* cursor line shows absolute line number */
 	lnum = wp->w_buffer->b_ml.ml_line_count;
 
-    if (lnum == wp->w_nrwidth_line_count)
+    if (lnum == wp->w_nrwidth_line_count && wp->w_nuw_cached == wp->w_p_nuw)
 	return wp->w_nrwidth_width;
     wp->w_nrwidth_line_count = lnum;
 
@@ -10693,6 +10730,7 @@ number_width(wp)
 	n = wp->w_p_nuw - 1;
 
     wp->w_nrwidth_width = n;
+    wp->w_nuw_cached = wp->w_p_nuw;
     return n;
 }
 #endif

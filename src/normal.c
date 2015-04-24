@@ -5098,7 +5098,11 @@ dozet:
 
 		/* "zm": fold more */
     case 'm':	if (curwin->w_p_fdl > 0)
-		    --curwin->w_p_fdl;
+		{
+		    curwin->w_p_fdl -= cap->count1;
+		    if (curwin->w_p_fdl < 0)
+			curwin->w_p_fdl = 0;
+		}
 		old_fdl = -1;		/* force an update */
 		curwin->w_p_fen = TRUE;
 		break;
@@ -5110,7 +5114,13 @@ dozet:
 		break;
 
 		/* "zr": reduce folding */
-    case 'r':	++curwin->w_p_fdl;
+    case 'r':	curwin->w_p_fdl += cap->count1;
+		{
+		    int d = getDeepestNesting();
+
+		    if (curwin->w_p_fdl >= d)
+			curwin->w_p_fdl = d;
+		}
 		break;
 
 		/* "zR": open all folds */
@@ -9227,6 +9237,14 @@ nv_object(cap)
 		flag = current_block(cap->oap, cap->count1, include, '<', '>');
 		break;
 	case 't': /* "at" = a tag block (xml and html) */
+		/* Do not adjust oap->end in do_pending_operator()
+		 * otherwise there are different results for 'dit'
+		 * (note leading whitespace in last line):
+		 * 1) <b>      2) <b>
+		 *    foobar      foobar
+		 *    </b>            </b>
+		 */
+		cap->retval |= CA_NO_ADJ_OP_END;
 		flag = current_tagblock(cap->oap, cap->count1, include);
 		break;
 	case 'p': /* "ap" = a paragraph */

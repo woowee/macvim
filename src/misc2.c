@@ -1885,9 +1885,12 @@ vim_strchr(string, c)
     {
 	while (*p != NUL)
 	{
-	    if (utf_ptr2char(p) == c)
+	    int l = (*mb_ptr2len)(p);
+
+	    /* Avoid matching an illegal byte here. */
+	    if (utf_ptr2char(p) == c && l > 1)
 		return p;
-	    p += (*mb_ptr2len)(p);
+	    p += l;
 	}
 	return NULL;
     }
@@ -6286,7 +6289,7 @@ put_time(fd, the_time)
     char_u	buf[8];
 
     time_to_bytes(the_time, buf);
-    fwrite(buf, (size_t)8, (size_t)1, fd);
+    (void)fwrite(buf, (size_t)8, (size_t)1, fd);
 }
 
 /*

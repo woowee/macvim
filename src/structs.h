@@ -1203,10 +1203,11 @@ struct dictitem_S
 
 typedef struct dictitem_S dictitem_T;
 
-#define DI_FLAGS_RO	1 /* "di_flags" value: read-only variable */
-#define DI_FLAGS_RO_SBX 2 /* "di_flags" value: read-only in the sandbox */
-#define DI_FLAGS_FIX	4 /* "di_flags" value: fixed variable, not allocated */
-#define DI_FLAGS_LOCK	8 /* "di_flags" value: locked variable */
+#define DI_FLAGS_RO	1  /* "di_flags" value: read-only variable */
+#define DI_FLAGS_RO_SBX 2  /* "di_flags" value: read-only in the sandbox */
+#define DI_FLAGS_FIX	4  /* "di_flags" value: fixed: no :unlet or remove() */
+#define DI_FLAGS_LOCK	8  /* "di_flags" value: locked variable */
+#define DI_FLAGS_ALLOC	16 /* "di_flags" value: separately allocated */
 
 /*
  * Structure to hold info about a Dictionary.
@@ -1808,6 +1809,11 @@ struct file_buffer
 
 #ifdef FEAT_SIGNS
     signlist_T	*b_signlist;	/* list of signs to draw */
+# ifdef FEAT_NETBEANS_INTG
+    int		b_has_sign_column; /* Flag that is set when a first sign is
+				    * added and remains set until the end of
+				    * the netbeans session. */
+# endif
 #endif
 
 #ifdef FEAT_NETBEANS_INTG
@@ -2309,6 +2315,7 @@ struct window_S
 #ifdef FEAT_LINEBREAK
     linenr_T	w_nrwidth_line_count;	/* line count when ml_nrwidth_width
 					 * was computed. */
+    long	w_nuw_cached;		/* 'numberwidth' option cached */
     int		w_nrwidth_width;	/* nr of chars to print line count. */
 #endif
 

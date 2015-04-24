@@ -3158,6 +3158,7 @@ post2nfa(postfix, end, nfa_calc_size)
 		    if (stackp < stack)			\
 		    {					\
 			st_error(postfix, end, p);	\
+			vim_free(stack);		\
 			return NULL;			\
 		    }
 
@@ -3634,10 +3635,16 @@ post2nfa(postfix, end, nfa_calc_size)
 
     e = POP();
     if (stackp != stack)
+    {
+	vim_free(stack);
 	EMSG_RET_NULL(_("E875: (NFA regexp) (While converting from postfix to NFA), too many states left on stack"));
+    }
 
     if (istate >= nstate)
+    {
+	vim_free(stack);
 	EMSG_RET_NULL(_("E876: (NFA regexp) Not enough space to store the whole NFA "));
+    }
 
     matchstate = &state_ptr[istate++]; /* the match state */
     matchstate->c = NFA_MATCH;
@@ -6479,7 +6486,11 @@ nfa_regmatch(prog, start, submatch, m)
 
 		    /* Bail out quickly when there can't be a match, avoid the
 		     * overhead of win_linetabsize() on long lines. */
-		    if (op != 1 && col > t->state->val)
+		    if (op != 1 && col > t->state->val
+#ifdef FEAT_MBYTE
+			    * (has_mbyte ? MB_MAXBYTES : 1)
+#endif
+			    )
 			break;
 		    result = FALSE;
 		    if (op == 1 && col - 1 > t->state->val && col > 100)
