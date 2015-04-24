@@ -148,6 +148,11 @@ static int inAtomic = 0;
     static void
 nb_close_socket(void)
 {
+    buf_T	*buf;
+
+    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+	buf->b_has_sign_column = FALSE;
+
 #ifdef FEAT_GUI_X11
     if (inputHandler != (XtInputId)NULL)
     {
@@ -2720,8 +2725,15 @@ nb_do_cmd(
     static void
 nb_set_curbuf(buf_T *buf)
 {
-    if (curbuf != buf && buf_jump_open_win(buf) == NULL)
+    if (curbuf != buf) {
+	if (buf_jump_open_win(buf) != NULL)
+	    return;
+# ifdef FEAT_WINDOWS
+	if ((swb_flags & SWB_USETAB) && buf_jump_open_tab(buf) != NULL)
+	    return;
+# endif
 	set_curbuf(buf, DOBUF_GOTO);
+    }
 }
 
 /*

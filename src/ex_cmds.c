@@ -741,6 +741,16 @@ do_move(line1, line2, dest)
     linenr_T	extra;	    /* Num lines added before line1 */
     linenr_T	num_lines;  /* Num lines moved */
     linenr_T	last_line;  /* Last line in file after adding new text */
+#ifdef FEAT_FOLDING
+    int		isFolded;
+
+    /* Moving lines seems to corrupt the folds, delete folding info now
+     * and recreate it when finished.  Don't do this for manual folding, it
+     * would delete all folds. */
+    isFolded = hasAnyFolding(curwin) && !foldmethodIsManual(curwin);
+    if (isFolded)
+	deleteFoldRecurse(&curwin->w_folds);
+#endif
 
     if (dest >= line1 && dest < line2)
     {
@@ -838,6 +848,12 @@ do_move(line1, line2, dest)
     }
     else
 	changed_lines(dest + 1, 0, line1 + num_lines, 0L);
+
+#ifdef FEAT_FOLDING
+	/* recreate folds */
+	if (isFolded)
+	    foldUpdateAll(curwin);
+#endif
 
     return OK;
 }
@@ -1158,8 +1174,8 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
     }
     else
 #endif
-	if ((do_in && (itmp = vim_tempname('i')) == NULL)
-		|| (do_out && (otmp = vim_tempname('o')) == NULL))
+	if ((do_in && (itmp = vim_tempname('i', FALSE)) == NULL)
+		|| (do_out && (otmp = vim_tempname('o', FALSE)) == NULL))
 	{
 	    EMSG(_(e_notmp));
 	    goto filterend;
@@ -1963,7 +1979,7 @@ write_viminfo(file, forceit)
 	    if (fp_out == NULL)
 	    {
 		vim_free(tempname);
-		if ((tempname = vim_tempname('o')) != NULL)
+		if ((tempname = vim_tempname('o', TRUE)) != NULL)
 		    fp_out = mch_fopen((char *)tempname, WRITEBIN);
 	    }
 
@@ -3185,7 +3201,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags, oldwin)
 #endif
     int		retval = FAIL;
     long	n;
-    linenr_T	lnum;
+    pos_T	orig_pos;
     linenr_T	topline = 0;
     int		newcol = -1;
     int		solcol = -1;
@@ -3678,7 +3694,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags, oldwin)
 	 * Careful: open_buffer() and apply_autocmds() may change the current
 	 * buffer and window.
 	 */
-	lnum = curwin->w_cursor.lnum;
+	orig_pos = curwin->w_cursor;
 	topline = curwin->w_topline;
 	if (!oldbuf)			    /* need to read the file */
 	{
@@ -3719,11 +3735,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags, oldwin)
 	check_arg_idx(curwin);
 #endif
 
-	/*
-	 * If autocommands change the cursor position or topline, we should
-	 * keep it.
-	 */
-	if (curwin->w_cursor.lnum != lnum)
+	/* If autocommands change the cursor position or topline, we should
+	 * keep it.  Also when it moves within a line. */
+	if (!equalpos(curwin->w_cursor, orig_pos))
 	{
 	    newlnum = curwin->w_cursor.lnum;
 	    newcol = curwin->w_cursor.col;
