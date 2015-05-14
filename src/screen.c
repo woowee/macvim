@@ -4334,10 +4334,10 @@ win_line(wp, lnum, startrow, endrow, nochange)
 	    if (wp->w_p_list
 		    && (((c == 160
 #ifdef FEAT_MBYTE
-			  || (mb_utf8 && mb_c == 160)
+			  || (mb_utf8 && (mb_c == 160 || mb_c == 0x202f))
 #endif
 			 ) && lcs_nbsp)
-			|| (c == ' ' && lcs_space && ptr <= line + trailcol)))
+			|| (c == ' ' && lcs_space && ptr - line <= trailcol)))
 	    {
 		c = (c == ' ') ? lcs_space : lcs_nbsp;
 		if (area_attr == 0 && search_attr == 0)
@@ -4699,7 +4699,7 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		    }
 		}
 		else if (c == NUL
-			&& ((wp->w_p_list && lcs_eol > 0)
+			&& (wp->w_p_list
 			    || ((fromcol >= 0 || fromcol_prev >= 0)
 				&& tocol > vcol
 				&& VIsual_mode != Ctrl_V
@@ -4711,7 +4711,7 @@ win_line(wp, lnum, startrow, endrow, nochange)
 				&& !(noinvcur
 				    && lnum == wp->w_cursor.lnum
 				    && (colnr_T)vcol == wp->w_virtcol)))
-			&& lcs_eol_one >= 0)
+			&& lcs_eol_one > 0)
 		{
 		    /* Display a '$' after the line or highlight an extra
 		     * character if the line break is included. */
@@ -4745,7 +4745,7 @@ win_line(wp, lnum, startrow, endrow, nochange)
 			    c_extra = NUL;
 			}
 		    }
-		    if (wp->w_p_list)
+		    if (wp->w_p_list && lcs_eol > 0)
 			c = lcs_eol;
 		    else
 			c = ' ';
