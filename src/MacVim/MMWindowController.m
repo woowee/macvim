@@ -58,7 +58,7 @@
  *
  * The window is always kept centered and resizing works more or less the same
  * way as in windowed mode.
- *
+ *  
  */
 
 #import "MMAppController.h"
@@ -172,7 +172,7 @@
 
     [win setDelegate:self];
     [win setInitialFirstResponder:[vimView textView]];
-
+    
     if ([win styleMask] & NSTexturedBackgroundWindowMask) {
         // On Leopard, we want to have a textured window to have nice
         // looking tabs. But the textured window look implies rounded
@@ -493,7 +493,7 @@
 
 - (BOOL)destroyScrollbarWithIdentifier:(int32_t)ident
 {
-    BOOL scrollbarHidden = [vimView destroyScrollbarWithIdentifier:ident];
+    BOOL scrollbarHidden = [vimView destroyScrollbarWithIdentifier:ident];   
     shouldResizeVimView = shouldResizeVimView || scrollbarHidden;
     shouldMaximizeWindow = shouldMaximizeWindow || scrollbarHidden;
 
@@ -1150,26 +1150,30 @@
     // Fade out window, remove title bar and maximize, then fade back in.
     // (There is a small delay before window is maximized but usually this is
     // not noticeable on a relatively modern Mac.)
-    [window setStyleMask:([window styleMask] | NSFullScreenWindowMask)];
-    NSString *style;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
-    style = @"Yosemite";
-#else
-    style = @"Unified";
-#endif
 
-    [[vimView tabBarControl] setStyleNamed:style];
+    // Fade out
     [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
         [context setDuration:0.5*duration];
         [[window animator] setAlphaValue:0];
     } completionHandler:^{
+        [window setStyleMask:([window styleMask] | NSFullScreenWindowMask)];
+        [[vimView tabBarControl] setStyleNamed:@"Unified"];
         [self updateTablineSeparator];
 
+        // Stay dark for some time to wait for things to sync, then do the full screen operation
         [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
             [context setDuration:0.5*duration];
-            [[window animator] setAlphaValue:1];
+            [[window animator] setAlphaValue:0];
         } completionHandler:^{
             [self maximizeWindow:fullScreenOptions];
+            
+            // Fade in
+            [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
+                [context setDuration:0.5*duration];
+                [[window animator] setAlphaValue:1];
+            } completionHandler:^{
+                // Do nothing
+            }];
         }];
     }];
 }
@@ -1205,15 +1209,7 @@
     fullScreenEnabled = NO;
     [window setAlphaValue:1];
     [window setStyleMask:([window styleMask] & ~NSFullScreenWindowMask)];
-
-    NSString *tabStyle;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
-    tabStyle = @"Yosemite";
-#else
-    tabStyle = @"Metal";
-#endif
-
-    [[vimView tabBarControl] setStyleNamed:tabStyle];
+    [[vimView tabBarControl] setStyleNamed:@"Metal"];
     [self updateTablineSeparator];
     [window setFrame:preFullScreenFrame display:YES];
 }
@@ -1242,15 +1238,8 @@
         [context setDuration:0.5*duration];
         [[window animator] setAlphaValue:0];
     } completionHandler:^{
-        NSString *tabStyle;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
-        tabStyle = @"Yosemite";
-#else
-        tabStyle = @"Metal";
-#endif
-        NSLog(@"tabStyle: %@", tabStyle);
         [window setStyleMask:([window styleMask] & ~NSFullScreenWindowMask)];
-        [[vimView tabBarControl] setStyleNamed:tabStyle];
+        [[vimView tabBarControl] setStyleNamed:@"Metal"];
         [self updateTablineSeparator];
         [window setFrame:preFullScreenFrame display:YES];
 
@@ -1286,13 +1275,7 @@
     fullScreenEnabled = YES;
     [window setAlphaValue:1];
     [window setStyleMask:([window styleMask] | NSFullScreenWindowMask)];
-    NSString *style;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
-        style = @"Yosemite";
-#else
-        style = @"Unified";
-#endif
-    [[vimView tabBarControl] setStyleNamed:style];
+    [[vimView tabBarControl] setStyleNamed:@"Unified"];
     [self updateTablineSeparator];
     [self maximizeWindow:fullScreenOptions];
 }
@@ -1444,7 +1427,7 @@
 }
 
 - (BOOL)askBackendForStarRegister:(NSPasteboard *)pb
-{
+{ 
     // TODO: Can this be done with evaluateExpression: instead?
     BOOL reply = NO;
     id backendProxy = [vimController backendProxy];
@@ -1526,7 +1509,7 @@
         input = [NSString stringWithFormat:@"<C-\\><C-N>:let @/='%@'<CR>%c",
                 query, next ? 'n' : 'N'];
     } else {
-        input = next ? @"<C-\\><C-N>n" : @"<C-\\><C-N>N";
+        input = next ? @"<C-\\><C-N>n" : @"<C-\\><C-N>N"; 
     }
 
     [vimController addVimInput:input];
