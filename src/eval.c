@@ -5746,8 +5746,10 @@ get_string_tv(arg, rettv, evaluate)
 
 			      if (c == 'X')
 				  n = 2;
-			      else
+			      else if (*p == 'u')
 				  n = 4;
+			      else
+				  n = 8;
 			      nr = 0;
 			      while (--n >= 0 && vim_isxdigit(p[1]))
 			      {
@@ -17175,6 +17177,7 @@ f_setmatches(argvars, rettv)
     list_T	*l;
     listitem_T	*li;
     dict_T	*d;
+    list_T	*s = NULL;
 
     rettv->vval.v_number = -1;
     if (argvars[0].v_type != VAR_LIST)
@@ -17197,7 +17200,8 @@ f_setmatches(argvars, rettv)
 		return;
 	    }
 	    if (!(dict_find(d, (char_u *)"group", -1) != NULL
-			&& dict_find(d, (char_u *)"pattern", -1) != NULL
+			&& (dict_find(d, (char_u *)"pattern", -1) != NULL
+			    || dict_find(d, (char_u *)"pos1", -1) != NULL)
 			&& dict_find(d, (char_u *)"priority", -1) != NULL
 			&& dict_find(d, (char_u *)"id", -1) != NULL))
 	    {
@@ -17211,11 +17215,53 @@ f_setmatches(argvars, rettv)
 	li = l->lv_first;
 	while (li != NULL)
 	{
+	    int		i = 0;
+	    char_u	buf[5];
+	    dictitem_T  *di;
+
 	    d = li->li_tv.vval.v_dict;
-	    match_add(curwin, get_dict_string(d, (char_u *)"group", FALSE),
+
+	    if (dict_find(d, (char_u *)"pattern", -1) == NULL)
+	    {
+		if (s == NULL)
+		{
+		    s = list_alloc();
+		    if (s == NULL)
+			return;
+		}
+
+		/* match from matchaddpos() */
+		for (i = 1; i < 9; i++)
+		{
+		    sprintf((char *)buf, (char *)"pos%d", i);
+		    if ((di = dict_find(d, (char_u *)buf, -1)) != NULL)
+		    {
+			if (di->di_tv.v_type != VAR_LIST)
+			    return;
+
+			list_append_tv(s, &di->di_tv);
+			s->lv_refcount++;
+		    }
+		    else
+			break;
+		}
+	    }
+	    if (i == 0)
+	    {
+		match_add(curwin, get_dict_string(d, (char_u *)"group", FALSE),
 		    get_dict_string(d, (char_u *)"pattern", FALSE),
 		    (int)get_dict_number(d, (char_u *)"priority"),
 		    (int)get_dict_number(d, (char_u *)"id"), NULL);
+	    }
+	    else
+	    {
+		match_add(curwin, get_dict_string(d, (char_u *)"group", FALSE),
+		    NULL, (int)get_dict_number(d, (char_u *)"priority"),
+		    (int)get_dict_number(d, (char_u *)"id"), s);
+		list_unref(s);
+		s = NULL;
+	    }
+
 	    li = li->li_next;
 	}
 	rettv->vval.v_number = 0;
