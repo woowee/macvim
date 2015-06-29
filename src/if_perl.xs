@@ -474,9 +474,9 @@ static struct {
     {"Perl_stack_grow", (PERL_PROC*)&Perl_stack_grow, FALSE},
     {"Perl_set_context", (PERL_PROC*)&Perl_set_context, FALSE},
 #if (PERL_REVISION == 5) && (PERL_VERSION >= 14)
-    {"Perl_sv_2bool_flags", (PERL_PROC*)&Perl_sv_2bool_flags, FLASE},
+    {"Perl_sv_2bool_flags", (PERL_PROC*)&Perl_sv_2bool_flags, FALSE},
 # if (PERL_REVISION == 5) && (PERL_VERSION < 22)
-    {"Perl_xs_apiversion_bootcheck",(PERL_PROC*)&Perl_xs_apiversion_bootcheck, FLASE},
+    {"Perl_xs_apiversion_bootcheck",(PERL_PROC*)&Perl_xs_apiversion_bootcheck, FALSE},
 # endif
 #else
     {"Perl_sv_2bool", (PERL_PROC*)&Perl_sv_2bool, FALSE},
