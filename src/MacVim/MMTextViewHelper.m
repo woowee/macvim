@@ -130,7 +130,7 @@ KeyboardInputSourcesEqual(TISInputSourceRef a, TISInputSourceRef b)
     ASLogDebug(@"%@", event);
 
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
-    if (NULL == TISCopyCurrentKeyboardInputSource) {
+    if (NULL == &TISCopyCurrentKeyboardInputSource) {
 #endif
 
         // NOTE: Check IM state _before_ key has been interpreted or we'll pick
@@ -794,7 +794,7 @@ KeyboardInputSourcesEqual(TISInputSourceRef a, TISInputSourceRef b)
 
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
     // The TIS symbols are weakly linked.
-    if (NULL != TISCopyCurrentKeyboardInputSource) {
+    if (NULL != &TISCopyCurrentKeyboardInputSource) {
         // We get here when compiled on >=10.5 and running on >=10.5.
 
         if (asciiImSource) {
@@ -831,7 +831,7 @@ KeyboardInputSourcesEqual(TISInputSourceRef a, TISInputSourceRef b)
 
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
     // The TIS symbols are weakly linked.
-    if (NULL != TISCopyCurrentKeyboardInputSource) {
+    if (NULL != &TISCopyCurrentKeyboardInputSource) {
         // We get here when compiled on >=10.5 and running on >=10.5.
 
         // Enable IM: switch back to input source used when IM was last on
@@ -869,7 +869,7 @@ KeyboardInputSourcesEqual(TISInputSourceRef a, TISInputSourceRef b)
 - (void)checkImState
 {
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)
-    if (imControl && NULL != TISCopyCurrentKeyboardInputSource) {
+    if (imControl && NULL != &TISCopyCurrentKeyboardInputSource) {
         // We get here when compiled on >=10.5 and running on >=10.5.
         TISInputSourceRef cur = TISCopyCurrentKeyboardInputSource();
         BOOL state = !KeyboardInputSourcesEqual(asciiImSource, cur);
