@@ -108,6 +108,11 @@ static char_u	  *compl_leader = NULL;
 static int	  compl_get_longest = FALSE;	/* put longest common string
 						   in compl_leader */
 
+static int	  compl_no_insert = FALSE;	/* FALSE: select & insert
+						   TRUE: noinsert */
+static int	  compl_no_select = FALSE;	/* FALSE: select & insert
+						   TRUE: noselect */
+
 static int	  compl_used_match;	/* Selected one of the matches.  When
 					   FALSE the match was edited or using
 					   the longest common string. */
@@ -2788,7 +2793,17 @@ set_completion(startcol, list)
     compl_cont_status = 0;
 
     compl_curr_match = compl_first_match;
-    ins_complete(Ctrl_N);
+    if (compl_no_insert)
+    {
+	if (!compl_no_select)
+	    ins_complete(K_DOWN);
+    }
+    else
+    {
+	ins_complete(Ctrl_N);
+	if (compl_no_select)
+	    ins_complete(Ctrl_P);
+    }
     out_flush();
 }
 
@@ -3372,6 +3387,8 @@ ins_compl_clear()
     vim_free(compl_orig_text);
     compl_orig_text = NULL;
     compl_enter_selects = FALSE;
+    /* clear v:completed_item */
+    set_vim_var_dict(VV_COMPLETED_ITEM, dict_alloc());
 }
 
 /*
@@ -3655,9 +3672,17 @@ ins_compl_prep(c)
     if (ctrl_x_mode == CTRL_X_NOT_DEFINED_YET
 				      || (ctrl_x_mode == 0 && !compl_started))
     {
-	compl_get_longest = (vim_strchr(p_cot, 'l') != NULL);
+	compl_get_longest = (strstr((char *)p_cot, "longest") != NULL);
 	compl_used_match = TRUE;
+
     }
+
+    compl_no_insert = FALSE;
+    compl_no_select = FALSE;
+    if (strstr((char *)p_cot, "noselect") != NULL)
+	compl_no_select = TRUE;
+    if (strstr((char *)p_cot, "noinsert") != NULL)
+	compl_no_insert = TRUE;
 
     if (ctrl_x_mode == CTRL_X_NOT_DEFINED_YET)
     {
@@ -4606,17 +4631,39 @@ ins_compl_delete()
     /* TODO: is this sufficient for redrawing?  Redrawing everything causes
      * flicker, thus we can't do that. */
     changed_cline_bef_curs();
+    /* clear v:completed_item */
+    set_vim_var_dict(VV_COMPLETED_ITEM, dict_alloc());
 }
 
 /* Insert the new text being completed. */
     static void
 ins_compl_insert()
 {
+    dict_T	*dict;
+
     ins_bytes(compl_shown_match->cp_str + ins_compl_len());
     if (compl_shown_match->cp_flags & ORIGINAL_TEXT)
 	compl_used_match = FALSE;
     else
 	compl_used_match = TRUE;
+
+    /* Set completed item. */
+    /* { word, abbr, menu, kind, info } */
+    dict = dict_alloc();
+    if (dict != NULL)
+    {
+	dict_add_nr_str(dict, "word", 0L,
+		    EMPTY_IF_NULL(compl_shown_match->cp_str));
+	dict_add_nr_str(dict, "abbr", 0L,
+		    EMPTY_IF_NULL(compl_shown_match->cp_text[CPT_ABBR]));
+	dict_add_nr_str(dict, "menu", 0L,
+		    EMPTY_IF_NULL(compl_shown_match->cp_text[CPT_MENU]));
+	dict_add_nr_str(dict, "kind", 0L,
+		    EMPTY_IF_NULL(compl_shown_match->cp_text[CPT_KIND]));
+	dict_add_nr_str(dict, "info", 0L,
+		    EMPTY_IF_NULL(compl_shown_match->cp_text[CPT_INFO]));
+    }
+    set_vim_var_dict(VV_COMPLETED_ITEM, dict);
 }
 
 /*
@@ -4648,6 +4695,7 @@ ins_compl_next(allow_get_expansion, count, insert_match)
     compl_T *found_compl = NULL;
     int	    found_end = FALSE;
     int	    advance;
+    int	    started = compl_started;
 
     /* When user complete function return -1 for findstart which is next
      * time of 'always', compl_shown_match become NULL. */
@@ -4729,7 +4777,7 @@ ins_compl_next(allow_get_expansion, count, insert_match)
 		return -1;
 	    }
 
-	    if (advance)
+	    if (!compl_no_select && advance)
 	    {
 		if (compl_shows_dir == BACKWARD)
 		    --compl_pending;
@@ -4781,7 +4829,12 @@ ins_compl_next(allow_get_expansion, count, insert_match)
     }
 
     /* Insert the text of the new completion, or the compl_leader. */
-    if (insert_match)
+    if (compl_no_insert && !started)
+    {
+	ins_bytes(compl_orig_text + ins_compl_len());
+	compl_used_match = FALSE;
+    }
+    else if (insert_match)
     {
 	if (!compl_get_longest || compl_used_match)
 	    ins_compl_insert();
@@ -4818,7 +4871,10 @@ ins_compl_next(allow_get_expansion, count, insert_match)
 
     /* Enter will select a match when the match wasn't inserted and the popup
      * menu is visible. */
-    compl_enter_selects = !insert_match && compl_match_array != NULL;
+    if (compl_no_insert && !started)
+	compl_enter_selects = TRUE;
+    else
+	compl_enter_selects = !insert_match && compl_match_array != NULL;
 
     /*
      * Show the file name for the match (if any)
@@ -4893,7 +4949,7 @@ ins_compl_check_keys(frequency)
 	    }
 	}
     }
-    if (compl_pending != 0 && !got_int)
+    if (compl_pending != 0 && !got_int && !compl_no_insert)
     {
 	int todo = compl_pending > 0 ? compl_pending : -compl_pending;
 
