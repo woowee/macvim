@@ -5403,7 +5403,8 @@ do_addsub(command, Prenum1, g_cmd)
     int		i;
     int		lnum = curwin->w_cursor.lnum;
     int		lnume = curwin->w_cursor.lnum;
-    int		startcol;
+    int		startcol = 0;
+    int		did_change = FALSE;
 
     dohex = (vim_strchr(curbuf->b_p_nf, 'x') != NULL);	/* "heX" */
     dooct = (vim_strchr(curbuf->b_p_nf, 'o') != NULL);	/* "Octal" */
@@ -5547,6 +5548,7 @@ do_addsub(command, Prenum1, g_cmd)
 #endif
 	    }
 	    curwin->w_cursor.col = col;
+	    did_change = TRUE;
 	    (void)del_char(FALSE);
 	    ins_char(firstdigit);
 	}
@@ -5619,6 +5621,7 @@ do_addsub(command, Prenum1, g_cmd)
 	     * Delete the old number.
 	     */
 	    curwin->w_cursor.col = col;
+	    did_change = TRUE;
 	    todel = length;
 	    c = gchar_cursor();
 
@@ -5702,10 +5705,10 @@ do_addsub(command, Prenum1, g_cmd)
 	/* reset */
 	subtract = FALSE;
 	negative = FALSE;
-	if (visual && VIsual_mode != Ctrl_V)
-	    col = 0;
-	else
+	if (visual && VIsual_mode == Ctrl_V)
 	    col = startcol;
+	else
+	    col = 0;
 	Prenum1 += offset;
 	curwin->w_set_curswant = TRUE;
 #ifdef FEAT_RIGHTLEFT
@@ -5713,7 +5716,8 @@ do_addsub(command, Prenum1, g_cmd)
 	RLADDSUBFIX(ptr);
 #endif
     }
-    --curwin->w_cursor.col;
+    if (did_change && curwin->w_cursor.col > 0)
+	--curwin->w_cursor.col;
     return OK;
 }
 
