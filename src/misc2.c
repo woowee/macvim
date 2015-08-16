@@ -1600,40 +1600,6 @@ strup_save(orig)
 #endif
 
 /*
- * copy a space a number of times
- */
-    void
-copy_spaces(ptr, count)
-    char_u	*ptr;
-    size_t	count;
-{
-    size_t	i = count;
-    char_u	*p = ptr;
-
-    while (i--)
-	*p++ = ' ';
-}
-
-#if defined(FEAT_VISUALEXTRA) || defined(PROTO)
-/*
- * Copy a character a number of times.
- * Does not work for multi-byte characters!
- */
-    void
-copy_chars(ptr, count, c)
-    char_u	*ptr;
-    size_t	count;
-    int		c;
-{
-    size_t	i = count;
-    char_u	*p = ptr;
-
-    while (i--)
-	*p++ = c;
-}
-#endif
-
-/*
  * delete spaces at the end of a string
  */
     void
@@ -2819,7 +2785,7 @@ find_special_key(srcp, modp, keycode, keep_x_key)
 	    bp += 3;	/* skip t_xx, xx may be '-' or '>' */
 	else if (STRNICMP(bp, "char-", 5) == 0)
 	{
-	    vim_str2nr(bp + 5, NULL, &l, TRUE, TRUE, NULL, NULL);
+	    vim_str2nr(bp + 5, NULL, &l, TRUE, TRUE, NULL, NULL, 0);
 	    bp += l + 5;
 	    break;
 	}
@@ -2851,7 +2817,7 @@ find_special_key(srcp, modp, keycode, keep_x_key)
 						 && VIM_ISDIGIT(last_dash[6]))
 	    {
 		/* <Char-123> or <Char-033> or <Char-0x33> */
-		vim_str2nr(last_dash + 6, NULL, NULL, TRUE, TRUE, NULL, &n);
+		vim_str2nr(last_dash + 6, NULL, NULL, TRUE, TRUE, NULL, &n, 0);
 		key = (int)n;
 	    }
 	    else

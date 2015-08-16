@@ -98,6 +98,7 @@
 # define PV_INC		OPT_BOTH(OPT_BUF(BV_INC))
 #endif
 #define PV_EOL		OPT_BUF(BV_EOL)
+#define PV_FIXEOL	OPT_BUF(BV_FIXEOL)
 #define PV_EP		OPT_BOTH(OPT_BUF(BV_EP))
 #define PV_ET		OPT_BUF(BV_ET)
 #ifdef FEAT_MBYTE
@@ -312,6 +313,7 @@ static char_u	*p_cfu;
 static char_u	*p_ofu;
 #endif
 static int	p_eol;
+static int	p_fixeol;
 static int	p_et;
 #ifdef FEAT_MBYTE
 static char_u	*p_fenc;
@@ -643,6 +645,9 @@ static struct vimoption
     {"beautify",    "bf",   P_BOOL|P_VI_DEF,
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
+    {"belloff",      "bo",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
+			    (char_u *)&p_bo, PV_NONE,
+			    {(char_u *)"", (char_u *)0L} SCRIPTID_INIT},
     {"binary",	    "bin",  P_BOOL|P_VI_DEF|P_RSTAT,
 			    (char_u *)&p_bin, PV_BIN,
 			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
@@ -1190,6 +1195,9 @@ static struct vimoption
 			    {(char_u *)"", (char_u *)0L}
 #endif
 			    SCRIPTID_INIT},
+    {"fixendofline",  "fixeol", P_BOOL|P_VI_DEF|P_RSTAT,
+			    (char_u *)&p_fixeol, PV_FIXEOL,
+			    {(char_u *)TRUE, (char_u *)0L} SCRIPTID_INIT},
     {"fkmap",	    "fk",   P_BOOL|P_VI_DEF,
 #ifdef FEAT_FKMAP
 			    (char_u *)&p_fkmap, PV_NONE,
@@ -4668,7 +4676,7 @@ do_set(arg, opt_flags)
 			{
 			    /* Allow negative (for 'undolevels'), octal and
 			     * hex numbers. */
-			    vim_str2nr(arg, NULL, &i, TRUE, TRUE, &value, NULL);
+			    vim_str2nr(arg, NULL, &i, TRUE, TRUE, &value, NULL, 0);
 			    if (arg[i] != NUL && !vim_iswhite(arg[i]))
 			    {
 				errmsg = e_invarg;
@@ -4694,9 +4702,12 @@ do_set(arg, opt_flags)
 		    {
 			char_u	    *save_arg = NULL;
 			char_u	    *s = NULL;
-			char_u	    *oldval;	/* previous value if *varp */
+			char_u	    *oldval = NULL;	/* previous value if *varp */
 			char_u	    *newval;
-			char_u	    *origval;
+			char_u	    *origval = NULL;
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+			char_u	    *saved_origval = NULL;
+#endif
 			unsigned    newlen;
 			int	    comma;
 			int	    bs;
@@ -5016,6 +5027,17 @@ do_set(arg, opt_flags)
 			/* Set the new value. */
 			*(char_u **)(varp) = newval;
 
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+			if (!starting
+# ifdef FEAT_CRYPT
+				&& options[opt_idx].indir != PV_KEY
+# endif
+							   && origval != NULL)
+			    /* origval may be freed by
+			     * did_set_string_option(), make a copy. */
+			    saved_origval = vim_strsave(origval);
+#endif
+
 			/* Handle side effects, and set the global value for
 			 * ":set" on local options. */
 			errmsg = did_set_string_option(opt_idx, (char_u **)varp,
@@ -5024,6 +5046,25 @@ do_set(arg, opt_flags)
 			/* If error detected, print the error message. */
 			if (errmsg != NULL)
 			    goto skip;
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+			if (saved_origval != NULL)
+			{
+			    char_u buf_type[7];
+
+			    sprintf((char *)buf_type, "%s",
+				(opt_flags & OPT_LOCAL) ? "local" : "global");
+			    set_vim_var_string(VV_OPTION_NEW,
+							*(char_u **)varp, -1);
+			    set_vim_var_string(VV_OPTION_OLD, saved_origval, -1);
+			    set_vim_var_string(VV_OPTION_TYPE, buf_type, -1);
+			    apply_autocmds(EVENT_OPTIONSET,
+					  (char_u *)options[opt_idx].fullname,
+				NULL, FALSE, NULL);
+			    reset_v_option_vars();
+			    vim_free(saved_origval);
+			}
+#endif
+
 		    }
 		    else	    /* key code option */
 		    {
@@ -5392,6 +5433,7 @@ didset_options()
     (void)opt_strings_flags(p_cmp, p_cmp_values, &cmp_flags, TRUE);
 #endif
     (void)opt_strings_flags(p_bkc, p_bkc_values, &bkc_flags, TRUE);
+    (void)opt_strings_flags(p_bo, p_bo_values, &bo_flags, TRUE);
 #ifdef FEAT_SESSION
     (void)opt_strings_flags(p_ssop, p_ssop_values, &ssop_flags, TRUE);
     (void)opt_strings_flags(p_vop, p_ssop_values, &vop_flags, TRUE);
@@ -5779,6 +5821,9 @@ set_string_option(opt_idx, value, opt_flags)
     char_u	*s;
     char_u	**varp;
     char_u	*oldval;
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+    char_u	*saved_oldval = NULL;
+#endif
     char_u	*r = NULL;
 
     if (options[opt_idx].var == NULL)	/* don't set hidden option */
@@ -5794,9 +5839,34 @@ set_string_option(opt_idx, value, opt_flags)
 		    : opt_flags);
 	oldval = *varp;
 	*varp = s;
+
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	if (!starting
+# ifdef FEAT_CRYPT
+		&& options[opt_idx].indir != PV_KEY
+# endif
+		)
+	    saved_oldval = vim_strsave(oldval);
+#endif
 	if ((r = did_set_string_option(opt_idx, varp, TRUE, oldval, NULL,
 							   opt_flags)) == NULL)
 	    did_set_option(opt_idx, opt_flags, TRUE);
+
+	/* call autocomamnd after handling side effects */
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	if (saved_oldval != NULL)
+	{
+	    char_u buf_type[7];
+	    sprintf((char *)buf_type, "%s",
+		(opt_flags & OPT_LOCAL) ? "local" : "global");
+	    set_vim_var_string(VV_OPTION_NEW, *varp, -1);
+	    set_vim_var_string(VV_OPTION_OLD, saved_oldval, -1);
+	    set_vim_var_string(VV_OPTION_TYPE, buf_type, -1);
+	    apply_autocmds(EVENT_OPTIONSET, (char_u *)options[opt_idx].fullname, NULL, FALSE, NULL);
+	    reset_v_option_vars();
+	    vim_free(saved_oldval);
+	}
+#endif
     }
     return r;
 }
@@ -7052,6 +7122,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	else if (check_opt_strings(p_bs, p_bs_values, TRUE) != OK)
 	    errmsg = e_invarg;
     }
+    else if (varp == &p_bo)
+    {
+	if (opt_strings_flags(p_bo, p_bo_values, &bo_flags, TRUE) != OK)
+	    errmsg = e_invarg;
+    }
 
 #ifdef FEAT_MBYTE
     /* 'casemap' */
@@ -7912,6 +7987,11 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     {
 	redraw_titles();
     }
+    /* when 'fixeol' is changed, redraw the window title */
+    else if ((int *)varp == &curbuf->b_p_fixeol)
+    {
+	redraw_titles();
+    }
 # ifdef FEAT_MBYTE
     /* when 'bomb' is changed, redraw the window title and tab page text */
     else if ((int *)varp == &curbuf->b_p_bomb)
@@ -8395,7 +8475,24 @@ set_bool_option(opt_idx, varp, value, opt_flags)
      * End of handling side effects for bool options.
      */
 
+    /* after handling side effects, call autocommand */
+
     options[opt_idx].flags |= P_WAS_SET;
+
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+    if (!starting)
+    {
+	char_u buf_old[2], buf_new[2], buf_type[7];
+	vim_snprintf((char *)buf_old, 2, "%d", old_value ? TRUE: FALSE);
+	vim_snprintf((char *)buf_new, 2, "%d", value ? TRUE: FALSE);
+	vim_snprintf((char *)buf_type, 7, "%s", (opt_flags & OPT_LOCAL) ? "local" : "global");
+	set_vim_var_string(VV_OPTION_NEW, buf_new, -1);
+	set_vim_var_string(VV_OPTION_OLD, buf_old, -1);
+	set_vim_var_string(VV_OPTION_TYPE, buf_type, -1);
+	apply_autocmds(EVENT_OPTIONSET, (char_u *) options[opt_idx].fullname, NULL, FALSE, NULL);
+	reset_v_option_vars();
+    }
+#endif
 
     comp_col();			    /* in case 'ruler' or 'showcmd' changed */
     if (curwin->w_curswant != MAXCOL
@@ -8954,6 +9051,21 @@ set_num_option(opt_idx, varp, value, errbuf, errbuflen, opt_flags)
 	*(long *)get_varp_scope(&(options[opt_idx]), OPT_GLOBAL) = *pp;
 
     options[opt_idx].flags |= P_WAS_SET;
+
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+    if (!starting && errmsg == NULL)
+    {
+	char_u buf_old[11], buf_new[11], buf_type[7];
+	vim_snprintf((char *)buf_old, 10, "%ld", old_value);
+	vim_snprintf((char *)buf_new, 10, "%ld", value);
+	vim_snprintf((char *)buf_type, 7, "%s", (opt_flags & OPT_LOCAL) ? "local" : "global");
+	set_vim_var_string(VV_OPTION_NEW, buf_new, -1);
+	set_vim_var_string(VV_OPTION_OLD, buf_old, -1);
+	set_vim_var_string(VV_OPTION_TYPE, buf_type, -1);
+	apply_autocmds(EVENT_OPTIONSET, (char_u *) options[opt_idx].fullname, NULL, FALSE, NULL);
+	reset_v_option_vars();
+    }
+#endif
 
     comp_col();			    /* in case 'columns' or 'ls' changed */
     if (curwin->w_curswant != MAXCOL
@@ -10076,6 +10188,8 @@ unset_global_local_option(name, from)
     buf_T	*buf = (buf_T *)from;
 
     opt_idx = findoption(name);
+    if (opt_idx < 0)
+	return;
     p = &(options[opt_idx]);
 
     switch ((int)p->indir)
@@ -10374,6 +10488,7 @@ get_varp(p)
 	case PV_OFU:	return (char_u *)&(curbuf->b_p_ofu);
 #endif
 	case PV_EOL:	return (char_u *)&(curbuf->b_p_eol);
+	case PV_FIXEOL:	return (char_u *)&(curbuf->b_p_fixeol);
 	case PV_ET:	return (char_u *)&(curbuf->b_p_et);
 #ifdef FEAT_MBYTE
 	case PV_FENC:	return (char_u *)&(curbuf->b_p_fenc);
@@ -10750,6 +10865,7 @@ buf_copy_options(buf, flags)
 #ifdef FEAT_MBYTE
 	    buf->b_p_bomb = p_bomb;
 #endif
+	    buf->b_p_fixeol = p_fixeol;
 	    buf->b_p_et = p_et;
 	    buf->b_p_et_nobin = p_et_nobin;
 	    buf->b_p_ml = p_ml;
@@ -12106,6 +12222,7 @@ save_file_ff(buf)
  * from when editing started (save_file_ff() called).
  * Also when 'endofline' was changed and 'binary' is set, or when 'bomb' was
  * changed and 'binary' is not set.
+ * Also when 'endofline' was changed and 'fixeol' is not set.
  * When "ignore_empty" is true don't consider a new, empty buffer to be
  * changed.
  */
@@ -12124,7 +12241,7 @@ file_ff_differs(buf, ignore_empty)
 	return FALSE;
     if (buf->b_start_ffc != *buf->b_p_ff)
 	return TRUE;
-    if (buf->b_p_bin && buf->b_start_eol != buf->b_p_eol)
+    if ((buf->b_p_bin || !buf->b_p_fixeol) && buf->b_start_eol != buf->b_p_eol)
 	return TRUE;
 #ifdef FEAT_MBYTE
     if (!buf->b_p_bin && buf->b_start_bomb != buf->b_p_bomb)
