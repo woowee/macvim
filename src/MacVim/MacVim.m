@@ -102,6 +102,7 @@ char *MessageStrings[] =
     "GestureMsgID",
     "AddToMRUMsgID",
     "BackingPropertiesChangedMsgID",
+    "SetBlurRadiusMsgID",
     "END OF MESSAGE IDs"     // NOTE: Must be last!
 };
 
@@ -118,6 +119,7 @@ NSString *MMNoWindowKey = @"MMNoWindow";
 NSString *MMAutosaveRowsKey    = @"MMAutosaveRows";
 NSString *MMAutosaveColumnsKey = @"MMAutosaveColumns";
 NSString *MMRendererKey	       = @"MMRenderer";
+NSString *MMRendererLigaturesSupportKey = @"MMRendererLigaturesSupport";
 
 // Vim find pasteboard type (string contains Vim regex patterns)
 NSString *VimFindPboardType = @"VimFindPboardType";
