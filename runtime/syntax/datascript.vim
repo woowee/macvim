@@ -1,12 +1,11 @@
 " Vim syntax file
-" Language:	DataScript
+" Language:	Datascript
 " Maintainer:	Dominique Pelle <dominique.pelle@gmail.com>
-" Last Change:	2015 Jul 30
+" Last Change:	2014 Feb 26
 "
 " DataScript is a formal language for modelling binary datatypes,
 " bitstreams or file formats. For more information, see:
-"
-" http://dstools.sourceforge.net/DataScriptLanguageOverview.html
+" http://datascript.berlios.de/DataScriptLanguageOverview.html
 
 if version < 600
   syntax clear
@@ -20,8 +19,6 @@ syn keyword dsPackage      import package
 syn keyword dsType         bit bool string
 syn keyword dsType         int int8 int16 int32 int64
 syn keyword dsType         uint8 uint16 uint32 uint64
-syn keyword dsType         varint16 varint32 varint64
-syn keyword dsType         varuint16 varuint32 varuint64
 syn keyword dsType         leint16 leint32 leint64
 syn keyword dsType         leuint16 leuint32 leuint64
 syn keyword dsEndian       little big
@@ -35,8 +32,7 @@ syn keyword dsOperator     sizeof bitsizeof lengthof is sum forall in
 syn keyword dsStorageClass const
 syn keyword dsTodo         contained TODO FIXME XXX
 syn keyword dsSql          sql sql_table sql_database sql_pragma sql_index
-syn keyword dsSql          sql_integer sql_metadata sql_key sql_virtual
-syn keyword dsSql          using reference_key foreign_key to
+syn keyword dsSql          sql_integer sql_metadata sql_key foreign_key
 
 " dsCommentGroup allows adding matches for special things in comments.
 syn cluster dsCommentGroup  contains=dsTodo
@@ -64,8 +60,6 @@ syn region   dsComment
 
 syn region  dsString
   \ start=+L\="+ skip=+\\\\\|\\"+ end=+"+ contains=@Spell
-
-syn sync ccomment dsComment
 
 " Define the default highlighting.
 hi def link dsType              Type

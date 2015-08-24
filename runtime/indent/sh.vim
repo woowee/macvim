@@ -1,11 +1,10 @@
 " Vim indent file
-" Language:            Shell Script
-" Maintainer:          Christian Brabandt <cb@256bit.org>
+" Language:         Shell Script
+" Maintainer:       Currently unmaintained. If you want to take it, please
+" 		    email Bram
 " Previous Maintainer: Peter Aronoff <telemachus@arpinum.org>
-" Original Author:     Nikolai Weibull <now@bitwi.se>
-" Latest Revision:     2015-07-28
-" License:             Vim (see :h license)
-" Repository:          https://github.com/chrisbra/vim-sh-indent
+" Original Author:  Nikolai Weibull <now@bitwi.se>
+" Latest Revision:  2014-08-22
 
 if exists("b:did_indent")
   finish
@@ -13,7 +12,7 @@ endif
 let b:did_indent = 1
 
 setlocal indentexpr=GetShIndent()
-setlocal indentkeys+=0=then,0=do,0=else,0=elif,0=fi,0=esac,0=done,0=end,),0=;;,0=;&
+setlocal indentkeys+=0=then,0=do,0=else,0=elif,0=fi,0=esac,0=done,),0=;;,0=;&
 setlocal indentkeys+=0=fin,0=fil,0=fip,0=fir,0=fix
 setlocal indentkeys-=:,0#
 setlocal nosmartindent
@@ -57,8 +56,8 @@ function! GetShIndent()
 
   let ind = indent(lnum)
   let line = getline(lnum)
-  if line =~ '^\s*\%(if\|then\|do\|else\|elif\|case\|while\|until\|for\|select\|foreach\)\>'
-    if line !~ '\<\%(fi\|esac\|done\|end\)\>\s*\%(#.*\)\=$'
+  if line =~ '^\s*\%(if\|then\|do\|else\|elif\|case\|while\|until\|for\|select\)\>'
+    if line !~ '\<\%(fi\|esac\|done\)\>\s*\%(#.*\)\=$'
       let ind += s:indent_value('default')
     endif
   elseif s:is_case_label(line, pnum)
@@ -79,7 +78,7 @@ function! GetShIndent()
 
   let pine = line
   let line = getline(v:lnum)
-  if line =~ '^\s*\%(then\|do\|else\|elif\|fi\|done\|end\)\>' || line =~ '^\s*}'
+  if line =~ '^\s*\%(then\|do\|else\|elif\|fi\|done\)\>' || line =~ '^\s*}'
     let ind -= s:indent_value('default')
   elseif line =~ '^\s*esac\>' && s:is_case_empty(getline(v:lnum - 1))
     let ind -= s:indent_value('default')
