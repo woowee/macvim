@@ -3033,7 +3033,7 @@ win_line(wp, lnum, startrow, endrow, nochange)
 #endif
 #define WL_LINE		WL_SBR + 1	/* text in the line */
     int		draw_state = WL_START;	/* what to draw next */
-#if defined(FEAT_GUI_MACVIM)
+#if defined(FEAT_XIM) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM))
     int		feedback_col = 0;
     int		feedback_old_attr = -1;
 #endif
@@ -4982,10 +4982,16 @@ win_line(wp, lnum, startrow, endrow, nochange)
 		&& !attr_pri)
 	    char_attr = extra_attr;
 
-#if defined(FEAT_GUI_MACVIM)
+#if defined(FEAT_XIM) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM))
+	/* XIM don't send preedit_start and preedit_end, but they send
+	 * preedit_changed and commit.  Thus Vim can't set "im_is_active", use
+	 * im_is_preediting() here. */
 	if (
 		lnum == wp->w_cursor.lnum
 		&& (State & INSERT)
+# ifndef FEAT_GUI_MACVIM
+		&& !p_imdisable
+# endif
 		&& im_is_preediting()
 		&& draw_state == WL_LINE)
 	{

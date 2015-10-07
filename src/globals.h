@@ -870,13 +870,10 @@ EXTERN int* (*iconv_errno) (void);
 #endif /* FEAT_MBYTE */
 
 #ifdef FEAT_XIM
-# ifndef FEAT_GUI_MACVIM
-#  ifdef FEAT_GUI_GTK
+# if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM)
+#  ifndef FEAT_GUI_MACVIM
 EXTERN GtkIMContext	*xic INIT(= NULL);
-#  else
-EXTERN XIC		xic INIT(= NULL);
 #  endif
-# else
 /*
  * Start and end column of the preedit area in virtual columns from the start
  * of the text line.  When there is no preedit area they are set to MAXCOL.
@@ -886,6 +883,12 @@ EXTERN XIC		xic INIT(= NULL);
  */
 EXTERN colnr_T		preedit_start_col INIT(= MAXCOL);
 EXTERN colnr_T		preedit_end_col INIT(= MAXCOL);
+
+/* "xim_changed_while_preediting" is set when changed() can set the 'modified'
+ * flag even while preediting. */
+EXTERN int		xim_changed_while_preediting INIT(= FALSE);
+# else
+EXTERN XIC		xic INIT(= NULL);
 # endif
 # ifdef FEAT_GUI
 EXTERN guicolor_T	xim_fg_color INIT(= INVALCOLOR);

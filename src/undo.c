@@ -3022,6 +3022,10 @@ u_sync(force)
     /* Skip it when already synced or syncing is disabled. */
     if (curbuf->b_u_synced || (!force && no_u_sync > 0))
 	return;
+#if defined(FEAT_XIM) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM))
+    if (im_is_preediting())
+	return;		    /* XIM is busy, don't break an undo sequence */
+#endif
     if (get_undolevel() < 0)
 	curbuf->b_u_synced = TRUE;  /* no entries, nothing to do */
     else

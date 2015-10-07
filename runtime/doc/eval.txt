@@ -1,4 +1,4 @@
-*eval.txt*	For Vim version 7.4.  Last change: 2015 Jul 21
+*eval.txt*	For Vim version 7.4.  Last change: 2015 Sep 19
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -1747,7 +1747,7 @@ bufexists( {expr})		Number	TRUE if buffer {expr} exists
 buflisted( {expr})		Number	TRUE if buffer {expr} is listed
 bufloaded( {expr})		Number	TRUE if buffer {expr} is loaded
 bufname( {expr})		String	Name of the buffer {expr}
-bufnr( {expr})			Number	Number of the buffer {expr}
+bufnr( {expr} [, {create}])	Number	Number of the buffer {expr}
 bufwinnr( {expr})		Number	window number of buffer {expr}
 byte2line( {byte})		Number	line number at byte count {byte}
 byteidx( {expr}, {nr})		Number	byte index of {nr}'th char in {expr}
@@ -1822,6 +1822,7 @@ getbufvar( {expr}, {varname} [, {def}])
 				any	variable {varname} in buffer {expr}
 getchar( [expr])		Number	get one character from the user
 getcharmod( )			Number	modifiers for the last typed character
+getcharsearch()			Dict	last character search
 getcmdline()			String	return the current command-line
 getcmdpos()			Number	return cursor position in command-line
 getcmdtype()			String	return current command-line type
@@ -1971,6 +1972,7 @@ server2client( {clientid}, {string})
 				Number	send reply string
 serverlist()			String	get a list of available servers
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
+setcharsearch( {dict})		Dict	set character search from {dict}
 setcmdpos( {pos})		Number	set cursor position in command-line
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setloclist( {nr}, {list}[, {action}])
@@ -3360,6 +3362,26 @@ getcharmod()						*getcharmod()*
 		Only the modifiers that have not been included in the
 		character itself are obtained.	Thus Shift-a results in "A"
 		without a modifier.
+
+getcharsearch()						*getcharsearch()*
+		Return the current character search information as a {dict}
+		with the following entries:
+
+		    char	character previously used for a character
+				search (|t|, |f|, |T|, or |F|); empty string
+				if no character search has been performed
+		    forward	direction of character search; 1 for forward,
+				0 for backward
+		    until	type of character search; 1 for a |t| or |T|
+				character search, 0 for an |f| or |F|
+				character search
+
+		This can be useful to always have |;| and |,| search
+		forward/backward regardless of the direction of the previous
+		character search: >
+			:nnoremap <expr> ; getcharsearch().forward ? ';' : ','
+			:nnoremap <expr> , getcharsearch().forward ? ',' : ';'
+<		Also see |setcharsearch()|.
 
 getcmdline()						*getcmdline()*
 		Return the current command-line.  Only works when the command
@@ -5397,6 +5419,26 @@ setbufvar({expr}, {varname}, {val})			*setbufvar()*
 			:call setbufvar("todo", "myvar", "foobar")
 <		This function is not available in the |sandbox|.
 
+setcharsearch({dict})					*setcharsearch()*
+		Set the current character search information to {dict},
+		which contains one or more of the following entries:
+
+		    char	character which will be used for a subsequent
+				|,| or |;| command; an empty string clears the
+				character search
+		    forward	direction of character search; 1 for forward,
+				0 for backward
+		    until	type of character search; 1 for a |t| or |T|
+				character search, 0 for an |f| or |F|
+				character search
+
+		This can be useful to save/restore a user's character search
+		from a script: >
+			:let prevsearch = getcharsearch()
+			:" Perform a command which clobbers user's search
+			:call setcharsearch(prevsearch)
+<		Also see |getcharsearch()|.
+
 setcmdpos({pos})					*setcmdpos()*
 		Set the cursor position in the command line to byte position
 		{pos}.	The first position is 1.
@@ -5819,7 +5861,8 @@ split({expr} [, {pattern} [, {keepempty}]])			*split()*
 			:let words = split(getline('.'), '\W\+')
 <		To split a string in individual characters: >
 			:for c in split(mystring, '\zs')
-<		If you want to keep the separator you can also use '\zs': >
+<		If you want to keep the separator you can also use '\zs' at
+		the end of the pattern: >
 			:echo split('abc:def:ghi', ':\zs')
 <			['abc:', 'def:', 'ghi'] ~
 		Splitting a table where the first element can be empty: >
@@ -6079,6 +6122,9 @@ synID({lnum}, {col}, {trans})				*synID()*
 
 		{col} is 1 for the leftmost column, {lnum} is 1 for the first
 		line.  'synmaxcol' applies, in a longer line zero is returned.
+		Note that when the position is after the last character,
+		that's where the cursor can be in Insert mode, synID() returns
+		zero.
 
 		When {trans} is non-zero, transparent items are reduced to the
 		item that they reveal.	This is useful when wanting to know

@@ -2549,7 +2549,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 #  else
 		gui_mch_draw_string(gui.row, scol - cn, s + i, cl,
 #  ifdef FEAT_GUI_MACVIM
-					0,
+					            0,
 #  endif
 					draw_flags | DRAW_TRANSP | DRAW_COMP);
 #  endif

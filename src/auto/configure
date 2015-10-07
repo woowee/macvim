@@ -694,6 +694,7 @@ PERL_PRO
 PERL_OBJ
 PERL_SRC
 shrpenv
+vi_cv_perlsitelib
 vi_cv_perl_xsubpp
 vi_cv_perllib
 vi_cv_path_perl
@@ -5851,6 +5852,7 @@ $as_echo "OK" >&6; }
 	fi
       done
 
+
                   perlcppflags=`$vi_cv_path_perl -Mlib=$srcdir -MExtUtils::Embed \
 	      -e 'ccflags;perl_inc;print"\n"' | sed -e 's/-fno[^ ]*//' \
 			-e 's/-fdebug-prefix-map[^ ]*//g'`
@@ -9772,6 +9774,7 @@ done
 
   CPPFLAGS=$cppflags_save
 fi
+
 
 if test -z "$SKIP_ATHENA" -o -z "$SKIP_NEXTAW" -o -z "$SKIP_MOTIF" -o -z "$SKIP_GTK2"; then
     cppflags_save=$CPPFLAGS

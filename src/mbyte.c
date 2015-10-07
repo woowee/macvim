@@ -4540,7 +4540,6 @@ iconv_end()
 # if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MACVIM) || defined(PROTO)
 static int xim_has_preediting INIT(= FALSE);  /* IM current status */
 
-#  ifdef FEAT_GUI_MACVIM
 /*
  * Set preedit_start_col to the current cursor position.
  */
@@ -4551,8 +4550,9 @@ init_preedit_start_col(void)
 	preedit_start_col = cmdline_getvcol_cursor();
     else if (curwin != NULL)
 	getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
+    /* Prevent that preediting marks the buffer as changed. */
+    xim_changed_while_preediting = curbuf->b_changed;
 }
-#  endif
 
 static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
 static int preedit_is_active   = FALSE;
@@ -4564,12 +4564,9 @@ static unsigned long im_commit_handler_id  = 0;
 # ifndef FEAT_GUI_MACVIM
 static unsigned int  im_activatekey_keyval = GDK_VoidSymbol;
 static unsigned int  im_activatekey_state  = 0;
+# endif
 
-static GtkWidget *preedit_window = NULL;
-static GtkWidget *preedit_label = NULL;
-
-static void im_preedit_window_set_position(void);
-
+# ifndef FEAT_GUI_MACVIM
     void
 im_set_active(int active)
 {
@@ -4857,13 +4854,14 @@ im_commit_cb(GtkIMContext *context UNUSED,
     if (add_to_input)
 	im_add_to_input((char_u *)str, slen);
 
-#  ifdef FEAT_GUI_MACVIM
     /* Inserting chars while "im_is_active" is set does not cause a change of
      * buffer.  When the chars are committed the buffer must be marked as
      * changed. */
     if (!commit_with_preedit)
 	preedit_start_col = MAXCOL;
-#  endif
+
+    /* This flag is used in changed() at next call. */
+    xim_changed_while_preediting = TRUE;
 
     if (gtk_main_level() > 0)
 	gtk_main_quit();
@@ -4908,9 +4906,7 @@ im_preedit_end_macvim()
     im_delete_preedit();
 
     /* Indicate that preediting has finished */
-# ifdef FEAT_GUI_MACVIM
     preedit_start_col = MAXCOL;
-# endif
     xim_has_preediting = FALSE;
 
 #if 0
@@ -5004,7 +5000,6 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 
     g_return_if_fail(preedit_string != NULL); /* just in case */
 
-# ifdef FEAT_GUI_MACVIM
     /* If preedit_start_col is MAXCOL set it to the current cursor position. */
     if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')
     {
@@ -5021,11 +5016,9 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 	 * preedit_start_col must be reset. */
 	preedit_start_col = MAXCOL;
     }
-# endif
 
     im_delete_preedit();
 
-# ifdef FEAT_GUI_MACVIM
     /*
      * Compute the end of the preediting area: "preedit_end_col".
      * According to the documentation of gtk_im_context_get_preedit_string(),
@@ -5035,7 +5028,6 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
      */
     if (preedit_start_col != MAXCOL)
 	preedit_end_col = preedit_start_col;
-# endif
     str = (char_u *)preedit_string;
     for (p = str, i = 0; *p != NUL; p += utf_byte2len(*p), ++i)
     {
@@ -5060,10 +5052,8 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 	     * composing characters are not counted even if p_deco is set. */
 	    ++num_move_back;
 	}
-# ifdef FEAT_GUI_MACVIM
 	if (preedit_start_col != MAXCOL)
 	    preedit_end_col += utf_ptr2cells(p);
-# endif
     }
 
     if (p > str)
@@ -5080,7 +5070,47 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 # endif
 }
 
-# ifdef FEAT_GUI_MACVIM
+# ifndef FEAT_GUI_MACVIM
+/*
+ * Translate the Pango attributes at iter to Vim highlighting attributes.
+ * Ignore attributes not supported by Vim highlighting.  This shouldn't have
+ * too much impact -- right now we handle even more attributes than necessary
+ * for the IM modules I tested with.
+ */
+    static int
+translate_pango_attributes(PangoAttrIterator *iter)
+{
+    PangoAttribute  *attr;
+    int		    char_attr = HL_NORMAL;
+
+    attr = pango_attr_iterator_get(iter, PANGO_ATTR_UNDERLINE);
+    if (attr != NULL && ((PangoAttrInt *)attr)->value
+						 != (int)PANGO_UNDERLINE_NONE)
+	char_attr |= HL_UNDERLINE;
+
+    attr = pango_attr_iterator_get(iter, PANGO_ATTR_WEIGHT);
+    if (attr != NULL && ((PangoAttrInt *)attr)->value >= (int)PANGO_WEIGHT_BOLD)
+	char_attr |= HL_BOLD;
+
+    attr = pango_attr_iterator_get(iter, PANGO_ATTR_STYLE);
+    if (attr != NULL && ((PangoAttrInt *)attr)->value
+						   != (int)PANGO_STYLE_NORMAL)
+	char_attr |= HL_ITALIC;
+
+    attr = pango_attr_iterator_get(iter, PANGO_ATTR_BACKGROUND);
+    if (attr != NULL)
+    {
+	const PangoColor *color = &((PangoAttrColor *)attr)->color;
+
+	/* Assume inverse if black background is requested */
+	if ((color->red | color->green | color->blue) == 0)
+	    char_attr |= HL_INVERSE;
+    }
+
+    return char_attr;
+}
+# endif
+
 /*
  * Retrieve the highlighting attributes at column col in the preedit string.
  * Return -1 if not in preediting mode or if col is out of range.
@@ -5088,12 +5118,58 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
     int
 im_get_feedback_attr(int col)
 {
+# ifndef FEAT_GUI_MACVIM
+    char	    *preedit_string = NULL;
+    PangoAttrList   *attr_list	    = NULL;
+    int		    char_attr	    = -1;
+
+    if (xic == NULL)
+	return char_attr;
+
+    gtk_im_context_get_preedit_string(xic, &preedit_string, &attr_list, NULL);
+
+    if (preedit_string != NULL && attr_list != NULL)
+    {
+	int idx;
+
+	/* Get the byte index as used by PangoAttrIterator */
+	for (idx = 0; col > 0 && preedit_string[idx] != '\0'; --col)
+	    idx += utfc_ptr2len((char_u *)preedit_string + idx);
+
+	if (preedit_string[idx] != '\0')
+	{
+	    PangoAttrIterator	*iter;
+	    int			start, end;
+
+	    char_attr = HL_NORMAL;
+	    iter = pango_attr_list_get_iterator(attr_list);
+
+	    /* Extract all relevant attributes from the list. */
+	    do
+	    {
+		pango_attr_iterator_range(iter, &start, &end);
+
+		if (idx >= start && idx < end)
+		    char_attr |= translate_pango_attributes(iter);
+	    }
+	    while (pango_attr_iterator_next(iter));
+
+	    pango_attr_iterator_destroy(iter);
+	}
+    }
+
+    if (attr_list != NULL)
+	pango_attr_list_unref(attr_list);
+    g_free(preedit_string);
+
+    return char_attr;
+# else
     if (col >= im_preedit_start && col < im_preedit_cursor)
 	return HL_THICKUNDERLINE;
     else
 	return HL_UNDERLINE;
-}
 # endif
+}
 
     void
 xim_init(void)
@@ -5139,9 +5215,7 @@ im_shutdown(void)
 # endif
     im_is_active = FALSE;
     im_commit_handler_id = 0;
-# ifdef FEAT_GUI_MACVIM
     preedit_start_col = MAXCOL;
-# endif
     xim_has_preediting = FALSE;
 }
 
@@ -5300,9 +5374,7 @@ xim_reset(void)
     }
 # endif
 
-# ifdef FEAT_GUI_MACVIM
     preedit_start_col = MAXCOL;
-# endif
     xim_has_preediting = FALSE;
 }
 
@@ -5408,6 +5480,21 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
 	{
 	    int imresult = gtk_im_context_filter_keypress(xic, event);
 
+	    /* Some XIM send following sequence:
+	     * 1. preedited string.
+	     * 2. committed string.
+	     * 3. line changed key.
+	     * 4. preedited string.
+	     * 5. remove preedited string.
+	     * if 3, Vim can't move back the above line for 5.
+	     * thus, this part should not parse the key. */
+	    if (!imresult && preedit_start_col != MAXCOL
+					       && event->keyval == GDK_Return)
+	    {
+		im_synthesize_keypress(GDK_Return, 0U);
+		return FALSE;
+	    }
+
 	    /* If XIM tried to commit a keypad key as a single char.,
 	     * ignore it so we can use the keypad key 'raw', for mappings. */
 	    if (xim_expected_char != NUL && xim_ignored_char)
@@ -5427,10 +5514,10 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
 }
 # endif
 
+# ifndef FEAT_GUI_MACVIM
     int
 im_get_status(void)
 {
-# ifndef FEAT_GUI_MACVIM
 #  ifdef FEAT_EVAL
     if (p_imsf[0] != NUL)
     {
@@ -5452,13 +5539,17 @@ im_get_status(void)
     }
 #  endif
     return im_is_active;
+}
 # else /* FEAT_GUI_MACVIM */
+    int
+im_get_status(void)
+{
     if (gui.in_use)
 	return gui_im_get_status();
     else
 	return im_is_active;
-# endif
 }
+# endif
 
     int
 preedit_get_status(void)

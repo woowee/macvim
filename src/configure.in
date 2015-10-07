@@ -1068,6 +1068,7 @@ if test "$enable_perlinterp" = "yes" -o "$enable_perlinterp" = "dynamic"; then
 	fi
       done
       AC_SUBST(vi_cv_perl_xsubpp)
+      AC_SUBST(vi_cv_perlsitelib)
       dnl Remove "-fno-something", it breaks using cproto.
       dnl Remove "-fdebug-prefix-map", it isn't supported by clang.
       perlcppflags=`$vi_cv_path_perl -Mlib=$srcdir -MExtUtils::Embed \
@@ -2963,6 +2964,7 @@ if test "$enable_xsmp" = "yes"; then
   AC_CHECK_HEADERS(X11/SM/SMlib.h)
   CPPFLAGS=$cppflags_save
 fi
+
 
 if test -z "$SKIP_ATHENA" -o -z "$SKIP_NEXTAW" -o -z "$SKIP_MOTIF" -o -z "$SKIP_GTK2"; then
   dnl Check for X11/xpm.h and X11/Sunkeysym.h with the GUI include path

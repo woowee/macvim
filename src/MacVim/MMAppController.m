@@ -1258,7 +1258,7 @@ fsEventCallback(ConstFSEventStreamRef streamRef,
             kCFPreferencesCurrentApplication);
     CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
 
-    ASLogInfo(@"Use ligatures=%ld", enable);
+    ASLogInfo(@"Use ligatures=%hhd", enable);
 
     // This action is called when the user clicks the "enable support for ligatures"
     // button in the advanced preferences pane.
