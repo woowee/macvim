@@ -1212,7 +1212,6 @@ doESCkey:
 	case K_IGNORE:	/* Something mapped to nothing */
 	    break;
 
-
 #ifdef FEAT_AUTOCMD
 	case K_CURSORHOLD:	/* Didn't type something for a while. */
 	    apply_autocmds(EVENT_CURSORHOLDI, NULL, NULL, FALSE, curbuf);
