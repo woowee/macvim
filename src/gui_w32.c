@@ -4959,7 +4959,7 @@ make_tooltip(beval, text, pt)
 delete_tooltip(beval)
     BalloonEval	*beval;
 {
-    DestroyWindow(beval->balloon);
+    PostMessage(beval->balloon, WM_CLOSE, 0, 0);
 }
 
 /*ARGSUSED*/

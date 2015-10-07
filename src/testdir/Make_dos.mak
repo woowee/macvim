@@ -40,10 +40,12 @@ SCRIPTS =	test3.out test4.out test5.out test6.out test7.out \
 		test_autocmd_option.out \
 		test_autoformat_join.out \
 		test_breakindent.out \
+		test_cdo.out \
 		test_changelist.out \
 		test_charsearch.out \
 		test_close_count.out \
 		test_command_count.out \
+		test_comparators.out \
 		test_erasebackword.out \
 		test_eval.out \
 		test_fixeol.out \

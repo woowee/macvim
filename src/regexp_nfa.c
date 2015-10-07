@@ -4525,6 +4525,7 @@ skip_add:
 		    sub->list.multi[subidx].start_col =
 					  (colnr_T)(reginput - regline + off);
 		}
+		sub->list.multi[subidx].end_lnum = -1;
 	    }
 	    else
 	    {
