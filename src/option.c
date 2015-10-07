@@ -397,10 +397,11 @@ static long	p_tw_nobin;
 static long	p_wm_nobin;
 
 /* Saved values for when 'paste' is set */
+static int	p_ai_nopaste;
+static int	p_et_nopaste;
+static long	p_sts_nopaste;
 static long	p_tw_nopaste;
 static long	p_wm_nopaste;
-static long	p_sts_nopaste;
-static int	p_ai_nopaste;
 
 struct vimoption
 {
@@ -3172,6 +3173,7 @@ static void did_set_title __ARGS((int icon));
 #endif
 static char_u *option_expand __ARGS((int opt_idx, char_u *val));
 static void didset_options __ARGS((void));
+static void didset_options2 __ARGS((void));
 static void check_string_option __ARGS((char_u **pp));
 #if defined(FEAT_EVAL) || defined(PROTO)
 static long_u *insecure_flag __ARGS((int opt_idx, int opt_flags));
@@ -3189,6 +3191,7 @@ static int int_cmp __ARGS((const void *a, const void *b));
 static char_u *check_clipboard_option __ARGS((void));
 #endif
 #ifdef FEAT_SPELL
+static char_u *did_set_spell_option __ARGS((int is_spellfile));
 static char_u *compile_cap_prog __ARGS((synblock_T *synblock));
 #endif
 #ifdef FEAT_EVAL
@@ -3475,15 +3478,9 @@ set_init_1()
     didset_options();
 
 #ifdef FEAT_SPELL
-    /* Use the current chartab for the generic chartab. */
+    /* Use the current chartab for the generic chartab. This is not in
+     * didset_options() because it only depends on 'encoding'. */
     init_spell_chartab();
-#endif
-
-#ifdef FEAT_LINEBREAK
-    /*
-     * initialize the table for 'breakat'.
-     */
-    fill_breakat_flags();
 #endif
 
     /*
@@ -3517,13 +3514,7 @@ set_init_1()
 	}
     }
 
-    /* Initialize the highlight_attr[] table. */
-    highlight_changed();
-
     save_file_ff(curbuf);	/* Buffer is unchanged */
-
-    /* Parse default for 'wildmode'  */
-    check_opt_wim();
 
 #if defined(FEAT_ARABIC)
     /* Detect use of mlterm.
@@ -3536,15 +3527,7 @@ set_init_1()
 	set_option_value((char_u *)"tbidi", 1L, NULL, 0);
 #endif
 
-#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
-    /* Parse default for 'fillchars'. */
-    (void)set_chars_option(&p_fcs);
-#endif
-
-#ifdef FEAT_CLIPBOARD
-    /* Parse default for 'clipboard' */
-    (void)check_clipboard_option();
-#endif
+    didset_options2();
 
 #ifdef FEAT_MBYTE
 # if defined(WIN3264) && defined(FEAT_GETTEXT)
@@ -3770,6 +3753,7 @@ set_option_default(opt_idx, opt_flags, compatible)
 
 /*
  * Set all options (except terminal options) to their default value.
+ * When "opt_flags" is non-zero skip 'encoding'.
  */
     static void
 set_options_default(opt_flags)
@@ -3782,7 +3766,20 @@ set_options_default(opt_flags)
 #endif
 
     for (i = 0; !istermoption(&options[i]); i++)
-	if (!(options[i].flags & P_NODEFAULT))
+	if (!(options[i].flags & P_NODEFAULT)
+#if defined(FEAT_MBYTE) || defined(FEAT_CRYPT)
+		&& (opt_flags == 0
+		    || (TRUE
+# if defined(FEAT_MBYTE)
+			&& options[i].var != (char_u *)&p_enc
+# endif
+# if defined(FEAT_CRYPT)
+			&& options[i].var != (char_u *)&p_cm
+			&& options[i].var != (char_u *)&p_key
+# endif
+			))
+#endif
+			)
 	    set_option_default(i, opt_flags, p_cp);
 
 #ifdef FEAT_WINDOWS
@@ -4318,6 +4315,9 @@ do_set(arg, opt_flags)
 		++arg;
 		/* Only for :set command set global value of local options. */
 		set_options_default(OPT_FREE | opt_flags);
+		didset_options();
+		didset_options2();
+		redraw_all_later(CLEAR);
 	    }
 	    else
 	    {
@@ -5463,6 +5463,7 @@ didset_options()
     (void)spell_check_msm();
     (void)spell_check_sps();
     (void)compile_cap_prog(curwin->w_s);
+    (void)did_set_spell_option(TRUE);
 #endif
 #if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32)
     (void)opt_strings_flags(p_toolbar, p_toolbar_values, &toolbar_flags, TRUE);
@@ -5476,6 +5477,35 @@ didset_options()
 #endif
 #ifdef FEAT_LINEBREAK
     briopt_check(curwin);
+#endif
+#ifdef FEAT_LINEBREAK
+    /* initialize the table for 'breakat'. */
+    fill_breakat_flags();
+#endif
+
+}
+
+/*
+ * More side effects of setting options.
+ */
+    static void
+didset_options2()
+{
+    /* Initialize the highlight_attr[] table. */
+    (void)highlight_changed();
+
+    /* Parse default for 'wildmode'  */
+    check_opt_wim();
+
+    (void)set_chars_option(&p_lcs);
+#if defined(FEAT_WINDOWS) || defined(FEAT_FOLDING)
+    /* Parse default for 'fillchars'. */
+    (void)set_chars_option(&p_fcs);
+#endif
+
+#ifdef FEAT_CLIPBOARD
+    /* Parse default for 'clipboard' */
+    (void)check_clipboard_option();
 #endif
 }
 
@@ -6919,28 +6949,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (varp == &(curwin->w_s->b_p_spl)
 	    || varp == &(curwin->w_s->b_p_spf))
     {
-	win_T	    *wp;
-	int	    l;
-
-	if (varp == &(curwin->w_s->b_p_spf))
-	{
-	    l = (int)STRLEN(curwin->w_s->b_p_spf);
-	    if (l > 0 && (l < 4 || STRCMP(curwin->w_s->b_p_spf + l - 4,
-								".add") != 0))
-		errmsg = e_invarg;
-	}
-
-	if (errmsg == NULL)
-	{
-	    FOR_ALL_WINDOWS(wp)
-		if (wp->w_buffer == curbuf && wp->w_p_spell)
-		{
-		    errmsg = did_set_spelllang(wp);
-# ifdef FEAT_WINDOWS
-		    break;
-# endif
-		}
-	}
+	errmsg = did_set_spell_option(varp == &(curwin->w_s->b_p_spf));
     }
     /* When 'spellcapcheck' is set compile the regexp program. */
     else if (varp == &(curwin->w_s->b_p_spc))
@@ -7822,6 +7831,36 @@ check_clipboard_option()
 #endif
 
 #ifdef FEAT_SPELL
+    static char_u *
+did_set_spell_option(is_spellfile)
+    int		is_spellfile;
+{
+    char_u  *errmsg = NULL;
+    win_T   *wp;
+    int	    l;
+
+    if (is_spellfile)
+    {
+	l = (int)STRLEN(curwin->w_s->b_p_spf);
+	if (l > 0 && (l < 4
+			|| STRCMP(curwin->w_s->b_p_spf + l - 4, ".add") != 0))
+	    errmsg = e_invarg;
+    }
+
+    if (errmsg == NULL)
+    {
+	FOR_ALL_WINDOWS(wp)
+	    if (wp->w_buffer == curbuf && wp->w_p_spell)
+	    {
+		errmsg = did_set_spelllang(wp);
+# ifdef FEAT_WINDOWS
+		break;
+# endif
+	    }
+    }
+    return errmsg;
+}
+
 /*
  * Set curbuf->b_cap_prog to the regexp program for 'spellcapcheck'.
  * Return error message when failed, NULL when OK.
@@ -10888,6 +10927,7 @@ buf_copy_options(buf, flags)
 	    buf->b_p_fixeol = p_fixeol;
 	    buf->b_p_et = p_et;
 	    buf->b_p_et_nobin = p_et_nobin;
+	    buf->b_p_et_nopaste = p_et_nopaste;
 	    buf->b_p_ml = p_ml;
 	    buf->b_p_ml_nobin = p_ml_nobin;
 	    buf->b_p_inf = p_inf;
@@ -11834,6 +11874,7 @@ paste_option_changed()
 {
     static int	old_p_paste = FALSE;
     static int	save_sm = 0;
+    static int	save_sta = 0;
 #ifdef FEAT_CMDL_INFO
     static int	save_ru = 0;
 #endif
@@ -11858,10 +11899,12 @@ paste_option_changed()
 		buf->b_p_wm_nopaste = buf->b_p_wm;
 		buf->b_p_sts_nopaste = buf->b_p_sts;
 		buf->b_p_ai_nopaste = buf->b_p_ai;
+		buf->b_p_et_nopaste = buf->b_p_et;
 	    }
 
 	    /* save global options */
 	    save_sm = p_sm;
+	    save_sta = p_sta;
 #ifdef FEAT_CMDL_INFO
 	    save_ru = p_ru;
 #endif
@@ -11870,10 +11913,11 @@ paste_option_changed()
 	    save_hkmap = p_hkmap;
 #endif
 	    /* save global values for local buffer options */
+	    p_ai_nopaste = p_ai;
+	    p_et_nopaste = p_et;
+	    p_sts_nopaste = p_sts;
 	    p_tw_nopaste = p_tw;
 	    p_wm_nopaste = p_wm;
-	    p_sts_nopaste = p_sts;
-	    p_ai_nopaste = p_ai;
 	}
 
 	/*
@@ -11887,10 +11931,12 @@ paste_option_changed()
 	    buf->b_p_wm = 0;	    /* wrapmargin is 0 */
 	    buf->b_p_sts = 0;	    /* softtabstop is 0 */
 	    buf->b_p_ai = 0;	    /* no auto-indent */
+	    buf->b_p_et = 0;	    /* no expandtab */
 	}
 
 	/* set global options */
 	p_sm = 0;		    /* no showmatch */
+	p_sta = 0;		    /* no smarttab */
 #ifdef FEAT_CMDL_INFO
 # ifdef FEAT_WINDOWS
 	if (p_ru)
@@ -11921,10 +11967,12 @@ paste_option_changed()
 	    buf->b_p_wm = buf->b_p_wm_nopaste;
 	    buf->b_p_sts = buf->b_p_sts_nopaste;
 	    buf->b_p_ai = buf->b_p_ai_nopaste;
+	    buf->b_p_et = buf->b_p_et_nopaste;
 	}
 
 	/* restore global options */
 	p_sm = save_sm;
+	p_sta = save_sta;
 #ifdef FEAT_CMDL_INFO
 # ifdef FEAT_WINDOWS
 	if (p_ru != save_ru)
@@ -11937,10 +11985,11 @@ paste_option_changed()
 	p_hkmap = save_hkmap;
 #endif
 	/* set global values for local buffer options */
+	p_ai = p_ai_nopaste;
+	p_et = p_et_nopaste;
+	p_sts = p_sts_nopaste;
 	p_tw = p_tw_nopaste;
 	p_wm = p_wm_nopaste;
-	p_sts = p_sts_nopaste;
-	p_ai = p_ai_nopaste;
     }
 
     old_p_paste = p_paste;
@@ -11970,6 +12019,7 @@ vimrc_found(fname, envname)
 	    if (!(options[opt_idx].flags & (P_WAS_SET|P_VI_DEF)))
 		set_option_default(opt_idx, OPT_FREE, FALSE);
 	didset_options();
+	didset_options2();
     }
 
     if (fname != NULL)
@@ -12058,6 +12108,7 @@ compatible_set()
 		|| (!(options[opt_idx].flags & P_VI_DEF) && !p_cp))
 	    set_option_default(opt_idx, OPT_FREE, p_cp);
     didset_options();
+    didset_options2();
 }
 
 #ifdef FEAT_LINEBREAK

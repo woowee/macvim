@@ -4375,21 +4375,20 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, find_what,
 		temp = alloc((int)(STRLEN(search_ctx->ffsc_wc_path)
 				 + STRLEN(search_ctx->ffsc_fix_path + len)
 				 + 1));
-	    }
+		if (temp == NULL || wc_path == NULL)
+		{
+		    vim_free(buf);
+		    vim_free(temp);
+		    vim_free(wc_path);
+		    goto error_return;
+		}
 
-	    if (temp == NULL || wc_path == NULL)
-	    {
-		vim_free(buf);
-		vim_free(temp);
+		STRCPY(temp, search_ctx->ffsc_fix_path + len);
+		STRCAT(temp, search_ctx->ffsc_wc_path);
+		vim_free(search_ctx->ffsc_wc_path);
 		vim_free(wc_path);
-		goto error_return;
+		search_ctx->ffsc_wc_path = temp;
 	    }
-
-	    STRCPY(temp, search_ctx->ffsc_fix_path + len);
-	    STRCAT(temp, search_ctx->ffsc_wc_path);
-	    vim_free(search_ctx->ffsc_wc_path);
-	    vim_free(wc_path);
-	    search_ctx->ffsc_wc_path = temp;
 	}
 #endif
 	vim_free(buf);
@@ -5064,7 +5063,9 @@ ff_wc_equal(s1, s2)
     char_u	*s1;
     char_u	*s2;
 {
-    int		i;
+    int		i, j;
+    int		c1 = NUL;
+    int		c2 = NUL;
     int		prev1 = NUL;
     int		prev2 = NUL;
 
@@ -5074,21 +5075,21 @@ ff_wc_equal(s1, s2)
     if (s1 == NULL || s2 == NULL)
 	return FALSE;
 
-    if (STRLEN(s1) != STRLEN(s2))
-	return FAIL;
-
-    for (i = 0; s1[i] != NUL && s2[i] != NUL; i += MB_PTR2LEN(s1 + i))
+    for (i = 0, j = 0; s1[i] != NUL && s2[j] != NUL;)
     {
-	int c1 = PTR2CHAR(s1 + i);
-	int c2 = PTR2CHAR(s2 + i);
+	c1 = PTR2CHAR(s1 + i);
+	c2 = PTR2CHAR(s2 + j);
 
 	if ((p_fic ? MB_TOLOWER(c1) != MB_TOLOWER(c2) : c1 != c2)
 		&& (prev1 != '*' || prev2 != '*'))
-	    return FAIL;
+	    return FALSE;
 	prev2 = prev1;
 	prev1 = c1;
+
+        i += MB_PTR2LEN(s1 + i);
+        j += MB_PTR2LEN(s2 + j);
     }
-    return TRUE;
+    return s1[i] == s2[j];
 }
 #endif
 
@@ -5820,14 +5821,14 @@ pathcmp(p, q, maxlen)
     const char *p, *q;
     int maxlen;
 {
-    int		i;
+    int		i, j;
     int		c1, c2;
     const char	*s = NULL;
 
-    for (i = 0; maxlen < 0 || i < maxlen; i += MB_PTR2LEN((char_u *)p + i))
+    for (i = 0, j = 0; maxlen < 0 || (i < maxlen && j < maxlen);)
     {
 	c1 = PTR2CHAR((char_u *)p + i);
-	c2 = PTR2CHAR((char_u *)q + i);
+	c2 = PTR2CHAR((char_u *)q + j);
 
 	/* End of "p": check if "q" also ends or just has a slash. */
 	if (c1 == NUL)
@@ -5835,6 +5836,7 @@ pathcmp(p, q, maxlen)
 	    if (c2 == NUL)  /* full match */
 		return 0;
 	    s = q;
+            i = j;
 	    break;
 	}
 
@@ -5860,8 +5862,11 @@ pathcmp(p, q, maxlen)
 	    return p_fic ? MB_TOUPPER(c1) - MB_TOUPPER(c2)
 		    : c1 - c2;  /* no match */
 	}
+
+	i += MB_PTR2LEN((char_u *)p + i);
+	j += MB_PTR2LEN((char_u *)q + j);
     }
-    if (s == NULL)	/* "i" ran into "maxlen" */
+    if (s == NULL)	/* "i" or "j" ran into "maxlen" */
 	return 0;
 
     c1 = PTR2CHAR((char_u *)s + i);
@@ -6326,5 +6331,25 @@ has_non_ascii(s)
 	    if (*p >= 128)
 		return TRUE;
     return FALSE;
+}
+#endif
+
+#if defined(MESSAGE_QUEUE) || defined(PROTO)
+/*
+ * Process messages that have been queued for netbeans or clientserver.
+ * These functions can call arbitrary vimscript and should only be called when
+ * it is safe to do so.
+ */
+    void
+parse_queued_messages()
+{
+# ifdef FEAT_NETBEANS_INTG
+    /* Process the queued netbeans messages. */
+    netbeans_parse_messages();
+# endif
+# if defined(FEAT_CLIENTSERVER) && defined(FEAT_X11)
+    /* Process the queued clientserver messages. */
+    server_parse_messages();
+# endif
 }
 #endif
