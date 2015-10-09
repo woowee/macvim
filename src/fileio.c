@@ -1267,6 +1267,7 @@ retry:
 	}
     }
 
+# ifdef FEAT_EVAL
     /*
      * Try to guess encoding of the file.
      */
@@ -1275,6 +1276,7 @@ retry:
         if (guess_encode(&fenc, &fenc_alloced, fname) != 0)
             set_internal_string_var((char_u *)"b:x_guessed_fileencoding", fenc);
     }
+# endif
 
     /*
      * Conversion may be required when the encoding of the file is different
