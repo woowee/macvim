@@ -7838,7 +7838,8 @@ vim_tempname(extra_char, keep)
 
 #if defined(BACKSLASH_IN_FILENAME) || defined(PROTO)
 /*
- * Convert all backslashes in fname to forward slashes in-place.
+ * Convert all backslashes in fname to forward slashes in-place, unless when
+ * it looks like a URL.
  */
     void
 forward_slash(fname)
@@ -7846,6 +7847,8 @@ forward_slash(fname)
 {
     char_u	*p;
 
+    if (path_with_url(fname))
+	return;
     for (p = fname; *p != NUL; ++p)
 # ifdef  FEAT_MBYTE
 	/* The Big5 encoding can have '\' in the trail byte. */
