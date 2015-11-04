@@ -1905,10 +1905,12 @@ test1 \
 	test_autocmd_option \
 	test_autoformat_join \
 	test_breakindent \
+	test_cdo \
 	test_changelist \
 	test_charsearch \
 	test_close_count \
 	test_command_count \
+	test_comparators \
 	test_erasebackword \
 	test_eval \
 	test_fixeol \
@@ -2211,6 +2213,7 @@ install-languages: languages $(DEST_LANG) $(DEST_KMAP)
 ICON48PATH = $(DESTDIR)$(DATADIR)/icons/hicolor/48x48/apps
 ICON32PATH = $(DESTDIR)$(DATADIR)/icons/locolor/32x32/apps
 ICON16PATH = $(DESTDIR)$(DATADIR)/icons/locolor/16x16/apps
+DESKTOPPATH = $(DESTDIR)$(DATADIR)/applications
 KDEPATH = $(HOME)/.kde/share/icons
 install-icons:
 	if test -d $(ICON48PATH) -a -w $(ICON48PATH) \
@@ -2225,7 +2228,11 @@ install-icons:
 		-a ! -f $(ICON16PATH)/gvim.png; then \
 	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim16x16.png $(ICON16PATH)/gvim.png; \
 	fi
-
+	if test -d $(DESKTOPPATH) -a -w $(DESKTOPPATH); then \
+	   $(INSTALL_DATA) $(SCRIPTSOURCE)/vim.desktop \
+		$(SCRIPTSOURCE)/gvim.desktop \
+		$(DESKTOPPATH); \
+	fi
 
 $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	@echo Runtime files not found.
