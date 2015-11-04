@@ -674,16 +674,12 @@ ruby_runtime_link_init(char *libname, int verbose)
 ruby_enabled(verbose)
     int		verbose;
 {
-    int ret = FAIL;
-    int mustfree = FALSE;
-    char *s = (char *)vim_getenv((char_u *)"RUBY_DLL", &mustfree);
-    if (s != NULL)
-        ret = ruby_runtime_link_init(s, verbose);
-    if (mustfree)
-        vim_free(s);
-    if (ret == FAIL)
-        ret = ruby_runtime_link_init(DYNAMIC_RUBY_DLL, verbose);
-    return (ret == OK);
+#ifdef WIN3264
+    char *dll = DYNAMIC_RUBY_DLL;
+#else
+    char *dll = *p_rubydll ? (char *)p_rubydll : DYNAMIC_RUBY_DLL;
+#endif
+    return ruby_runtime_link_init(dll, verbose) == OK;
 }
 #endif /* defined(DYNAMIC_RUBY) || defined(PROTO) */
 

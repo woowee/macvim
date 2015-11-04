@@ -418,16 +418,12 @@ lua_link_init(char *libname, int verbose)
     int
 lua_enabled(int verbose)
 {
-    int ret = FAIL;
-    int mustfree = FALSE;
-    char *s = (char *)vim_getenv((char_u *)"LUA_DLL", &mustfree);
-    if (s != NULL)
-	ret = lua_link_init(s, verbose);
-    if (mustfree)
-	vim_free(s);
-    if (ret == FAIL)
-	ret = lua_link_init(DYNAMIC_LUA_DLL, verbose);
-    return (ret == OK);
+#ifdef WIN3264
+    char *dll = DYNAMIC_LUA_DLL;
+#else
+    char *dll = *p_luadll ? (char *)p_luadll : DYNAMIC_LUA_DLL;
+#endif
+    return lua_link_init(dll, verbose) == OK;
 }
 
 #endif /* DYNAMIC_LUA */

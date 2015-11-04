@@ -618,16 +618,12 @@ perl_runtime_link_init(char *libname, int verbose)
 perl_enabled(verbose)
     int		verbose;
 {
-    int ret = FAIL;
-    int mustfree = FALSE;
-    char *s = (char *)vim_getenv((char_u *)"PERL_DLL", &mustfree);
-    if (s != NULL)
-        ret = perl_runtime_link_init(s, verbose);
-    if (mustfree)
-        vim_free(s);
-    if (ret == FAIL)
-        ret = perl_runtime_link_init(DYNAMIC_PERL_DLL, verbose);
-    return (ret == OK);
+#ifdef WIN3264
+    char *dll = DYNAMIC_PERL_DLL;
+#else
+    char *dll = *p_perldll ? (char *)p_perldll : DYNAMIC_PERL_DLL;
+#endif
+    return perl_runtime_link_init(dll, verbose) == OK;
 }
 #endif /* DYNAMIC_PERL */
 

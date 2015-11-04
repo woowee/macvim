@@ -14,6 +14,8 @@ env:
     VERSIONER_PYTHON_VERSION=2.7
     vi_cv_path_python3=/usr/local/bin/python3
     vi_cv_path_plain_lua=/usr/local/bin/lua-5.1
+    vi_cv_dll_name_perl=/System/Library/Perl/5.16/darwin-thread-multi-2level/CORE/libperl.dylib
+    vi_cv_dll_name_python3=/usr/local/Frameworks/Python.framework/Versions/3.5/Python
     "CONFOPT='--with-features=huge --enable-multibyte --enable-netbeans --with-tlib=ncurses --enable-cscope --enable-perlinterp=dynamic --enable-pythoninterp=dynamic --enable-python3interp=dynamic --enable-rubyinterp=dynamic --with-ruby-command=/usr/bin/ruby --enable-ruby19interp=dynamic --with-ruby19-command=/usr/local/bin/ruby --enable-luainterp=dynamic --with-lua-prefix=/usr/local --enable-lua52interp=dynamic --with-lua52-prefix=/usr/local --enable-gui=macvim'"
 
 sudo: false
@@ -24,7 +26,7 @@ branches:
     - kaoriya
 
 before_install:
-  - brew update
+  - brew update || brew update
   - brew install lua51
   - brew install lua
   - brew install python3
@@ -36,6 +38,8 @@ before_install:
 script:
   - NPROC=$(getconf _NPROCESSORS_ONLN)
   - ./configure --with-features=$FEATURES $CONFOPT
+  - grep -q -- "-DDYNAMIC_PERL_DLL=\\\\\"$vi_cv_dll_name_perl\\\\\"" src/auto/config.mk
+  - grep -q -- "-DDYNAMIC_PYTHON3_DLL=\\\\\"$vi_cv_dll_name_python3\\\\\"" src/auto/config.mk
   - GETTEXT=$(find /usr/local/Cellar/gettext -name bin)
   - PATH=$PATH:$GETTEXT make -C src/po MSGFMT=$GETTEXT/msgfmt
   - make -j$NPROC

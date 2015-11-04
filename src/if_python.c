@@ -745,16 +745,12 @@ python_runtime_link_init(char *libname, int verbose)
     int
 python_enabled(int verbose)
 {
-    int ret = FAIL;
-    int mustfree = FALSE;
-    char *s = (char *)vim_getenv((char_u *)"PYTHON_DLL", &mustfree);
-    if (s != NULL)
-        ret = python_runtime_link_init(s, verbose);
-    if (mustfree)
-        vim_free(s);
-    if (ret == FAIL)
-        ret = python_runtime_link_init(DYNAMIC_PYTHON_DLL, verbose);
-    return (ret == OK);
+#ifdef WIN3264
+    char *dll = DYNAMIC_PYTHON_DLL;
+#else
+    char *dll = *p_pydll ? (char *)p_pydll : DYNAMIC_PYTHON_DLL;
+#endif
+    return python_runtime_link_init(dll, verbose) == OK;
 }
 
 /*

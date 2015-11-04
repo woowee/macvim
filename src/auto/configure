@@ -5952,7 +5952,13 @@ $as_echo ">>> too old; need Perl version 5.003_01 or later <<<" >&6; }
     if test "$perl_ok" = "yes" -a "X$libperl" != "X"; then
       $as_echo "#define DYNAMIC_PERL 1" >>confdefs.h
 
-      PERL_CFLAGS="-DDYNAMIC_PERL_DLL=\\\"$libperl\\\" $PERL_CFLAGS"
+      if ${vi_cv_dll_name_perl+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  vi_cv_dll_name_perl="$libperl"
+fi
+
+      PERL_CFLAGS="-DDYNAMIC_PERL_DLL=\\\"$vi_cv_dll_name_perl\\\" $PERL_CFLAGS"
     fi
   fi
 
@@ -6644,6 +6650,7 @@ $as_echo_n "checking whether we can do without RTLD_GLOBAL for Python... " >&6; 
   CFLAGS="$CFLAGS $PYTHON_CFLAGS"
   libs_save=$LIBS
     LIBS="-ldl $LIBS"
+  if test "x$MACOSX" != "xyes"; then
   if test "$cross_compiling" = yes; then :
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -6765,6 +6772,7 @@ rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
   conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 
+  fi
 
   CFLAGS=$cflags_save
   LIBS=$libs_save
