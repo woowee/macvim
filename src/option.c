@@ -347,7 +347,6 @@ static int	p_lisp;
 static int	p_ml;
 static int	p_ma;
 #ifdef FEAT_GUI_MACVIM
-static int      p_macligatures;
 static int	p_mmta;
 static int	p_mpfont;
 #endif
