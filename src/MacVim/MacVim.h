@@ -213,6 +213,8 @@ enum {
     AddToMRUMsgID,
     BackingPropertiesChangedMsgID,
     SetBlurRadiusMsgID,
+    EnableLigaturesMsgID,
+    DisableLigaturesMsgID,
     LastMsgID   // NOTE: MUST BE LAST MESSAGE IN ENUM!
 };
 
@@ -279,7 +281,6 @@ extern NSString *MMNoWindowKey;
 extern NSString *MMAutosaveRowsKey;
 extern NSString *MMAutosaveColumnsKey;
 extern NSString *MMRendererKey;
-extern NSString *MMRendererLigaturesSupportKey;
 
 enum {
     MMRendererDefault = 0,
