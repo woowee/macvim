@@ -9,7 +9,7 @@ compiler:
   - clang
 
 env:
-  - FEATURES=huge
+  - MACOSX_DEPLOYMENT_TARGET=10.8
     VERSIONER_PERL_VERSION=5.16
     VERSIONER_PYTHON_VERSION=2.7
     vi_cv_path_python3=/usr/local/bin/python3
@@ -20,11 +20,6 @@ env:
 
 sudo: false
 
-branches:
-  except:
-    - /^v[0-9]/
-    - kaoriya
-
 before_install:
   - brew update || brew update
   - brew install lua51
@@ -34,10 +29,11 @@ before_install:
   - brew install gettext
   - brew tap splhack/splhack
   - brew install --HEAD cmigemo-mk
+  - brew list --versions
 
 script:
   - NPROC=$(getconf _NPROCESSORS_ONLN)
-  - ./configure --with-features=$FEATURES $CONFOPT
+  - ./configure $CONFOPT
   - grep -q -- "-DDYNAMIC_PERL_DLL=\\\\\"$vi_cv_dll_name_perl\\\\\"" src/auto/config.mk
   - grep -q -- "-DDYNAMIC_PYTHON3_DLL=\\\\\"$vi_cv_dll_name_python3\\\\\"" src/auto/config.mk
   - GETTEXT=$(find /usr/local/Cellar/gettext -name bin)
