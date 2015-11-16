@@ -48,7 +48,6 @@ static void loadSymbols()
     loadSymbols();
 
     NSString *generalLabel = NSLocalizedString(@"General", nil);
-    NSString *integrationLabel = NSLocalizedString(@"Integration", nil);
     NSString *advancedLabel = NSLocalizedString(@"Advanced", nil);
 
     if (nsImageNamePreferencesGeneral != NULL) {
