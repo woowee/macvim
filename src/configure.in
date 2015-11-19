@@ -148,7 +148,7 @@ if test "`(uname) 2>/dev/null`" = Darwin; then
   AC_MSG_CHECKING(--with-developer-dir argument)
   AC_ARG_WITH(developer-dir, [  --with-developer-dir=PATH    use PATH as location for Xcode developer tools],
 	DEVELOPER_DIR="$withval"; AC_MSG_RESULT($DEVELOPER_DIR),
-        DEVELOPER_DIR=""; AC_MSG_RESULT(not present))
+        AC_MSG_RESULT(not present))
   
   if test "x$DEVELOPER_DIR" = "x"; then
     AC_PATH_PROG(XCODE_SELECT, xcode-select)
@@ -4308,6 +4308,13 @@ if test "x$MACOSX" = "xyes"; then
     [ AC_MSG_RESULT(using default) ])
 
   AC_SUBST(XCODEFLAGS)
+
+  macosx_version=`/usr/bin/sw_vers -productVersion|/usr/bin/sed -e 's/^\([[0-9]]*\.[[0-9]]*\).*/\1/'`
+  case "$macosx_version" in
+    10.4|10.5)	XCODEPROJ="MacVim_legacy.xcodeproj";;
+    *)		XCODEPROJ="MacVim.xcodeproj";;
+  esac
+  AC_SUBST(XCODEPROJ)
 fi
 
 

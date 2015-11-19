@@ -1231,7 +1231,7 @@
 	<key>CFBundleIconFile</key>
 	<string>MacVim</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>org.vim.MacVim</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -1256,12 +1256,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>20151117</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
+	<string>82</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
@@ -1307,9 +1302,7 @@
 		</dict>
 	</array>
 	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/splhack/macvim-kaoriya/master/latest.xml</string>
-	<key>SUPublicDSAKeyFile</key>
-	<string>dsa_pub.pem</string>
+	<string>http://b4winckler.github.com/macvim/appcast/stable.xml</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 
