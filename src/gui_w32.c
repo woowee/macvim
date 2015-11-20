@@ -1812,11 +1812,14 @@ gui_mch_init(void)
     highlight_gui_started();
 
     /*
-     * Start out by adding the configured border width into the border offset
+     * Start out by adding the configured border width into the border offset.
      */
     gui.border_offset = gui.border_width;
+<<<<<<< HEAD
     if (!is_visual_style_enabled())
 	gui.border_offset += 2;	    /*CLIENT EDGE*/
+=======
+>>>>>>> 19ec2e553f9b7744ba06c20714108145459cad38
 
     /*
      * Set up for Intellimouse processing
