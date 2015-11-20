@@ -1757,7 +1757,7 @@ gui_mch_init(void)
 	    return FAIL;
     }
     s_textArea = CreateWindowEx(
-	is_visual_style_enabled() ? 0 : WS_EX_CLIENTEDGE,
+	0,
 	szTextAreaClass, "Vim text area",
 	WS_CHILD | WS_VISIBLE, 0, 0,
 	100,				/* Any value will do for now */
@@ -1819,7 +1819,11 @@ gui_mch_init(void)
     if (!is_visual_style_enabled())
 	gui.border_offset += 2;	    /*CLIENT EDGE*/
 =======
+<<<<<<< HEAD
 >>>>>>> 19ec2e553f9b7744ba06c20714108145459cad38
+=======
+>>>>>>> vim/master
+>>>>>>> kaoriya
 
     /*
      * Set up for Intellimouse processing
