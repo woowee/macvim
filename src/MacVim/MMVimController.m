@@ -71,6 +71,8 @@ static BOOL isUnsafeMessage(int msgid);
 }
 - (void)setTextFieldString:(NSString *)textFieldString;
 - (NSTextField *)textField;
+- (void)beginSheetModalForWindow:(NSWindow *)window
+                   modalDelegate:(id)delegate;
 @end
 
 
@@ -1537,9 +1539,7 @@ static BOOL isUnsafeMessage(int msgid);
     }
 
     [alert beginSheetModalForWindow:[windowController window]
-                      modalDelegate:self
-                     didEndSelector:@selector(alertDidEnd:code:context:)
-                        contextInfo:NULL];
+                      modalDelegate:self];
 
     [alert release];
 }
@@ -1606,13 +1606,19 @@ static BOOL isUnsafeMessage(int msgid);
 
 - (void)beginSheetModalForWindow:(NSWindow *)window
                    modalDelegate:(id)delegate
-                  didEndSelector:(SEL)didEndSelector
-                     contextInfo:(void *)contextInfo
 {
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
+    [super beginSheetModalForWindow:window
+                  completionHandler:^(NSModalResponse code) {
+                      [delegate alertDidEnd:self code:code context:NULL];
+                  }];
+#else
     [super beginSheetModalForWindow:window
                       modalDelegate:delegate
-                     didEndSelector:didEndSelector
-                        contextInfo:contextInfo];
+                     didEndSelector:@selector(alertDidEnd:code:context:)
+                        contextInfo:NULL];
+#endif
 
     // HACK! Place the input text field at the bottom of the informative text
     // (which has been made a bit larger by adding newline characters).
