@@ -37,6 +37,7 @@ extern NSString *MMTranslateCtrlClickKey;
 extern NSString *MMTopLeftPointKey;
 extern NSString *MMOpenInCurrentWindowKey;
 extern NSString *MMNoFontSubstitutionKey;
+extern NSString *MMNoTitleBarWindowKey;
 extern NSString *MMLoginShellKey;
 extern NSString *MMUntitledWindowKey;
 extern NSString *MMTexturedWindowKey;
@@ -54,6 +55,7 @@ extern NSString *MMUseInlineImKey;
 #endif // INCLUDE_OLD_IM_CODE
 extern NSString *MMSuppressTerminationAlertKey;
 extern NSString *MMNativeFullScreenKey;
+extern NSString *MMUseMouseTimeKey;
 extern NSString *MMIgnoreShiftSpaceKey;
 
 

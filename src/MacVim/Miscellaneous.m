@@ -29,6 +29,7 @@ NSString *MMTranslateCtrlClickKey       = @"MMTranslateCtrlClick";
 NSString *MMTopLeftPointKey             = @"MMTopLeftPoint";
 NSString *MMOpenInCurrentWindowKey      = @"MMOpenInCurrentWindow";
 NSString *MMNoFontSubstitutionKey       = @"MMNoFontSubstitution";
+NSString *MMNoTitleBarWindowKey         = @"MMNoTitleBarWindow";
 NSString *MMLoginShellKey               = @"MMLoginShell";
 NSString *MMUntitledWindowKey           = @"MMUntitledWindow";
 NSString *MMTexturedWindowKey           = @"MMTexturedWindow";
@@ -46,6 +47,7 @@ NSString *MMUseInlineImKey              = @"MMUseInlineIm";
 #endif // INCLUDE_OLD_IM_CODE
 NSString *MMSuppressTerminationAlertKey = @"MMSuppressTerminationAlert";
 NSString *MMNativeFullScreenKey         = @"MMNativeFullScreen";
+NSString *MMUseMouseTimeKey             = @"MMUseMouseTime";
 NSString *MMIgnoreShiftSpaceKey         = @"MMIgnoreShiftSpace";
 
 
