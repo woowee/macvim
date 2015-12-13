@@ -5089,7 +5089,12 @@ do_set(arg, opt_flags)
 
 			/* If error detected, print the error message. */
 			if (errmsg != NULL)
+			{
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+			    vim_free(saved_origval);
+#endif
 			    goto skip;
+			}
 #if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
 			if (saved_origval != NULL)
 			{
