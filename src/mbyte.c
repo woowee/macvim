@@ -4546,20 +4546,6 @@ iconv_end()
 # if defined(FEAT_GUI_GTK) || defined(PROTO)
 static int xim_has_preediting INIT(= FALSE);  /* IM current status */
 
-/*
- * Set preedit_start_col to the current cursor position.
- */
-    static void
-init_preedit_start_col(void)
-{
-    if (State & CMDLINE)
-	preedit_start_col = cmdline_getvcol_cursor();
-    else if (curwin != NULL && curwin->w_buffer != NULL)
-	getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
-    /* Prevent that preediting marks the buffer as changed. */
-    xim_changed_while_preediting = curbuf->b_changed;
-}
-
 static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
 static int preedit_is_active   = FALSE;
 
