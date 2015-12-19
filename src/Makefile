@@ -2985,7 +2985,7 @@ macvim-dmg: macvim
 
 macvimclean:
 	if test -d MacVim; then \
-		rm -rf MacVim/build xxd/xxd.dSYM; \
+		rm -rf MacVim/build MacVim/qlstephen/build xxd/xxd.dSYM; \
 	fi
 
 
