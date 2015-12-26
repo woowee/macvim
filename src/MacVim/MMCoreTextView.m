@@ -1266,6 +1266,12 @@ recurseDraw(const unichar *chars, CGGlyph *glyphs, CGPoint *positions,
             CFRelease(fallback);
         }
 
+        if (glyphs == g) {
+           // No valid chars in the glyphs. Exit from the possible infinite
+           // recursive call.
+           break;
+        }
+
         chars = c;
         glyphs = g;
         positions = p;
