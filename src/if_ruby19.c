@@ -15,8 +15,6 @@
 #define rb_num2int_stub rb19_num2int_stub
 #define rb_float_new_in_heap rb19_float_new_in_heap
 #define rb_num2ulong rb19_num2ulong
-#define rb_gc_writebarrier_unprotect_stub rb19_gc_writebarrier_unprotect_stub
-#define rb_check_type_stub rb19_check_type_stub
 #define ex_ruby ex_ruby19
 #define ex_rubydo ex_ruby19do
 #define ex_rubyfile ex_ruby19file

@@ -207,12 +207,7 @@ static void ruby_vim_init(void);
 #  define rb_check_type			dll_rb_check_type
 # endif
 # define rb_class_path			dll_rb_class_path
-# if defined(DYNAMIC_RUBY_VER) && DYNAMIC_RUBY_VER >= 23
-#  define rb_data_object_wrap		dll_rb_data_object_wrap
-#  define rb_data_object_zalloc		dll_rb_data_object_zalloc
-# else
-#  define rb_data_object_alloc		dll_rb_data_object_alloc
-# endif
+# define rb_data_object_alloc		dll_rb_data_object_alloc
 # define rb_define_class_under		dll_rb_define_class_under
 # define rb_define_const			dll_rb_define_const
 # define rb_define_global_function	dll_rb_define_global_function
@@ -328,12 +323,7 @@ VALUE *dll_rb_cSymbol;
 VALUE *dll_rb_cTrueClass;
 static void (*dll_rb_check_type) (VALUE,int);
 static VALUE (*dll_rb_class_path) (VALUE);
-# if defined(DYNAMIC_RUBY_VER) && DYNAMIC_RUBY_VER >= 23
-static VALUE (*dll_rb_data_object_wrap) (VALUE, void*, RUBY_DATA_FUNC, RUBY_DATA_FUNC);
-static VALUE (*dll_rb_data_object_zalloc) (VALUE, void*, RUBY_DATA_FUNC, RUBY_DATA_FUNC);
-# else
 static VALUE (*dll_rb_data_object_alloc) (VALUE, void*, RUBY_DATA_FUNC, RUBY_DATA_FUNC);
-# endif
 static VALUE (*dll_rb_define_class_under) (VALUE, const char*, VALUE);
 static void (*dll_rb_define_const) (VALUE,const char*,VALUE);
 static void (*dll_rb_define_global_function) (const char*,VALUE(*)(),int);
@@ -521,12 +511,7 @@ static struct
     {"rb_cTrueClass", (RUBY_PROC*)&dll_rb_cTrueClass},
     {"rb_check_type", (RUBY_PROC*)&dll_rb_check_type},
     {"rb_class_path", (RUBY_PROC*)&dll_rb_class_path},
-# if defined(DYNAMIC_RUBY_VER) && DYNAMIC_RUBY_VER >= 23
-    {"rb_data_object_wrap", (RUBY_PROC*)&dll_rb_data_object_wrap},
-    {"rb_data_object_zalloc", (RUBY_PROC*)&dll_rb_data_object_zalloc},
-# else
     {"rb_data_object_alloc", (RUBY_PROC*)&dll_rb_data_object_alloc},
-# endif
     {"rb_define_class_under", (RUBY_PROC*)&dll_rb_define_class_under},
     {"rb_define_const", (RUBY_PROC*)&dll_rb_define_const},
     {"rb_define_global_function", (RUBY_PROC*)&dll_rb_define_global_function},
