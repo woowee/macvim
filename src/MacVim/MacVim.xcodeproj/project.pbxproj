@@ -665,7 +665,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "OSX_MINOR_VERSION=`/usr/bin/sw_vers -productVersion|cut -f2 -d'.'`\nif [ $OSX_MINOR_VERSION -ge 8 ]; then\n    xcodebuild -project qlstephen/QuickLookStephen.xcodeproj\n    mkdir -p $CONTENTS_FOLDER_PATH/Library/QuickLook\n    cp -pr qlstephen/build/Release/QLStephen.qlgenerator $CONTENTS_FOLDER_PATH/Library/QuickLook\nfi";
+			shellScript = "OSX_MINOR_VERSION=`/usr/bin/sw_vers -productVersion|cut -f2 -d'.'`\nif [ $OSX_MINOR_VERSION -ge 8 ]; then\n    xcodebuild -project qlstephen/QuickLookStephen.xcodeproj\n    mkdir -p $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/QuickLook\n    cp -pr qlstephen/build/Release/QLStephen.qlgenerator $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/Library/QuickLook\nfi";
+			showEnvVarsInLog = 0;
 		};
 		52F1931D1877EC5E007C4A82 /* Copy gettext Files */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -798,7 +799,6 @@
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -831,7 +831,6 @@
 		C01FCF4C08A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
