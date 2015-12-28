@@ -137,11 +137,8 @@ extern NSTimeInterval MMBalloonEvalInternalDelay;
 
 - (void)setAntialias:(BOOL)antialias;
 - (void)setLigatures:(BOOL)ligatures;
-- (void)setProportionalFont:(BOOL)proportionalFont;
-
-#ifdef BLUR_TRANSPARENCY
 - (void)setBlurRadius:(int)radius;
-#endif
+- (void)setProportionalFont:(BOOL)proportionalFont;
 
 - (void)updateModifiedFlag;
 

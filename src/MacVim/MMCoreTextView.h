@@ -9,9 +9,6 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import "Miscellaneous.h" // Defines MM_ENABLE_ATSUI
-
-#if !MM_ENABLE_ATSUI
 
 @class MMTextViewHelper;
 
@@ -94,7 +91,6 @@
 - (void)keyDown:(NSEvent *)event;
 - (void)insertText:(id)string;
 - (void)doCommandBySelector:(SEL)selector;
-- (BOOL)performKeyEquivalent:(NSEvent *)event;
 
 //
 // NSTextContainer methods
@@ -117,5 +113,3 @@
 @interface MMCoreTextView (ToolTip)
 - (void)setToolTipAtMousePoint:(NSString *)string;
 @end
-
-#endif // !MM_ENABLE_ATSUI

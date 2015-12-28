@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9059" systemVersion="15A284" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1050" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9059"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="MMPreferenceController">
@@ -13,7 +13,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <userDefaultsController representsSharedInstance="YES" id="58" userLabel="Shared Defaults"/>
         <customView id="115" userLabel="General">
             <rect key="frame" x="0.0" y="0.0" width="483" height="303"/>
@@ -22,10 +22,9 @@
                 <popUpButton verticalHuggingPriority="750" id="957">
                     <rect key="frame" x="206" y="16" width="197" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <popUpButtonCell key="cell" type="push" title="MacVimを終了しない" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="border" inset="2" selectedItem="960" id="979">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="system"/>
+                        <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" id="959">
                             <items>
                                 <menuItem title="MacVimを終了しない" state="on" id="960"/>
@@ -41,7 +40,6 @@
                 <textField verticalHuggingPriority="750" id="126">
                     <rect key="frame" x="17" y="22" width="187" height="17"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <animations/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="最後のウインドウを閉じた時:" id="977">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -51,10 +49,9 @@
                 <popUpButton verticalHuggingPriority="750" id="427">
                     <rect key="frame" x="218" y="122" width="229" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <popUpButtonCell key="cell" type="push" title="引数リストに設定する" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="border" inset="2" selectedItem="436" id="978">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="system"/>
+                        <font key="font" metaFont="menu"/>
                         <menu key="menu" title="OtherViews" id="429">
                             <items>
                                 <menuItem title="タブで開く" tag="3" id="430"/>
@@ -79,7 +76,6 @@
                 <textField verticalHuggingPriority="750" id="124">
                     <rect key="frame" x="17" y="200" width="187" height="17"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <animations/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="MacVim起動時:" id="976">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -89,7 +85,6 @@
                 <button id="122">
                     <rect key="frame" x="207" y="199" width="258" height="18"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <animations/>
                     <buttonCell key="cell" type="check" title="アップデートを確認" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="975">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
@@ -101,7 +96,6 @@
                 <textField verticalHuggingPriority="750" id="121">
                     <rect key="frame" x="209" y="48" width="257" height="70"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <animations/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Finderからファイルを開いたとき(たとえば、ファイルをダブルクリックしたり、ファイルをDockのMacVimアイコンにドラッグしたとき)、またはXcodeのような外部プログラムからファイルを開いたときに適用されます。" id="974">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" name="disabledControlTextColor" catalog="System" colorSpace="catalog"/>
@@ -111,7 +105,6 @@
                 <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" id="120">
                     <rect key="frame" x="209" y="154" width="243" height="38"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="243" height="18"/>
                     <size key="intercellSpacing" width="4" height="2"/>
@@ -139,7 +132,6 @@
                 <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" autosizesCells="NO" id="119">
                     <rect key="frame" x="209" y="225" width="243" height="58"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <animations/>
                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     <size key="cellSize" width="243" height="18"/>
                     <size key="intercellSpacing" width="4" height="2"/>
@@ -170,7 +162,6 @@
                 <textField verticalHuggingPriority="750" id="117">
                     <rect key="frame" x="17" y="266" width="187" height="17"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <animations/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="空のウインドウを開く時:" id="973">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -180,7 +171,6 @@
                 <textField verticalHuggingPriority="750" id="116">
                     <rect key="frame" x="17" y="175" width="187" height="17"/>
                     <autoresizingMask key="autoresizingMask"/>
-                    <animations/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="right" title="アプリケーションからファイルを開く時:" id="972">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -188,7 +178,6 @@
                     </textFieldCell>
                 </textField>
             </subviews>
-            <animations/>
         </customView>
         <customView id="620" userLabel="Advanced">
             <rect key="frame" x="0.0" y="0.0" width="485" height="336"/>
@@ -197,7 +186,6 @@
                 <textField verticalHuggingPriority="750" id="826">
                     <rect key="frame" x="18" y="178" width="449" height="56"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" id="993">
                         <font key="font" metaFont="smallSystem"/>
                         <string key="title">クイックスタートを有効にすると、新規ウインドウが瞬時に開くようになりますが、最新のランタイムファイルが読み込まれない場合があります。ランタイムファイル(たとえば ~/.vim ディレクトリのファイル)を変更して、新規ウインドウに確実に変更を反映させたい場合は、一旦クイックスタートを無効にしてから、再度有効にしてください。</string>
@@ -208,7 +196,6 @@
                 <button id="817">
                     <rect key="frame" x="19" y="240" width="204" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <buttonCell key="cell" type="check" title="クイックスタートを有効にする" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="992">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
@@ -221,7 +208,6 @@
                 <textField verticalHuggingPriority="750" id="815">
                     <rect key="frame" x="18" y="264" width="449" height="30"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="Core Textレンダラは標準レンダラよりも高速ですが、3本指ダブルタップによる辞書引きが動きません。" id="991">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
@@ -231,20 +217,18 @@
                 <button id="782">
                     <rect key="frame" x="19" y="300" width="204" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <buttonCell key="cell" type="check" title="Core Textレンダラを使用する" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="990">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
                     <connections>
-                        <action selector="atsuiButtonClicked:" target="-1" id="892"/>
+                        <action selector="coreTextButtonClicked:" target="-1" id="MdA-WG-Y9J"/>
                         <binding destination="58" name="value" keyPath="values.MMRenderer" id="1000"/>
                     </connections>
                 </button>
                 <textField verticalHuggingPriority="750" id="1001">
                     <rect key="frame" x="18" y="92" width="449" height="56"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" id="1004">
                         <font key="font" size="11" name="AquaKana"/>
                         <string key="title">ことえり等のインプットメソッドの入力をインラインで描画します。Core Textレンダラを使用する場合は、インプットメソッドの入力を描画するために、このオプションも有効にする必要があります。しかしながら、環境によってはいくつかの制限事項があります(たとえば"dead keys"へのマッピングは動かないでしょう)。</string>
@@ -255,7 +239,6 @@
                 <button id="1013">
                     <rect key="frame" x="19" y="154" width="269" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <buttonCell key="cell" type="check" title="インラインインプットメソッドを使用する" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="1014">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
@@ -267,7 +250,6 @@
                 <button id="1028">
                     <rect key="frame" x="18" y="68" width="390" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <buttonCell key="cell" type="check" title="OS標準フルスクリーン機能を使用する (要Mac OS X 10.7以上)" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="1029">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
@@ -279,7 +261,6 @@
                 <textField verticalHuggingPriority="750" id="1017">
                     <rect key="frame" x="18" y="20" width="449" height="42"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <animations/>
                     <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" title="OS標準フルスクリーン機能では、マルチモニタ使用時は2つ目のモニタが機能しないと言える状態なので、このオプションを無効にして、MacVim独自実装のフルスクリーン機能を使用すると良いでしょう。" id="1020">
                         <font key="font" metaFont="smallSystem"/>
                         <color key="textColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
@@ -287,7 +268,6 @@
                     </textFieldCell>
                 </textField>
             </subviews>
-            <animations/>
             <point key="canvasLocation" x="43.5" y="781"/>
         </customView>
     </objects>
