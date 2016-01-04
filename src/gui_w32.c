@@ -616,14 +616,22 @@ get_caption_width_adjustment(void)
     void
 gui_mch_show_caption(int show)
 {
+    const static LONG flags_on = WS_CAPTION;
+    const static LONG flags_off = 0;
     LONG style, newstyle;
 
     /* Remove caption when title is null. */
     style = newstyle = GetWindowLong(s_hwnd, GWL_STYLE);
-    if (show && !(style & WS_CAPTION))
-	newstyle = style | WS_CAPTION;
-    else if (!show && (style & WS_CAPTION))
-	newstyle = style & ~WS_CAPTION;
+    if (show)
+    {
+	newstyle &= ~flags_off;
+	newstyle |= flags_on;
+    }
+    else
+    {
+	newstyle &= ~flags_on;
+	newstyle |= flags_off;
+    }
     if (newstyle != style)
     {
 	SetWindowLong(s_hwnd, GWL_STYLE, newstyle);
@@ -631,27 +639,6 @@ gui_mch_show_caption(int show)
 		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 	gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
     }
-}
-
-/*
- * Return TRUE when Visual Style is enabled.
- */
-    static int
-is_visual_style_enabled(void)
-{
-    HANDLE hUxtheme;
-    static BOOL (WINAPI *pIsThemeActive)(void) = NULL;
-    static BOOL loaded = FALSE;
-
-    if (!loaded) {
-	hUxtheme = GetModuleHandle("uxtheme.dll");
-	if (hUxtheme != NULL)
-	    pIsThemeActive = (void*)GetProcAddress(hUxtheme, "IsThemeActive");
-	loaded = TRUE;
-    }
-    if (pIsThemeActive)
-	return pIsThemeActive();
-    return FALSE;
 }
 
 #ifdef FEAT_MENU
@@ -693,7 +680,7 @@ gui_mswin_get_menu_height(
 	    {
 		RECT r1, r2;
 		int frameht = GetSystemMetrics(SM_CYFRAME);
- 		int capht = get_caption_height();
+		int capht = get_caption_height();
 
 		/* get window rect of s_hwnd
 		 * get client rect of s_hwnd
@@ -1815,11 +1802,6 @@ gui_mch_init(void)
      * Start out by adding the configured border width into the border offset.
      */
     gui.border_offset = gui.border_width;
-<<<<<<< HEAD
-    if (!is_visual_style_enabled())
-	gui.border_offset += 2;	    /*CLIENT EDGE*/
-=======
->>>>>>> vim/master
 
     /*
      * Set up for Intellimouse processing

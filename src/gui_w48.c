@@ -2933,11 +2933,12 @@ gui_mswin_get_valid_dimensions(
 
     base_width = gui_get_base_width()
 	+ (GetSystemMetrics(SM_CXFRAME) +
-	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
+	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+	+ get_caption_width_adjustment();
     base_height = gui_get_base_height()
 	+ (GetSystemMetrics(SM_CYFRAME) +
 	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
-	+ GetSystemMetrics(SM_CYCAPTION)
+	+ get_caption_height()
 #ifdef FEAT_MENU
 	+ gui_mswin_get_menu_height(FALSE)
 #endif
@@ -3340,9 +3341,11 @@ gui_mch_newfont()
     if (win_socket_id == 0)
     {
 	gui_resize_shell(rect.right - rect.left
+	    - get_caption_width_adjustment()
 	    - (GetSystemMetrics(SM_CXFRAME) +
 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
 	    rect.bottom - rect.top
+	    - get_caption_height()
 	    - (GetSystemMetrics(SM_CYFRAME) +
 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 	    - GetSystemMetrics(SM_CYCAPTION)
