@@ -2111,6 +2111,7 @@ $VIMRUNTIME	starting.jax	/*$VIMRUNTIME*
 :delm	motion.jax	/*:delm*
 :delmarks	motion.jax	/*:delmarks*
 :di	change.jax	/*:di*
+:dif	diff.jax	/*:dif*
 :diffg	diff.jax	/*:diffg*
 :diffget	diff.jax	/*:diffget*
 :diffo	diff.jax	/*:diffo*
@@ -2123,7 +2124,6 @@ $VIMRUNTIME	starting.jax	/*$VIMRUNTIME*
 :diffsplit	diff.jax	/*:diffsplit*
 :difft	diff.jax	/*:difft*
 :diffthis	diff.jax	/*:diffthis*
-:diffu	diff.jax	/*:diffu*
 :diffupdate	diff.jax	/*:diffupdate*
 :dig	digraph.jax	/*:dig*
 :digraphs	digraph.jax	/*:digraphs*
@@ -4283,7 +4283,6 @@ E839	insert.jax	/*E839*
 E84	windows.jax	/*E84*
 E840	insert.jax	/*E840*
 E841	map.jax	/*E841*
-E842	cmdline.jax	/*E842*
 E843	editing.jax	/*E843*
 E844	syntax.jax	/*E844*
 E845	spell.jax	/*E845*
@@ -5358,9 +5357,11 @@ diff-mode	diff.jax	/*diff-mode*
 diff-options	diff.jax	/*diff-options*
 diff-original-file	diff.jax	/*diff-original-file*
 diff-patchexpr	diff.jax	/*diff-patchexpr*
+diff-slow	diff.jax	/*diff-slow*
 diff.txt	diff.jax	/*diff.txt*
 diff_filler()	eval.jax	/*diff_filler()*
 diff_hlID()	eval.jax	/*diff_hlID()*
+diff_translations	diff.jax	/*diff_translations*
 digraph	digraph.jax	/*digraph*
 digraph-arg	change.jax	/*digraph-arg*
 digraph-encoding	digraph.jax	/*digraph-encoding*
@@ -6714,6 +6715,7 @@ mail.vim	syntax.jax	/*mail.vim*
 maillist	intro.jax	/*maillist*
 maillist-archive	intro.jax	/*maillist-archive*
 make.vim	syntax.jax	/*make.vim*
+man.vim	filetype.jax	/*man.vim*
 manual-copyright	usr_01.jax	/*manual-copyright*
 map()	eval.jax	/*map()*
 map-<SID>	map.jax	/*map-<SID>*
