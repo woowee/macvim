@@ -683,7 +683,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	    return FAIL;
 	}
 #endif
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 	/*
 	 * MS-Windows allows opening a device, but we will probably get stuck
 	 * trying to read it.
@@ -764,7 +764,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     file_readonly = FALSE;
     if (read_stdin)
     {
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 	/* Force binary I/O on stdin to avoid CR-LF -> LF conversion. */
 	setmode(0, O_BINARY);
 #endif
@@ -3759,7 +3759,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     /*
      * Get information about original file (if there is one).
      */
-#if defined(UNIX) && !defined(ARCHIE)
+#if defined(UNIX)
     st_old.st_dev = 0;
     st_old.st_ino = 0;
     perm = -1;
@@ -3802,7 +3802,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     }
     if (c == NODE_WRITABLE)
     {
-# if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+# if defined(MSDOS) || defined(MSWIN)
 	/* MS-Windows allows opening a device, but we will probably get stuck
 	 * trying to write to it.  */
 	if (!p_odev)
@@ -4375,7 +4375,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	}
     }
 
-#if defined(UNIX) && !defined(ARCHIE)
+#if defined(UNIX)
     /* When using ":w!" and the file was read-only: make it writable */
     if (forceit && perm >= 0 && !(perm & 0200) && st_old.st_uid == getuid()
 				     && vim_strchr(p_cpo, CPO_FWRITE) == NULL)
@@ -6304,7 +6304,7 @@ shorten_fname(full_path, dir_name)
     if (fnamencmp(dir_name, full_path, len) == 0)
     {
 	p = full_path + len;
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 	/*
 	 * MSDOS: when a file is in the root directory, dir_name will end in a
 	 * slash, since C: by itself does not define a specific dir. In this
@@ -6321,7 +6321,7 @@ shorten_fname(full_path, dir_name)
 #endif
 	}
     }
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
     /*
      * When using a file in the current drive, remove the drive name:
      * "A:\dir\file" -> "\dir\file".  This helps when moving a session file on
@@ -6579,7 +6579,7 @@ buf_modname(shortname, fname, ext, prepend_dot)
 	else if ((int)STRLEN(e) + extlen > 4)
 	    s = e + 4 - extlen;
     }
-#if defined(OS2) || defined(USE_LONG_FNAME) || defined(WIN3264)
+#if defined(USE_LONG_FNAME) || defined(WIN3264)
     /*
      * If there is no file name, and the extension starts with '.', put a
      * '_' before the dot, because just ".ext" may be invalid if it's on a

@@ -467,7 +467,7 @@ struct vimoption
 
 /* 'isprint' for latin1 is also used for MS-Windows cp1252, where 0x80 is used
  * for the currency sign. */
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 # define ISP_LATIN1 (char_u *)"@,~-255"
 #else
 # define ISP_LATIN1 (char_u *)"@,161-255"
@@ -504,7 +504,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {
-#if (defined(MSDOS) || defined(WIN3264) || defined(OS2)) && !defined(FEAT_GUI_W32)
+#if (defined(MSDOS) || defined(WIN3264)) && !defined(FEAT_GUI_W32)
 			    (char_u *)128L,
 #else
 			    (char_u *)224L,
@@ -579,7 +579,7 @@ static struct vimoption
     {"background",  "bg",   P_STRING|P_VI_DEF|P_RCLR,
 			    (char_u *)&p_bg, PV_NONE,
 			    {
-#if (defined(MSDOS) || defined(OS2) || defined(WIN3264)) && !defined(FEAT_GUI)
+#if (defined(MSDOS) || defined(WIN3264)) && !defined(FEAT_GUI)
 			    (char_u *)"dark",
 #else
 			    (char_u *)"light",
@@ -1611,7 +1611,7 @@ static struct vimoption
     {"isident",	    "isi",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_isi, PV_NONE,
 			    {
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 			    (char_u *)"@,48-57,_,128-167,224-235",
 #else
 # ifdef EBCDIC
@@ -1637,7 +1637,7 @@ static struct vimoption
 				    "251-254",
 #else
 				(char_u *)"@,48-57,_",
-# if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+# if defined(MSDOS) || defined(MSWIN)
 				(char_u *)"@,48-57,_,128-167,224-235"
 # else
 				ISK_LATIN1
@@ -1647,7 +1647,7 @@ static struct vimoption
     {"isprint",	    "isp",  P_STRING|P_VI_DEF|P_RALL|P_COMMA|P_NODUP,
 			    (char_u *)&p_isp, PV_NONE,
 			    {
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2) \
+#if defined(MSDOS) || defined(MSWIN) \
 		|| (defined(MACOS) && !defined(MACOS_X)) \
 		|| defined(VMS)
 			    (char_u *)"@,~-255",
@@ -1693,14 +1693,10 @@ static struct vimoption
 #ifdef VMS
 			    (char_u *)"help",
 #else
-# if defined(OS2)
-			    (char_u *)"view /",
-# else
-#  ifdef USEMAN_S
+# ifdef USEMAN_S
 			    (char_u *)"man -s",
-#  else
+# else
 			    (char_u *)"man",
-#  endif
 # endif
 #endif
 #endif
@@ -1748,7 +1744,7 @@ static struct vimoption
     {"lines",	    NULL,   P_NUM|P_NODEFAULT|P_NO_MKRC|P_VI_DEF|P_RCLR,
 			    (char_u *)&Rows, PV_NONE,
 			    {
-#if defined(MSDOS) || defined(WIN3264) || defined(OS2)
+#if defined(MSDOS) || defined(WIN3264)
 			    (char_u *)25L,
 #else
 			    (char_u *)24L,
@@ -1963,7 +1959,7 @@ static struct vimoption
 			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
     {"nrformats",   "nf",   P_STRING|P_ALLOCED|P_VI_DEF|P_ONECOMMA|P_NODUP,
 			    (char_u *)&p_nf, PV_NF,
-			    {(char_u *)"octal,hex", (char_u *)0L}
+			    {(char_u *)"bin,octal,hex", (char_u *)0L}
 			    SCRIPTID_INIT},
     {"number",	    "nu",   P_BOOL|P_VI_DEF|P_RWIN,
 			    (char_u *)VAR_WIN, PV_NU,
@@ -1988,7 +1984,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L} SCRIPTID_INIT},
     {"opendevice",  "odev", P_BOOL|P_VI_DEF,
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 			    (char_u *)&p_odev, PV_NONE,
 #else
 			    (char_u *)NULL, PV_NONE,
@@ -2320,15 +2316,7 @@ static struct vimoption
 #   if defined(WIN3264)
 			    (char_u *)"",	/* set in set_init_1() */
 #   else
-#    if defined(OS2)
-			    (char_u *)"cmd.exe",
-#    else
-#     if defined(ARCHIE)
-			    (char_u *)"gos",
-#     else
 			    (char_u *)"sh",
-#     endif
-#    endif
 #   endif
 #  endif
 # endif
@@ -2340,23 +2328,15 @@ static struct vimoption
 #if defined(MSDOS) || defined(MSWIN)
 			    (char_u *)"/c",
 #else
-# if defined(OS2)
-			    (char_u *)"/c",
-# else
 			    (char_u *)"-c",
-# endif
 #endif
 				(char_u *)0L} SCRIPTID_INIT},
     {"shellpipe",   "sp",   P_STRING|P_VI_DEF|P_SECURE,
 #ifdef FEAT_QUICKFIX
 			    (char_u *)&p_sp, PV_NONE,
 			    {
-#if defined(UNIX) || defined(OS2)
-# ifdef ARCHIE
-			    (char_u *)"2>",
-# else
+#if defined(UNIX)
 			    (char_u *)"| tee",
-# endif
 #else
 			    (char_u *)">",
 #endif
@@ -2789,7 +2769,7 @@ static struct vimoption
     {"undolevels",  "ul",   P_NUM|P_VI_DEF,
 			    (char_u *)&p_ul, PV_UL,
 			    {
-#if defined(UNIX) || defined(WIN3264) || defined(OS2) || defined(VMS)
+#if defined(UNIX) || defined(WIN3264) || defined(VMS)
 			    (char_u *)1000L,
 #else
 			    (char_u *)100L,
@@ -2831,7 +2811,7 @@ static struct vimoption
     {"viminfo",	    "vi",   P_STRING|P_ONECOMMA|P_NODUP|P_SECURE,
 #ifdef FEAT_VIMINFO
 			    (char_u *)&p_viminfo, PV_NONE,
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 			    {(char_u *)"", (char_u *)"'100,<50,s10,h,rA:,rB:"}
 #else
 # ifdef AMIGA
@@ -3079,7 +3059,7 @@ static char *(p_ambw_values[]) = {"single", "double",
     NULL};
 #endif
 static char *(p_bg_values[]) = {"light", "dark", NULL};
-static char *(p_nf_values[]) = {"octal", "hex", "alpha", NULL};
+static char *(p_nf_values[]) = {"bin", "octal", "hex", "alpha", NULL};
 static char *(p_ff_values[]) = {FF_UNIX, FF_DOS, FF_MAC, NULL};
 #ifdef FEAT_CRYPT
 static char *(p_cm_values[]) = {"zip", "blowfish", "blowfish2", NULL};
@@ -3227,7 +3207,7 @@ set_init_1()
      * Don't use it if it is empty.
      */
     if (((p = mch_getenv((char_u *)"SHELL")) != NULL && *p != NUL)
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 # ifdef __EMX__
 	    || ((p = mch_getenv((char_u *)"EMXSHELL")) != NULL && *p != NUL)
 # endif
@@ -3377,10 +3357,10 @@ set_init_1()
     }
 #endif
 
-#if defined(FEAT_POSTSCRIPT) && (defined(MSWIN) || defined(OS2) || defined(VMS) || defined(EBCDIC) || defined(MAC) || defined(hpux))
+#if defined(FEAT_POSTSCRIPT) && (defined(MSWIN) || defined(VMS) || defined(EBCDIC) || defined(MAC) || defined(hpux))
     /* Set print encoding on platforms that don't default to latin1 */
     set_string_default("penc",
-# if defined(MSWIN) || defined(OS2)
+# if defined(MSWIN)
 		       (char_u *)"cp1252"
 # else
 #  ifdef VMS
@@ -3403,7 +3383,7 @@ set_init_1()
 #ifdef FEAT_POSTSCRIPT
     /* 'printexpr' must be allocated to be able to evaluate it. */
     set_string_default("pexpr",
-# if defined(MSWIN) || defined(MSDOS) || defined(OS2)
+# if defined(MSWIN) || defined(MSDOS)
 	    (char_u *)"system('copy' . ' ' . v:fname_in . (&printdevice == '' ? ' LPT1:' : (' \"' . &printdevice . '\"'))) . delete(v:fname_in)"
 # else
 #  ifdef VMS
@@ -3553,7 +3533,7 @@ set_init_1()
 		options[opt_idx].flags |= P_DEF_ALLOCED;
 	    }
 
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(MACOS) \
+#if defined(MSDOS) || defined(MSWIN) || defined(MACOS) \
 		|| defined(VMS)
 	    if (STRCMP(p_enc, "latin1") == 0
 # ifdef FEAT_MBYTE
@@ -3837,7 +3817,7 @@ set_init_2()
     set_number_default("window", Rows - 1);
 
     /* For DOS console the default is always black. */
-#if !((defined(MSDOS) || defined(OS2) || defined(WIN3264)) && !defined(FEAT_GUI))
+#if !((defined(MSDOS) || defined(WIN3264)) && !defined(FEAT_GUI))
     /*
      * If 'background' wasn't set by the user, try guessing the value,
      * depending on the terminal name.  Only need to check for terminals
@@ -3880,7 +3860,7 @@ set_init_2()
     static char_u *
 term_bg_default()
 {
-#if defined(MSDOS) || defined(OS2) || defined(WIN3264)
+#if defined(MSDOS) || defined(WIN3264)
     /* DOS console nearly always black */
     return (char_u *)"dark";
 #else
@@ -3905,7 +3885,7 @@ term_bg_default()
     void
 set_init_3()
 {
-#if defined(UNIX) || defined(OS2) || defined(WIN3264)
+#if defined(UNIX) || defined(WIN3264)
 /*
  * Set 'shellpipe' and 'shellredir', depending on the 'shell' option.
  * This is done after other initializations, where 'shell' might have been
@@ -3914,23 +3894,23 @@ set_init_3()
     char_u  *p;
     int	    idx_srr;
     int	    do_srr;
-#ifdef FEAT_QUICKFIX
+# ifdef FEAT_QUICKFIX
     int	    idx_sp;
     int	    do_sp;
-#endif
+# endif
 
     idx_srr = findoption((char_u *)"srr");
     if (idx_srr < 0)
 	do_srr = FALSE;
     else
 	do_srr = !(options[idx_srr].flags & P_WAS_SET);
-#ifdef FEAT_QUICKFIX
+# ifdef FEAT_QUICKFIX
     idx_sp = findoption((char_u *)"sp");
     if (idx_sp < 0)
 	do_sp = FALSE;
     else
 	do_sp = !(options[idx_sp].flags & P_WAS_SET);
-#endif
+# endif
     p = get_isolated_shell_name();
     if (p != NULL)
     {
@@ -3940,23 +3920,23 @@ set_init_3()
 	 */
 	if (	   fnamecmp(p, "csh") == 0
 		|| fnamecmp(p, "tcsh") == 0
-# if defined(OS2) || defined(WIN3264)	/* also check with .exe extension */
+# if defined(WIN3264)	/* also check with .exe extension */
 		|| fnamecmp(p, "csh.exe") == 0
 		|| fnamecmp(p, "tcsh.exe") == 0
 # endif
 	   )
 	{
-#if defined(FEAT_QUICKFIX)
+# if defined(FEAT_QUICKFIX)
 	    if (do_sp)
 	    {
-# ifdef WIN3264
+#  ifdef WIN3264
 		p_sp = (char_u *)">&";
-# else
+#  else
 		p_sp = (char_u *)"|& tee";
-# endif
+#  endif
 		options[idx_sp].def_val[VI_DEFAULT] = p_sp;
 	    }
-#endif
+# endif
 	    if (do_srr)
 	    {
 		p_srr = (char_u *)">&";
@@ -3964,7 +3944,7 @@ set_init_3()
 	    }
 	}
 	else
-# ifndef OS2	/* Always use bourne shell style redirection if we reach this */
+	    /* Always use bourne shell style redirection if we reach this */
 	    if (       fnamecmp(p, "sh") == 0
 		    || fnamecmp(p, "ksh") == 0
 		    || fnamecmp(p, "mksh") == 0
@@ -3973,7 +3953,7 @@ set_init_3()
 		    || fnamecmp(p, "zsh-beta") == 0
 		    || fnamecmp(p, "bash") == 0
 		    || fnamecmp(p, "fish") == 0
-#  ifdef WIN3264
+# ifdef WIN3264
 		    || fnamecmp(p, "cmd") == 0
 		    || fnamecmp(p, "sh.exe") == 0
 		    || fnamecmp(p, "ksh.exe") == 0
@@ -3983,21 +3963,20 @@ set_init_3()
 		    || fnamecmp(p, "zsh-beta.exe") == 0
 		    || fnamecmp(p, "bash.exe") == 0
 		    || fnamecmp(p, "cmd.exe") == 0
-#  endif
-		    )
 # endif
+		    )
 	    {
-#if defined(FEAT_QUICKFIX)
+# if defined(FEAT_QUICKFIX)
 		if (do_sp)
 		{
-# ifdef WIN3264
+#  ifdef WIN3264
 		    p_sp = (char_u *)">%s 2>&1";
-# else
+#  else
 		    p_sp = (char_u *)"2>&1| tee";
-# endif
+#  endif
 		    options[idx_sp].def_val[VI_DEFAULT] = p_sp;
 		}
-#endif
+# endif
 		if (do_srr)
 		{
 		    p_srr = (char_u *)">%s 2>&1";
@@ -4008,7 +3987,7 @@ set_init_3()
     }
 #endif
 
-#if defined(MSDOS) || defined(WIN3264) || defined(OS2)
+#if defined(MSDOS) || defined(WIN3264)
     /*
      * Set 'shellcmdflag', 'shellxquote', and 'shellquote' depending on the
      * 'shell' option.
@@ -4628,7 +4607,8 @@ do_set(arg, opt_flags)
 			{
 			    /* Allow negative (for 'undolevels'), octal and
 			     * hex numbers. */
-			    vim_str2nr(arg, NULL, &i, TRUE, TRUE, &value, NULL, 0);
+			    vim_str2nr(arg, NULL, &i, STR2NR_ALL,
+							     &value, NULL, 0);
 			    if (arg[i] != NUL && !vim_iswhite(arg[i]))
 			    {
 				errmsg = e_invarg;
@@ -4888,9 +4868,15 @@ do_set(arg, opt_flags)
 						|| s[i] == NUL))
 					break;
 				    /* Count backslashes.  Only a comma with an
-				     * even number of backslashes before it is
-				     * recognized as a separator */
-				    if (s > origval && s[-1] == '\\')
+				     * even number of backslashes or a single
+				     * backslash preceded by a comma before it
+				     * is recognized as a separator */
+				    if ((s > origval + 1
+						&& s[-1] == '\\'
+						&& s[-2] != ',')
+					    || (s == origval + 1
+						&& s[-1] == '\\'))
+
 					++bs;
 				    else
 					bs = 0;
@@ -7076,7 +7062,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	if (VIM_ISDIGIT(*p_bs))
 	{
-	    if (*p_bs >'2' || p_bs[1] != NUL)
+	    if (*p_bs > '2' || p_bs[1] != NUL)
 		errmsg = e_invarg;
 	}
 	else if (check_opt_strings(p_bs, p_bs_values, TRUE) != OK)

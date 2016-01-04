@@ -781,6 +781,7 @@ static void f_winrestview __ARGS((typval_T *argvars, typval_T *rettv));
 static void f_winsaveview __ARGS((typval_T *argvars, typval_T *rettv));
 static void f_winwidth __ARGS((typval_T *argvars, typval_T *rettv));
 static void f_writefile __ARGS((typval_T *argvars, typval_T *rettv));
+static void f_wordcount __ARGS((typval_T *argvars, typval_T *rettv));
 static void f_xor __ARGS((typval_T *argvars, typval_T *rettv));
 
 static int list2fpos __ARGS((typval_T *arg, pos_T *posp, int *fnump, colnr_T *curswantp));
@@ -1626,7 +1627,7 @@ call_vim_function(func, argc, argv, safe, str_arg_only, rettv)
 	    len = 0;
 	else
 	    /* Recognize a number argument, the others must be strings. */
-	    vim_str2nr(argv[i], NULL, &len, TRUE, TRUE, &n, NULL, 0);
+	    vim_str2nr(argv[i], NULL, &len, STR2NR_ALL, &n, NULL, 0);
 	if (len != 0 && len == (int)STRLEN(argv[i]))
 	{
 	    argvars[i].v_type = VAR_NUMBER;
@@ -5140,7 +5141,7 @@ eval7(arg, rettv, evaluate, want_string)
 		else
 #endif
 		{
-		    vim_str2nr(*arg, NULL, &len, TRUE, TRUE, &n, NULL, 0);
+		    vim_str2nr(*arg, NULL, &len, STR2NR_ALL, &n, NULL, 0);
 		    *arg += len;
 		    if (evaluate)
 		    {
@@ -8389,6 +8390,7 @@ static struct fst
     {"winrestview",	1, 1, f_winrestview},
     {"winsaveview",	0, 0, f_winsaveview},
     {"winwidth",	1, 1, f_winwidth},
+    {"wordcount",	0, 0, f_wordcount},
     {"writefile",	2, 3, f_writefile},
     {"xor",		2, 2, f_xor},
 };
@@ -9153,10 +9155,19 @@ prepare_assert_error(gap)
     char buf[NUMBUFLEN];
 
     ga_init2(gap, 1, 100);
-    ga_concat(gap, sourcing_name);
-    sprintf(buf, " line %ld", (long)sourcing_lnum);
-    ga_concat(gap, (char_u *)buf);
-    ga_concat(gap, (char_u *)": ");
+    if (sourcing_name != NULL)
+    {
+	ga_concat(gap, sourcing_name);
+	if (sourcing_lnum > 0)
+	    ga_concat(gap, (char_u *)" ");
+    }
+    if (sourcing_lnum > 0)
+    {
+	sprintf(buf, "line %ld", (long)sourcing_lnum);
+	ga_concat(gap, (char_u *)buf);
+    }
+    if (sourcing_name != NULL || sourcing_lnum > 0)
+	ga_concat(gap, (char_u *)": ");
 }
 
 /*
@@ -9245,7 +9256,7 @@ assert_bool(argvars, isTrue)
     {
 	prepare_assert_error(&ga);
 	fill_assert_error(&ga, &argvars[1],
-		(char_u *)(isTrue ? "True " : "False "),
+		(char_u *)(isTrue ? "True" : "False"),
 		NULL, &argvars[0]);
 	assert_error(&ga);
 	ga_clear(&ga);
@@ -10185,6 +10196,7 @@ f_cursor(argvars, rettv)
 #ifdef FEAT_VIRTUALEDIT
     long	coladd = 0;
 #endif
+    int		set_curswant = TRUE;
 
     rettv->vval.v_number = -1;
     if (argvars[1].v_type == VAR_UNKNOWN)
@@ -10200,7 +10212,10 @@ f_cursor(argvars, rettv)
 	coladd = pos.coladd;
 #endif
 	if (curswant >= 0)
+	{
 	    curwin->w_curswant = curswant - 1;
+	    set_curswant = FALSE;
+	}
     }
     else
     {
@@ -10233,7 +10248,7 @@ f_cursor(argvars, rettv)
 	mb_adjust_cursor();
 #endif
 
-    curwin->w_set_curswant = TRUE;
+    curwin->w_set_curswant = set_curswant;
     rettv->vval.v_number = 0;
 }
 
@@ -12792,9 +12807,6 @@ f_has(argvars, rettv)
 #endif
 #if defined(MACOS_X_UNIX)
 	"macunix",
-#endif
-#ifdef OS2
-	"os2",
 #endif
 #ifdef __QNX__
 	"qnx",
@@ -17558,7 +17570,10 @@ f_setpos(argvars, rettv)
 		{
 		    curwin->w_cursor = pos;
 		    if (curswant >= 0)
+		    {
 			curwin->w_curswant = curswant - 1;
+			curwin->w_set_curswant = FALSE;
+		    }
 		    check_cursor();
 		    rettv->vval.v_number = 0;
 		}
@@ -18556,11 +18571,12 @@ f_str2nr(argvars, rettv)
     int		base = 10;
     char_u	*p;
     long	n;
+    int		what;
 
     if (argvars[1].v_type != VAR_UNKNOWN)
     {
 	base = get_tv_number(&argvars[1]);
-	if (base != 8 && base != 10 && base != 16)
+	if (base != 2 && base != 8 && base != 10 && base != 16)
 	{
 	    EMSG(_(e_invarg));
 	    return;
@@ -18570,7 +18586,14 @@ f_str2nr(argvars, rettv)
     p = skipwhite(get_tv_string(&argvars[0]));
     if (*p == '+')
 	p = skipwhite(p + 1);
-    vim_str2nr(p, NULL, NULL, base == 8 ? 2 : 0, base == 16 ? 2 : 0, &n, NULL, 0);
+    switch (base)
+    {
+	case 2: what = STR2NR_BIN + STR2NR_FORCE; break;
+	case 8: what = STR2NR_OCT + STR2NR_FORCE; break;
+	case 16: what = STR2NR_HEX + STR2NR_FORCE; break;
+	default: what = 0;
+    }
+    vim_str2nr(p, NULL, NULL, what, &n, NULL, 0);
     rettv->vval.v_number = n;
 }
 
@@ -20230,6 +20253,19 @@ f_winwidth(argvars, rettv)
 }
 
 /*
+ * "wordcount()" function
+ */
+    static void
+f_wordcount(argvars, rettv)
+    typval_T	*argvars UNUSED;
+    typval_T	*rettv;
+{
+    if (rettv_dict_alloc(rettv) == FAIL)
+	return;
+    cursor_pos_info(rettv->vval.v_dict);
+}
+
+/*
  * Write list of strings to file
  */
     static int
@@ -21376,7 +21412,7 @@ get_tv_number_chk(varp, denote)
 	case VAR_STRING:
 	    if (varp->vval.v_string != NULL)
 		vim_str2nr(varp->vval.v_string, NULL, NULL,
-						    TRUE, TRUE, &n, NULL, 0);
+						    STR2NR_ALL, &n, NULL, 0);
 	    return n;
 	case VAR_LIST:
 	    EMSG(_("E745: Using a List as a Number"));

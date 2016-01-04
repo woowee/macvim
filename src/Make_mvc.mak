@@ -834,6 +834,11 @@ CFLAGS = $(CFLAGS) -DDYNAMIC_PERL -DDYNAMIC_PERL_DLL=\"$(PERL_DLL)\"
 
 PERL_EXE = $(PERL)\Bin$(PERL_ARCH)\perl
 PERL_INC = /I $(PERL_INCDIR)
+!if $(MSVC_MAJOR) <= 11
+# ActivePerl 5.20+ requires stdbool.h but VC2012 or earlier doesn't have it.
+# Use a stub stdbool.h.
+PERL_INC = $(PERL_INC) /I if_perl_msvc
+!endif
 PERL_OBJ = $(OUTDIR)\if_perl.obj $(OUTDIR)\if_perlsfio.obj
 XSUBPP = $(PERL)\lib\ExtUtils\xsubpp
 !if exist($(XSUBPP))
@@ -949,8 +954,13 @@ LINKARGS1 = $(LINKARGS1) /LTCG:STATUS
 !endif
 !endif
 
-all:	$(VIM).exe vimrun.exe install.exe uninstal.exe xxd/xxd.exe \
-		GvimExt/gvimext.dll
+all:	$(VIM).exe \
+	vimrun.exe \
+	install.exe \
+	uninstal.exe \
+	xxd/xxd.exe \
+	tee/tee.exe \
+	GvimExt/gvimext.dll
 
 $(VIM).exe: $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(MZSCHEME_OBJ) \
 		$(LUA_OBJ) $(PERL_OBJ) $(PYTHON_OBJ) $(PYTHON3_OBJ) $(RUBY_OBJ) $(TCL_OBJ) \
@@ -987,6 +997,11 @@ xxd/xxd.exe: xxd/xxd.c
 	$(MAKE) /NOLOGO -f Make_mvc.mak
 	cd ..
 	IF EXIST $@.manifest mt -nologo -manifest $@.manifest -outputresource:$@;1
+
+tee/tee.exe: tee/tee.c
+	cd tee
+	$(MAKE) /NOLOGO -f Make_mvc.mak
+	cd ..
 
 GvimExt/gvimext.dll: GvimExt/gvimext.cpp GvimExt/gvimext.rc GvimExt/gvimext.h
 	cd GvimExt
@@ -1032,6 +1047,11 @@ clean:
 test:
 	cd testdir
 	$(MAKE) /NOLOGO -f Make_dos.mak win32
+	cd ..
+
+testgvim:
+	cd testdir
+	$(MAKE) /NOLOGO -f Make_dos.mak VIMPROG=..\gvim win32
 	cd ..
 
 testclean:

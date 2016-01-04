@@ -3847,7 +3847,7 @@ init_homedir()
 # endif
 #endif
 
-#if defined(OS2) || defined(MSDOS) || defined(MSWIN)
+#if defined(MSDOS) || defined(MSWIN)
     /*
      * Default home dir is C:/
      * Best assumption we can make in such a situation.
@@ -3986,7 +3986,7 @@ expand_env_esc(srcp, dst, dstlen, esc, one, startstr)
 		    && at_start
 #endif
 	   )
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 		|| *src == '%'
 #endif
 		|| (*src == '~' && at_start))
@@ -4015,21 +4015,16 @@ expand_env_esc(srcp, dst, dstlen, esc, one, startstr)
 #endif
 		{
 		    while (c-- > 0 && *tail != NUL && ((vim_isIDc(*tail))
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 			    || (*src == '%' && *tail != '%')
 #endif
 			    ))
 		    {
-#ifdef OS2		/* env vars only in uppercase */
-			*var++ = TOUPPER_LOC(*tail);
-			tail++;	    /* toupper() may be a macro! */
-#else
 			*var++ = *tail++;
-#endif
 		    }
 		}
 
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(UNIX)
+#if defined(MSDOS) || defined(MSWIN) || defined(UNIX)
 # ifdef UNIX
 		if (src[1] == '{' && *tail != '}')
 # else
@@ -4047,7 +4042,7 @@ expand_env_esc(srcp, dst, dstlen, esc, one, startstr)
 #endif
 		    *var = NUL;
 		    var = vim_getenv(dst, &mustfree);
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(UNIX)
+#if defined(MSDOS) || defined(MSWIN) || defined(UNIX)
 		}
 #endif
 	    }
@@ -4240,7 +4235,7 @@ vim_getenv(name, mustfree)
     char_u	*pend;
     int		vimruntime;
 
-#if defined(OS2) || defined(MSDOS) || defined(MSWIN)
+#if defined(MSDOS) || defined(MSWIN)
     /* use "C:/" when $HOME is not set */
     if (STRCMP(name, "HOME") == 0)
 	return homedir;
@@ -4991,7 +4986,7 @@ get_past_head(path)
 {
     char_u  *retval;
 
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
     /* may skip "c:" */
     if (isalpha(path[0]) && path[1] == ':')
 	retval = path + 2;
@@ -10873,7 +10868,7 @@ has_env_var(p)
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
 	else if (vim_strchr((char_u *)
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+#if defined(MSDOS) || defined(MSWIN)
 				    "$%"
 #else
 				    "$"
