@@ -1072,6 +1072,9 @@ clean:
 	cd xxd
 	$(MAKE) /NOLOGO -f Make_mvc.mak clean
 	cd ..
+	cd tee
+	$(MAKE) /NOLOGO -f Make_mvc.mak clean
+	cd ..
 	cd GvimExt
 	$(MAKE) /NOLOGO -f Makefile clean
 	cd ..
