@@ -1,4 +1,4 @@
-*eval.txt*	For Vim version 7.4.  Last change: 2016 Jan 09
+*eval.txt*	For Vim version 7.4.  Last change: 2016 Jan 16
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -919,6 +919,11 @@ just above, except that indexes out of range cause an error.  Examples: >
 Using expr8[expr1] or expr8[expr1a : expr1b] on a |Funcref| results in an
 error.
 
+Watch out for confusion between a namespace and a variable followed by a colon
+for a sublist: >
+	mylist[n:]     " uses variable n
+	mylist[s:]     " uses namespace s:, error!
+
 
 expr8.name		entry in a |Dictionary|		*expr-entry*
 
@@ -1750,9 +1755,11 @@ arglistid( [{winnr} [, {tabnr}]])
 				Number	argument list id
 argv( {nr})			String	{nr} entry of the argument list
 argv( )				List	the argument list
-assert_equal( {exp}, {act} [, {msg}]) none    assert that {exp} equals {act}
-assert_false( {actual} [, {msg}])     none    assert that {actual} is false
-assert_true( {actual} [, {msg}])      none    assert that {actual} is true
+assert_equal( {exp}, {act} [, {msg}]) none  assert {exp} equals {act}
+assert_exception({error} [, {msg}])   none  assert {error} is in v:exception
+assert_fails( {cmd} [, {error}])      none  assert {cmd} fails
+assert_false( {actual} [, {msg}])     none  assert {actual} is false
+assert_true( {actual} [, {msg}])      none  assert {actual} is true
 asin( {expr})			Float	arc sine of {expr}
 atan( {expr})			Float	arc tangent of {expr}
 atan2( {expr}, {expr})		Float   arc tangent of {expr1} / {expr2}
@@ -1792,7 +1799,7 @@ cursor( {lnum}, {col} [, {off}])
 				Number	move cursor to {lnum}, {col}, {off}
 cursor( {list})			Number	move cursor to position in {list}
 deepcopy( {expr} [, {noref}])	any	make a full copy of {expr}
-delete( {fname})		Number	delete file {fname}
+delete( {fname} [, {flags}])	Number	delete the file or directory {fname}
 did_filetype()			Number	TRUE if FileType autocommand event used
 diff_filler( {lnum})		Number	diff filler lines about {lnum}
 diff_hlID( {lnum}, {col})	Number	diff highlighting at {lnum}/{col}
@@ -2179,7 +2186,7 @@ argv([{nr}])	The result is the {nr}th file in the argument list of the
 		returned.
 
 							*assert_equal()*
-assert_equal({expected}, {actual}, [, {msg}])
+assert_equal({expected}, {actual} [, {msg}])
 		When {expected} and {actual} are not equal an error message is
 		added to |v:errors|.
 		There is no automatic conversion, the String "4" is different
@@ -2193,18 +2200,36 @@ assert_equal({expected}, {actual}, [, {msg}])
 <		Will result in a string to be added to |v:errors|:
 	test.vim line 12: Expected 'foo' but got 'bar' ~
 
-assert_false({actual}, [, {msg}])				*assert_false()*
+assert_exception({error} [, {msg}])			*assert_exception()*
+		When v:exception does not contain the string {error} an error
+		message is added to |v:errors|.
+		This can be used to assert that a command throws an exception.
+		Using the error number, followed by a colon, avoids problems
+		with translations: >
+			try
+			  commandthatfails
+			  call assert_false(1, 'command should have failed')
+			catch
+			  call assert_exception('E492:')
+			endtry
+
+assert_fails({cmd} [, {error}])					*assert_fails()*
+		Run {cmd} and add an error message to |v:errors| if it does
+		NOT produce an error.
+		When {error} is given it must match |v:errmsg|.
+
+assert_false({actual} [, {msg}])				*assert_false()*
 		When {actual} is not false an error message is added to
-		|v:errors|, like with |assert_equal()|..
+		|v:errors|, like with |assert_equal()|.
 		A value is false when it is zero. When "{actual}" is not a
 		number the assert fails.
 		When {msg} is omitted an error in the form "Expected False but
 		got {actual}" is produced.
 
-assert_true({actual}, [, {msg}])				*assert_true()*
+assert_true({actual} [, {msg}])					*assert_true()*
 		When {actual} is not true an error message is added to
-		|v:errors|, like with |assert_equal()|..
-		A value is true when it is a non-zeron number.  When {actual}
+		|v:errors|, like with |assert_equal()|.
+		A value is true when it is a non-zero number.  When {actual}
 		is not a number the assert fails.
 		When {msg} is omitted an error in the form "Expected True but
 		got {actual}" is produced.
@@ -2728,10 +2753,20 @@ deepcopy({expr}[, {noref}])				*deepcopy()* *E698*
 		{noref} set to 1 will fail.
 		Also see |copy()|.
 
-delete({fname})							*delete()*
-		Deletes the file by the name {fname}.  The result is a Number,
-		which is 0 if the file was deleted successfully, and non-zero
-		when the deletion failed.
+delete({fname} [, {flags}])					*delete()*
+		Without {flags} or with {flags} empty: Deletes the file by the
+		name {fname}.  This also works when {fname} is a symbolic link.
+
+		When {flags} is "d": Deletes the directory by the name
+		{fname}.  This fails when directory {fname} is not empty.
+		
+		When {flags} is "rf": Deletes the directory by the name
+		{fname} and everything in it, recursively.  BE CAREFUL!
+		A symbolic link itself is deleted, not what it points to.
+		
+		The result is a Number, which is 0 if the delete operation was
+		successful and -1 when the deletion failed or partly failed.
+
 		Use |remove()| to delete an item from a |List|.
 		To delete a line from the buffer use |:delete|.  Use |:exe|
 		when the line number is in a variable.
@@ -3477,7 +3512,7 @@ getcmdwintype()						*getcmdwintype()*
 							*getcurpos()*
 getcurpos()	Get the position of the cursor.  This is like getpos('.'), but
 		includes an extra item in the list:
-		    [bufnum, lnum, col, off, curswant]
+		    [bufnum, lnum, col, off, curswant] ~
 		The "curswant" number is the preferred column when moving the
 		cursor vertically.
 		This can be used to save and restore the cursor position: >

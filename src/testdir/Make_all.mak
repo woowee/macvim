@@ -89,6 +89,7 @@ SCRIPTS_ALL = \
 	test105.out \
 	test106.out \
 	test107.out \
+	test108.out \
 	test_argument_0count.out \
 	test_argument_count.out \
 	test_autocmd_option.out \
@@ -138,7 +139,6 @@ SCRIPTS_MORE2 = \
 	test10.out \
 	test12.out \
 	test25.out \
-	test27.out \
 	test49.out \
 	test97.out
 
@@ -171,7 +171,8 @@ SCRIPTS_GUI = test16.out
 
 # Tests using runtest.vim.vim.
 # Keep test_alot.res as the last one, sort the others.
-NEW_TESTS = test_assert.res \
+NEW_TESTS = test_arglist.res \
+	    test_assert.res \
 	    test_cdo.res \
 	    test_hardcopy.res \
 	    test_increment.res \

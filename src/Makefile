@@ -2003,12 +2003,15 @@ test1 \
 	test70 test71 test72 test73 test74 test75 test76 test77 test78 test79 \
 	test80 test81 test82 test83 test84 test85 test86 test87 test88 test89 \
 	test90 test91 test92 test93 test94 test95 test96 test97 test98 test99 \
-	test100 test101 test102 test103 test104 test105 test106 test107:
+	test100 test101 test102 test103 test104 test105 test106 test107 test108:
 	cd testdir; rm -f $@.out; $(MAKE) -f Makefile $@.out VIMPROG=../$(VIMTARGET) $(GUI_TESTARG) SCRIPTSOURCE=../$(SCRIPTSOURCE)
 
 test_assert \
 	test_backspace_opt \
 	test_cdo \
+	test_cursor_func \
+	test_delete \
+	test_expand \
 	test_hardcopy \
 	test_increment \
 	test_lispwords \
@@ -3020,6 +3023,7 @@ $(APPDIR)/Contents:
 
 RELEASEDIR = MacVim/build/Release
 DMGDIR = MacVim/build/dmg
+DMGFILE = MacVim.dmg
 
 macvim: $(VIMTARGET)
 	xcodebuild -project MacVim/MacVim.xcodeproj $(XCODEFLAGS)
@@ -3028,9 +3032,9 @@ macvim-dmg: macvim
 	mkdir -p $(DMGDIR)
 	cp MacVim/mvim $(DMGDIR)/
 	cp -r $(RELEASEDIR)/MacVim.app $(DMGDIR)/
-	rm -rf $(RELEASEDIR)/MacVim-$(VERSION).dmg
+	rm -rf $(RELEASEDIR)/$(DMGFILE)
 	create-dmg/create-dmg \
-		--volname "MacVim $(VERSION)" \
+		--volname "MacVim" \
 		--volicon MacVim/icons/MacVim.icns \
 		--background create-dmg/background.png \
 		--window-size 650 470 \
@@ -3038,7 +3042,7 @@ macvim-dmg: macvim
 		--icon MacVim.app 240 320 \
 		--icon mvim 570 80 \
 		--app-drop-link 410 320 \
-		$(RELEASEDIR)/MacVim-$(VERSION).dmg $(DMGDIR)
+		$(RELEASEDIR)/$(DMGFILE) $(DMGDIR)
 
 macvimclean:
 	if test -d MacVim; then \
