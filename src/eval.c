@@ -25113,6 +25113,7 @@ read_viminfo_varlist(virp, writing)
     char_u	*tab;
     int		type = VAR_NUMBER;
     typval_T	tv;
+    funccall_T  *save_funccal;
 
     if (!writing && (find_viminfo_parameter('!') != NULL))
     {
@@ -25159,7 +25160,11 @@ read_viminfo_varlist(virp, writing)
 		    }
 		}
 
+		/* when in a function use global variables */
+		save_funccal = current_funccal;
+		current_funccal = NULL;
 		set_var(virp->vir_line + 1, &tv, FALSE);
+		current_funccal = save_funccal;
 
 		if (tv.v_type == VAR_STRING)
 		    vim_free(tv.vval.v_string);
