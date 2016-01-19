@@ -538,7 +538,6 @@ if test "$enable_luainterp" = "yes" -o "$enable_luainterp" = "dynamic"; then
 	[vi_cv_with_luajit="no"])
   AC_MSG_RESULT($vi_cv_with_luajit)
 
-  LUA_INC=
   if test "X$vi_cv_path_lua_pfx" != "X"; then
     if test "x$vi_cv_with_luajit" != "xno"; then
       dnl -- try to find LuaJIT executable
@@ -724,7 +723,6 @@ if test "$enable_lua52interp" = "yes" -o "$enable_lua52interp" = "dynamic"; then
     fi
   fi
 
-  LUA52_INC=
   if test "X$vi_cv_path_lua52_pfx" != "X"; then
     dnl -- try to find Lua52 executable
     AC_PATH_PROG(vi_cv_path_lua52, lua)
