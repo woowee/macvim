@@ -19,7 +19,7 @@ env:
     vi_cv_dll_name_perl=/System/Library/Perl/5.16/darwin-thread-multi-2level/CORE/libperl.dylib
     vi_cv_dll_name_python=/System/Library/Frameworks/Python.framework/Versions/2.7/Python
     vi_cv_dll_name_python3=/usr/local/Frameworks/Python.framework/Versions/3.5/Python
-    VIM=src/MacVim/build/Release/MacVim.app/Contents/MacOS/Vim
+    VIMCMD=src/MacVim/build/Release/MacVim.app/Contents/MacOS/Vim
     "CONFOPT='--with-features=huge --enable-multibyte --enable-netbeans --with-tlib=ncurses --enable-cscope --enable-perlinterp=dynamic --enable-pythoninterp=dynamic --enable-python3interp=dynamic --enable-rubyinterp=dynamic --with-ruby-command=/usr/bin/ruby --enable-ruby19interp=dynamic --with-ruby19-command=/usr/local/bin/ruby --enable-luainterp=dynamic --with-lua-prefix=/usr/local --enable-lua52interp=dynamic --with-lua52-prefix=/usr/local --enable-gui=macvim'"
 
 sudo: false
@@ -45,15 +45,15 @@ script:
   - GETTEXT=$(find /usr/local/Cellar/gettext -name bin)
   - PATH=$PATH:$GETTEXT make -C src/po MSGFMT=$GETTEXT/msgfmt
   - make -j$NPROC
-  - rm -f result; $VIM -g -c "redir>result" -c version -c "redir END" -c q; sleep 1; cat result; grep -q -w "MacVim GUI" result
-  - rm -f result; $VIM -g -c "redir>result" -c "set luadll=/usr/local/lib/liblua.5.1.dylib" -c "lua print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIM -g -c "redir>result" -c "set luadll=/usr/local/lib/liblua.5.2.dylib" -c "lua print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIM -g -c "redir>result" -c "perl VIM::Msg(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIM -g -c "redir>result" -c "py print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIM -g -c "redir>result" -c "py3 print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIM -g -c "redir>result" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIM -g -c "redir>result" -c "set rubydll=/usr/lib/libruby.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIM -g -c "redir>result" -c "set rubydll=/usr/local/lib/libruby.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c version -c "redir END" -c q; sleep 1; cat result; grep -q -w "MacVim GUI" result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "set luadll=/usr/local/lib/liblua.5.1.dylib" -c "lua print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "set luadll=/usr/local/lib/liblua.5.2.dylib" -c "lua print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "perl VIM::Msg(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "py print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "py3 print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "set rubydll=/usr/lib/libruby.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "set rubydll=/usr/local/lib/libruby.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
   - make test
 
 # vim:set sts=2 sw=2 tw=0 et:
