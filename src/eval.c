@@ -10962,6 +10962,7 @@ f_feedkeys(argvars, rettv)
     char_u	*keys, *flags;
     char_u	nbuf[NUMBUFLEN];
     int		typed = FALSE;
+    int		execute = FALSE;
     char_u	*keys_esc;
 
     /* This is not allowed in the sandbox.  If the commands would still be
@@ -10984,6 +10985,7 @@ f_feedkeys(argvars, rettv)
 		    case 'm': remap = TRUE; break;
 		    case 't': typed = TRUE; break;
 		    case 'i': insert = TRUE; break;
+		    case 'x': execute = TRUE; break;
 		}
 	    }
 	}
@@ -10998,6 +11000,8 @@ f_feedkeys(argvars, rettv)
 	    vim_free(keys_esc);
 	    if (vgetc_busy)
 		typebuf_was_filled = TRUE;
+	    if (execute)
+		exec_normal(TRUE);
 	}
     }
 }
