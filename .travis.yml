@@ -52,7 +52,7 @@ script:
   - rm -f result; $VIMCMD -g -c "redir>result" -c "py3 print(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
   - rm -f result; $VIMCMD -g -c "redir>result" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
   - rm -f result; $VIMCMD -g -c "redir>result" -c "set rubydll=/usr/lib/libruby.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIMCMD -g -c "redir>result" -c "set rubydll=/usr/local/lib/libruby.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -c "redir>result" -c "set rubydll=/usr/local/lib/libruby.2.3.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; sleep 1; cat result; echo; grep -q -w Test result
   - make test
 
 # vim:set sts=2 sw=2 tw=0 et:
