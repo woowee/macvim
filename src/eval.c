@@ -21666,6 +21666,7 @@ free_tv(varp)
 	    case VAR_FLOAT:
 #endif
 	    case VAR_UNKNOWN:
+	    case VAR_SPECIAL:
 		break;
 	    default:
 		EMSG2(_(e_intern2), "free_tv()");
