@@ -6247,7 +6247,9 @@ eof
 
 fi
 
-	if ${vi_cv_dll_name_python+:} false; then :
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking Python's dll name" >&5
+$as_echo_n "checking Python's dll name... " >&6; }
+if ${vi_cv_dll_name_python+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -6258,7 +6260,8 @@ else
 	  fi
 
 fi
-
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $vi_cv_dll_name_python" >&5
+$as_echo "$vi_cv_dll_name_python" >&6; }
 
 	PYTHON_LIBS="${vi_cv_path_python_plibs}"
 	if test "${vi_cv_path_python_pfx}" = "${vi_cv_path_python_epfx}"; then
@@ -6583,7 +6586,9 @@ eof
 
 fi
 
-	if ${vi_cv_dll_name_python3+:} false; then :
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking Python3's dll name" >&5
+$as_echo_n "checking Python3's dll name... " >&6; }
+if ${vi_cv_dll_name_python3+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
@@ -6594,7 +6599,8 @@ else
 	  fi
 
 fi
-
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $vi_cv_dll_name_python3" >&5
+$as_echo "$vi_cv_dll_name_python3" >&6; }
 
         PYTHON3_LIBS="${vi_cv_path_python3_plibs}"
         if test "${vi_cv_path_python3_pfx}" = "${vi_cv_path_python3_epfx}"; then
@@ -6746,7 +6752,7 @@ else
     int no_rtl_global_needed_for(char *python_instsoname, char *prefix)
     {
       int needed = 0;
-      void* pylib = dlopen(python_instsoname, RTLD_LAZY);
+      void* pylib = dlopen(python_instsoname, RTLD_LAZY|RTLD_LOCAL);
       if (pylib != 0)
       {
           void (*pfx)(char *home) = dlsym(pylib, "Py_SetPythonHome");
@@ -6812,7 +6818,7 @@ else
     int no_rtl_global_needed_for(char *python_instsoname, wchar_t *prefix)
     {
       int needed = 0;
-      void* pylib = dlopen(python_instsoname, RTLD_LAZY);
+      void* pylib = dlopen(python_instsoname, RTLD_LAZY|RTLD_LOCAL);
       if (pylib != 0)
       {
           void (*pfx)(wchar_t *home) = dlsym(pylib, "Py_SetPythonHome");
