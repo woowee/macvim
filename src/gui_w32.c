@@ -553,9 +553,6 @@ typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
 static TMonitorFromWindow   pMonitorFromWindow = NULL;
 static TGetMonitorInfo	    pGetMonitorInfo = NULL;
 static HANDLE		    user32_lib = NULL;
-#ifdef FEAT_CHANNEL
-int WSInitialized = FALSE; /* WinSock is initialized */
-#endif
 
 /*
  * For Transparent Window (for only Windows 2000)
@@ -5156,25 +5153,6 @@ netbeans_draw_multisign_indicator(int row)
     SetPixel(s_hdc, x+2, y, gui.currFgColor);
     SetPixel(s_hdc, x+3, y++, gui.currFgColor);
     SetPixel(s_hdc, x+2, y, gui.currFgColor);
-}
-#endif
-
-#if defined(FEAT_CHANNEL) || defined(PROTO)
-/*
- * Initialize the Winsock dll.
- */
-    void
-channel_init_winsock()
-{
-    WSADATA wsaData;
-    int wsaerr;
-
-    if (WSInitialized)
-	return;
-
-    wsaerr = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (wsaerr == 0)
-	WSInitialized = TRUE;
 }
 #endif
 
