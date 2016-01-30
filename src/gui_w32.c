@@ -331,9 +331,9 @@ gui_mch_set_rendering_options(char_u *s)
 # define UINT_PTR UINT
 #endif
 
-static void make_tooltip __ARGS((BalloonEval *beval, char *text, POINT pt));
-static void delete_tooltip __ARGS((BalloonEval *beval));
-static VOID CALLBACK BevalTimerProc __ARGS((HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime));
+static void make_tooltip(BalloonEval *beval, char *text, POINT pt);
+static void delete_tooltip(BalloonEval *beval);
+static VOID CALLBACK BevalTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 static BalloonEval  *cur_beval = NULL;
 static UINT_PTR	    BevalTimerId = 0;
@@ -908,6 +908,7 @@ _OnWindowPosChanged(
     const LPWINDOWPOS lpwpos)
 {
     static int x = 0, y = 0, cx = 0, cy = 0;
+    extern int WSInitialized;
 
     if (WSInitialized && (lpwpos->x != x || lpwpos->y != y
 				     || lpwpos->cx != cx || lpwpos->cy != cy))
@@ -5041,7 +5042,7 @@ gui_mch_post_balloon(beval, mesg)
 gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
     void	*target;	/* ignored, always use s_textArea */
     char_u	*mesg;
-    void	(*mesgCB)__ARGS((BalloonEval *, int));
+    void	(*mesgCB)(BalloonEval *, int);
     void	*clientData;
 {
     /* partially stolen from gui_beval.c */
