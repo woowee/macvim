@@ -553,19 +553,6 @@ typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
 static TMonitorFromWindow   pMonitorFromWindow = NULL;
 static TGetMonitorInfo	    pGetMonitorInfo = NULL;
 static HANDLE		    user32_lib = NULL;
-
-/*
- * For Transparent Window (for only Windows 2000)
- */
-#define USE_LAYERED_WINDOW 1
-#if USE_LAYERED_WINDOW
-# define WS_EX_LAYERED 0x80000
-# define LWA_ALPHA 2
-typedef DWORD (WINAPI *FWINLAYER)(HWND hwnd, DWORD crKey, BYTE bAlpha,
-	DWORD dwFlags);
-static void w32_set_transparency(HWND hwnd, BYTE bAlpha);
-#endif /* USE_LAYERED_WINDOW */
-
 /*
  * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
  * less fancy GUI APIs.
