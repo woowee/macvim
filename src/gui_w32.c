@@ -2353,7 +2353,7 @@ im_set_active(int active)
  * Get IM status.  When IM is on, return not 0.  Else return 0.
  */
     int
-im_get_status()
+im_get_status(void)
 {
     int		status = 0;
     HIMC	hImc;
@@ -4633,10 +4633,7 @@ typedef struct _signicon_t
 } signicon_t;
 
     void
-gui_mch_drawsign(row, col, typenr)
-    int		row;
-    int		col;
-    int		typenr;
+gui_mch_drawsign(int row, int col, int typenr)
 {
     signicon_t *sign;
     int x, y, w, h;
@@ -4713,8 +4710,7 @@ close_signicon_image(signicon_t *sign)
 }
 
     void *
-gui_mch_register_sign(signfile)
-    char_u	*signfile;
+gui_mch_register_sign(char_u *signfile)
 {
     signicon_t	sign, *psign;
     char_u	*ext;
@@ -4769,8 +4765,7 @@ gui_mch_register_sign(signfile)
 }
 
     void
-gui_mch_destroy_sign(sign)
-    void *sign;
+gui_mch_destroy_sign(void *sign)
 {
     if (sign)
     {
@@ -4874,10 +4869,7 @@ multiline_balloon_available(void)
 }
 
     static void
-make_tooltip(beval, text, pt)
-    BalloonEval *beval;
-    char *text;
-    POINT pt;
+make_tooltip(BalloonEval *beval, char *text, POINT pt)
 {
     TOOLINFO	*pti;
     int		ToolInfoSize;
@@ -4941,19 +4933,18 @@ make_tooltip(beval, text, pt)
 }
 
     static void
-delete_tooltip(beval)
-    BalloonEval	*beval;
+delete_tooltip(BalloonEval *beval)
 {
     PostMessage(beval->balloon, WM_CLOSE, 0, 0);
 }
 
 /*ARGSUSED*/
     static VOID CALLBACK
-BevalTimerProc(hwnd, uMsg, idEvent, dwTime)
-    HWND    hwnd;
-    UINT    uMsg;
-    UINT_PTR    idEvent;
-    DWORD   dwTime;
+BevalTimerProc(
+    HWND    hwnd,
+    UINT    uMsg,
+    UINT_PTR    idEvent,
+    DWORD   dwTime)
 {
     POINT	pt;
     RECT	rect;
@@ -4991,8 +4982,7 @@ BevalTimerProc(hwnd, uMsg, idEvent, dwTime)
 
 /*ARGSUSED*/
     void
-gui_mch_disable_beval_area(beval)
-    BalloonEval	*beval;
+gui_mch_disable_beval_area(BalloonEval *beval)
 {
     // TRACE0("gui_mch_disable_beval_area {{{");
     KillTimer(s_textArea, BevalTimerId);
@@ -5001,8 +4991,7 @@ gui_mch_disable_beval_area(beval)
 
 /*ARGSUSED*/
     void
-gui_mch_enable_beval_area(beval)
-    BalloonEval	*beval;
+gui_mch_enable_beval_area(BalloonEval *beval)
 {
     // TRACE0("gui_mch_enable_beval_area |||");
     if (beval == NULL)
@@ -5013,9 +5002,7 @@ gui_mch_enable_beval_area(beval)
 }
 
     void
-gui_mch_post_balloon(beval, mesg)
-    BalloonEval	*beval;
-    char_u	*mesg;
+gui_mch_post_balloon(BalloonEval *beval, char_u *mesg)
 {
     POINT   pt;
     // TRACE0("gui_mch_post_balloon {{{");
@@ -5036,11 +5023,11 @@ gui_mch_post_balloon(beval, mesg)
 
 /*ARGSUSED*/
     BalloonEval *
-gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
-    void	*target;	/* ignored, always use s_textArea */
-    char_u	*mesg;
-    void	(*mesgCB)(BalloonEval *, int);
-    void	*clientData;
+gui_mch_create_beval_area(
+    void	*target,	/* ignored, always use s_textArea */
+    char_u	*mesg,
+    void	(*mesgCB)(BalloonEval *, int),
+    void	*clientData)
 {
     /* partially stolen from gui_beval.c */
     BalloonEval	*beval;
@@ -5118,8 +5105,7 @@ TrackUserActivity(UINT uMsg)
 }
 
     void
-gui_mch_destroy_beval_area(beval)
-    BalloonEval	*beval;
+gui_mch_destroy_beval_area(BalloonEval *beval)
 {
     vim_free(beval);
 }
