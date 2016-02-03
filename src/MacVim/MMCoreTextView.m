@@ -45,10 +45,11 @@
 #define DRAW_WIDE                 0x40    /* draw wide text */
 #define DRAW_TUNDERL              0x100   /* draw double underline text */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
-
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
 #define kCTFontOrientationDefault kCTFontDefaultOrientation
+#endif // MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_8
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
     static void
 CTFontDrawGlyphs(CTFontRef fontRef, const CGGlyph glyphs[],
                  const CGPoint positions[], UniCharCount count,
@@ -59,7 +60,6 @@ CTFontDrawGlyphs(CTFontRef fontRef, const CGGlyph glyphs[],
     CGContextShowGlyphsAtPositions(context, glyphs, positions, count);
     CGFontRelease(cgFontRef);
 }
-
 #endif // MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
 
 @interface MMCoreTextView (Private)
