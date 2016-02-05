@@ -6856,6 +6856,10 @@ garbage_collect(void)
     abort = abort || set_ref_in_python3(copyID);
 #endif
 
+#ifdef FEAT_CHANNEL
+    abort = abort || set_ref_in_channel(copyID);
+#endif
+
     if (!abort)
     {
 	/*
@@ -9844,6 +9848,7 @@ f_ch_sendexpr(typval_T *argvars, typval_T *rettv)
 	return;
 
     ch_idx = send_common(argvars, text, "sendexpr");
+    vim_free(text);
     if (ch_idx >= 0)
     {
 	if (channel_read_json_block(ch_idx, id, &listtv) == OK)
