@@ -191,10 +191,7 @@ func s:two_channels(port)
 endfunc
 
 func Test_two_channels()
-  " TODO: make this work again with MS-Windows
-  if has('unix')
-    call s:run_server('s:two_channels')
-  endif
+  call s:run_server('s:two_channels')
 endfunc
 
 " Test that a server crash is handled gracefully.
@@ -211,10 +208,7 @@ func s:server_crash(port)
 endfunc
 
 func Test_server_crash()
-  " TODO: make this work again with MS-Windows
-  if has('unix')
-    call s:run_server('s:server_crash')
-  endif
+  call s:run_server('s:server_crash')
 endfunc
 
 let s:reply = ""
@@ -272,4 +266,21 @@ func Test_connect_waittime()
     let elapsed = reltime(start)
     call assert_true(reltimefloat(elapsed) < (has('unix') ? 1.0 : 3.0))
   endif
+endfunc
+
+func Test_pipe()
+  if !has('job') || !has('unix')
+    return
+  endif
+  let job = job_start("python test_channel_pipe.py")
+  call assert_equal("run", job_status(job))
+  try
+    let handle = job_getchannel(job)
+    call ch_sendraw(handle, "echo something\n", 0)
+    call assert_equal("something\n", ch_readraw(handle))
+    let reply = ch_sendraw(handle, "quit\n")
+    call assert_equal("Goodbye!\n", reply)
+  finally
+    call job_stop(job)
+  endtry
 endfunc
