@@ -28,20 +28,27 @@ else
   finish
 endif
 
-let s:chopt = has('macunix') ? {'waittime' : 1} : {}
+let s:chopt = {}
 
 " Run "testfunc" after sarting the server and stop the server afterwards.
-func s:run_server(testfunc)
+func s:run_server(testfunc, ...)
   " The Python program writes the port number in Xportnr.
   call delete("Xportnr")
 
+  if a:0 == 1
+    let arg = ' ' . a:1
+  else
+    let arg = ''
+  endif
+  let cmd = s:python . " test_channel.py" . arg
+
   try
     if has('job')
-      let s:job = job_start(s:python . " test_channel.py")
+      let s:job = job_start(cmd)
     elseif has('win32')
-      exe 'silent !start cmd /c start "test_channel" ' . s:python . ' test_channel.py'
+      exe 'silent !start cmd /c start "test_channel" ' . cmd
     else
-      exe 'silent !' . s:python . ' test_channel.py&'
+      exe 'silent !' . cmd . '&'
     endif
 
     " Wait for up to 2 seconds for the port number to be there.
@@ -117,7 +124,7 @@ func s:communicate(port)
   call assert_equal('added more', getline('$'))
 
   " Send a request with a specific handler.
-  call ch_sendexpr(handle, 'hello!', 's:RequestHandler')
+  call ch_sendexpr(handle, 'hello!', {'callback': 's:RequestHandler'})
   sleep 10m
   if !exists('s:responseHandle')
     call assert_false(1, 's:responseHandle was not set')
@@ -128,7 +135,7 @@ func s:communicate(port)
 
   unlet s:responseHandle
   let s:responseMsg = ''
-  call ch_sendexpr(handle, 'hello!', function('s:RequestHandler'))
+  call ch_sendexpr(handle, 'hello!', {'callback': function('s:RequestHandler')})
   sleep 10m
   if !exists('s:responseHandle')
     call assert_false(1, 's:responseHandle was not set')
@@ -136,6 +143,13 @@ func s:communicate(port)
     call assert_equal(handle, s:responseHandle)
   endif
   call assert_equal('got it', s:responseMsg)
+
+  " check setting options (without testing the effect)
+  call ch_setoptions(handle, {'callback': 's:NotUsed'})
+  call ch_setoptions(handle, {'timeout': 1111})
+  call assert_fails("call ch_setoptions(handle, {'waittime': 111})", "E475")
+  call assert_fails("call ch_setoptions(handle, {'mode': 'json'})", "E475")
+  call ch_setoptions(handle, {'callback': ''})
 
   " Send an eval request that works.
   call assert_equal('ok', ch_sendexpr(handle, 'eval-works'))
@@ -171,10 +185,11 @@ func s:communicate(port)
   call assert_equal('ok', ch_sendexpr(handle, 'empty-request'))
 
   " make the server quit, can't check if this works, should not hang.
-  call ch_sendexpr(handle, '!quit!', 0)
+  call ch_sendexpr(handle, '!quit!', {'callback': 0})
 endfunc
 
 func Test_communicate()
+  call ch_log('Test_communicate()')
   call s:run_server('s:communicate')
 endfunc
 
@@ -203,6 +218,7 @@ func s:two_channels(port)
 endfunc
 
 func Test_two_channels()
+  call ch_log('Test_two_channels()')
   call s:run_server('s:two_channels')
 endfunc
 
@@ -220,6 +236,7 @@ func s:server_crash(port)
 endfunc
 
 func Test_server_crash()
+  call ch_log('Test_server_crash()')
   call s:run_server('s:server_crash')
 endfunc
 
@@ -242,12 +259,13 @@ func s:channel_handler(port)
   call assert_equal('we called you', s:reply)
 
   " Test that it works while not waiting on a numbered message.
-  call ch_sendexpr(handle, 'call me again', 0)
+  call ch_sendexpr(handle, 'call me again', {'callback': 0})
   sleep 10m
   call assert_equal('we did call you', s:reply)
 endfunc
 
 func Test_channel_handler()
+  call ch_log('Test_channel_handler()')
   let s:chopt.callback = 's:Handler'
   call s:run_server('s:channel_handler')
   let s:chopt.callback = function('s:Handler')
@@ -257,13 +275,10 @@ endfunc
 
 " Test that trying to connect to a non-existing port fails quickly.
 func Test_connect_waittime()
-  if !has('unix')
-    " TODO: Make this work again for MS-Windows.
-    return
-  endif
+  call ch_log('Test_connect_waittime()')
   let start = reltime()
   let handle = ch_open('localhost:9876', s:chopt)
-  if ch_status(handle) == "fail"
+  if ch_status(handle) != "fail"
     " Oops, port does exists.
     call ch_close(handle)
   else
@@ -272,7 +287,7 @@ func Test_connect_waittime()
   endif
 
   let start = reltime()
-  let handle = ch_open('localhost:9867', {'waittime': 2000})
+  let handle = ch_open('localhost:9867', {'waittime': 500})
   if ch_status(handle) != "fail"
     " Oops, port does exists.
     call ch_close(handle)
@@ -280,26 +295,58 @@ func Test_connect_waittime()
     " Failed connection doesn't wait the full time on Unix.
     " TODO: why is MS-Windows different?
     let elapsed = reltime(start)
-    call assert_true(reltimefloat(elapsed) < (has('unix') ? 1.0 : 3.0))
+    call assert_true(reltimefloat(elapsed) < 1.0)
   endif
 endfunc
 
-func Test_pipe()
+func Test_raw_pipe()
   if !has('job')
     return
   endif
-  let job = job_start(s:python . " test_channel_pipe.py")
+  call ch_log('Test_raw_pipe()')
+  let job = job_start(s:python . " test_channel_pipe.py", {'mode': 'raw'})
   call assert_equal("run", job_status(job))
   try
     let handle = job_getchannel(job)
-    call ch_sendraw(handle, "echo something\n", 0)
-    call assert_equal("something\n", ch_readraw(handle))
+    call ch_sendraw(handle, "echo something\n", {'callback': 0})
+    let msg = ch_readraw(handle)
+    call assert_equal("something\n", substitute(msg, "\r", "", 'g'))
+
+    call ch_sendraw(handle, "double this\n", {'callback': 0})
+    let msg = ch_readraw(handle)
+    call assert_equal("this\nAND this\n", substitute(msg, "\r", "", 'g'))
+
     let reply = ch_sendraw(handle, "quit\n")
-    call assert_equal("Goodbye!\n", reply)
+    call assert_equal("Goodbye!\n", substitute(reply, "\r", "", 'g'))
   finally
     call job_stop(job)
   endtry
 endfunc
+
+func Test_nl_pipe()
+  if !has('job')
+    return
+  endif
+  call ch_log('Test_nl_pipe()')
+  let job = job_start(s:python . " test_channel_pipe.py")
+  call assert_equal("run", job_status(job))
+  try
+    let handle = job_getchannel(job)
+    call ch_sendraw(handle, "echo something\n", {'callback': 0})
+    call assert_equal("something", ch_readraw(handle))
+
+    call ch_sendraw(handle, "double this\n", {'callback': 0})
+    call assert_equal("this", ch_readraw(handle))
+    call assert_equal("AND this", ch_readraw(handle))
+
+    let reply = ch_sendraw(handle, "quit\n")
+    call assert_equal("Goodbye!", reply)
+  finally
+    call job_stop(job)
+  endtry
+endfunc
+
+""""""""""
 
 let s:unletResponse = ''
 func s:UnletHandler(handle, msg)
@@ -310,11 +357,63 @@ endfunc
 " Test that "unlet handle" in a handler doesn't crash Vim.
 func s:unlet_handle(port)
   let s:channelfd = ch_open('localhost:' . a:port, s:chopt)
-  call ch_sendexpr(s:channelfd, "test", function('s:UnletHandler'))
+  call ch_sendexpr(s:channelfd, "test", {'callback': function('s:UnletHandler')})
   sleep 10m
   call assert_equal('what?', s:unletResponse)
 endfunc
 
 func Test_unlet_handle()
+  call ch_log('Test_unlet_handle()')
   call s:run_server('s:unlet_handle')
+endfunc
+
+""""""""""
+
+let s:unletResponse = ''
+func s:CloseHandler(handle, msg)
+  let s:unletResponse = a:msg
+  call ch_close(s:channelfd)
+endfunc
+
+" Test that "unlet handle" in a handler doesn't crash Vim.
+func s:close_handle(port)
+  let s:channelfd = ch_open('localhost:' . a:port, s:chopt)
+  call ch_sendexpr(s:channelfd, "test", {'callback': function('s:CloseHandler')})
+  sleep 10m
+  call assert_equal('what?', s:unletResponse)
+endfunc
+
+func Test_close_handle()
+  call ch_log('Test_close_handle()')
+  call s:run_server('s:close_handle')
+endfunc
+
+""""""""""
+
+func Test_open_fail()
+  call ch_log('Test_open_fail()')
+  silent! let ch = ch_open("noserver")
+  echo ch
+  let d = ch
+endfunc
+
+""""""""""
+
+func s:open_delay(port)
+  " Wait up to a second for the port to open.
+  let s:chopt.waittime = 1000
+  let channel = ch_open('localhost:' . a:port, s:chopt)
+  unlet s:chopt.waittime
+  if ch_status(channel) == "fail"
+    call assert_false(1, "Can't open channel")
+    return
+  endif
+  call assert_equal('got it', ch_sendexpr(channel, 'hello!'))
+  call ch_close(channel)
+endfunc
+
+func Test_open_delay()
+  call ch_log('Test_open_delay()')
+  " The server will wait half a second before creating the port.
+  call s:run_server('s:open_delay', 'delay')
 endfunc

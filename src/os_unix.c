@@ -5037,7 +5037,7 @@ error:
 
 #if defined(FEAT_JOB) || defined(PROTO)
     void
-mch_start_job(char **argv, job_T *job)
+mch_start_job(char **argv, job_T *job, jobopt_T *options)
 {
     pid_t	pid;
     int		fd_in[2];	/* for stdin */
@@ -5127,6 +5127,7 @@ mch_start_job(char **argv, job_T *job)
 # ifdef FEAT_CHANNEL
     channel_set_pipes(channel, fd_in[1], fd_out[0], fd_err[0]);
     channel_set_job(channel, job);
+    channel_set_options(channel, options);
 #  ifdef FEAT_GUI
     channel_gui_register(channel);
 #  endif
@@ -5344,11 +5345,12 @@ WaitForChar(long msec)
 #if defined(__BEOS__)
     int
 #else
-    static  int
+    static int
 #endif
 RealWaitForChar(int fd, long msec, int *check_for_gpm UNUSED)
 {
     int		ret;
+    int		result;
 #if defined(FEAT_XCLIPBOARD) || defined(USE_XSMP) || defined(FEAT_MZSCHEME)
     static int	busy = FALSE;
 
@@ -5465,6 +5467,9 @@ RealWaitForChar(int fd, long msec, int *check_for_gpm UNUSED)
 #endif
 
 	ret = poll(fds, nfd, towait);
+
+	result = ret > 0 && (fds[0].revents & POLLIN);
+
 # ifdef FEAT_MZSCHEME
 	if (ret == 0 && mzquantum_used)
 	    /* MzThreads scheduling is required and timeout occurred */
@@ -5612,6 +5617,10 @@ select_eintr:
 # endif
 
 	ret = select(maxfd + 1, &rfds, NULL, &efds, tvp);
+	result = ret > 0 && FD_ISSET(fd, &rfds);
+	if (result)
+	    --ret;
+
 # ifdef EINTR
 	if (ret == -1 && errno == EINTR)
 	{
@@ -5732,7 +5741,7 @@ select_eintr:
 #endif
     }
 
-    return (ret > 0);
+    return result;
 }
 
 #ifndef NO_EXPANDPATH
