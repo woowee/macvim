@@ -1,5 +1,8 @@
 /* channel.c */
 void ch_logfile(FILE *file);
+int ch_log_active(void);
+void ch_log(channel_T *ch, char *msg);
+void ch_logs(channel_T *ch, char *msg, char *name);
 channel_T *add_channel(void);
 void channel_free(channel_T *channel);
 void channel_gui_register(channel_T *channel);
@@ -7,9 +10,7 @@ void channel_gui_register_all(void);
 channel_T *channel_open(char *hostname, int port_in, int waittime, void (*close_cb)(void));
 void channel_set_pipes(channel_T *channel, sock_T in, sock_T out, sock_T err);
 void channel_set_job(channel_T *channel, job_T *job);
-void channel_set_json_mode(channel_T *channel, ch_mode_T ch_mode);
-void channel_set_timeout(channel_T *channel, int timeout);
-void channel_set_callback(channel_T *channel, char_u *callback);
+void channel_set_options(channel_T *channel, jobopt_T *options);
 void channel_set_req_callback(channel_T *channel, char_u *callback, int id);
 char_u *channel_get(channel_T *channel);
 int channel_collapse(channel_T *channel);
@@ -26,6 +27,7 @@ void channel_read(channel_T *channel, int which, char *func);
 char_u *channel_read_block(channel_T *channel);
 int channel_read_json_block(channel_T *channel, int id, typval_T **rettv);
 channel_T *channel_fd2channel(sock_T fd, int *whichp);
+void channel_handle_events(void);
 int channel_send(channel_T *channel, char_u *buf, char *fun);
 int channel_poll_setup(int nfd_in, void *fds_in);
 int channel_poll_check(int ret_in, void *fds_in);

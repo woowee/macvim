@@ -504,11 +504,13 @@ static void f_ceil(typval_T *argvars, typval_T *rettv);
 #endif
 #ifdef FEAT_CHANNEL
 static void f_ch_close(typval_T *argvars, typval_T *rettv);
+static void f_ch_log(typval_T *argvars, typval_T *rettv);
 static void f_ch_logfile(typval_T *argvars, typval_T *rettv);
 static void f_ch_open(typval_T *argvars, typval_T *rettv);
 static void f_ch_readraw(typval_T *argvars, typval_T *rettv);
 static void f_ch_sendexpr(typval_T *argvars, typval_T *rettv);
 static void f_ch_sendraw(typval_T *argvars, typval_T *rettv);
+static void f_ch_setoptions(typval_T *argvars, typval_T *rettv);
 static void f_ch_status(typval_T *argvars, typval_T *rettv);
 #endif
 static void f_changenr(typval_T *argvars, typval_T *rettv);
@@ -7536,7 +7538,7 @@ get_dict_string(dict_T *d, char_u *key, int save)
 
 /*
  * Get a number item from a dictionary.
- * Returns 0 if the entry doesn't exist or out of memory.
+ * Returns 0 if the entry doesn't exist.
  */
     long
 get_dict_number(dict_T *d, char_u *key)
@@ -8125,11 +8127,13 @@ static struct fst
 #endif
 #ifdef FEAT_CHANNEL
     {"ch_close",	1, 1, f_ch_close},
+    {"ch_log",		1, 2, f_ch_log},
     {"ch_logfile",	1, 2, f_ch_logfile},
     {"ch_open",		1, 2, f_ch_open},
     {"ch_readraw",	1, 2, f_ch_readraw},
     {"ch_sendexpr",	2, 3, f_ch_sendexpr},
     {"ch_sendraw",	2, 3, f_ch_sendraw},
+    {"ch_setoptions",	2, 2, f_ch_setoptions},
     {"ch_status",	1, 1, f_ch_status},
 #endif
     {"changenr",	0, 0, f_changenr},
@@ -8975,7 +8979,7 @@ f_abs(typval_T *argvars, typval_T *rettv)
     static void
 f_acos(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -9404,7 +9408,7 @@ f_assert_true(typval_T *argvars, typval_T *rettv UNUSED)
     static void
 f_asin(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -9434,7 +9438,7 @@ f_atan(typval_T *argvars, typval_T *rettv)
     static void
 f_atan2(typval_T *argvars, typval_T *rettv)
 {
-    float_T	fx, fy;
+    float_T	fx = 0.0, fy = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &fx) == OK
@@ -9842,13 +9846,123 @@ f_call(typval_T *argvars, typval_T *rettv)
     static void
 f_ceil(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
 	rettv->vval.v_float = ceil(f);
     else
 	rettv->vval.v_float = 0.0;
+}
+#endif
+
+#if defined(FEAT_CHANNEL) || defined(FEAT_JOB)
+/*
+ * Get a callback from "arg".  It can be a Funcref or a function name.
+ * When "arg" is zero return an empty string.
+ * Return NULL for an invalid argument.
+ */
+    static char_u *
+get_callback(typval_T *arg)
+{
+    if (arg->v_type == VAR_FUNC || arg->v_type == VAR_STRING)
+	return arg->vval.v_string;
+    if (arg->v_type == VAR_NUMBER && arg->vval.v_number == 0)
+	return (char_u *)"";
+    EMSG(_("E999: Invalid callback argument"));
+    return NULL;
+}
+
+/*
+ * Get the option entries from the dict in "tv", parse them and put the result
+ * in "opt".
+ * Only accept options in "supported".
+ * If an option value is invalid return FAIL.
+ */
+    static int
+get_job_options(typval_T *tv, jobopt_T *opt, int supported)
+{
+    typval_T	*item;
+    char_u	*mode;
+    dict_T	*dict;
+    int		todo;
+    hashitem_T	*hi;
+
+    opt->jo_set = 0;
+    if (tv->v_type == VAR_UNKNOWN)
+	return OK;
+    if (tv->v_type != VAR_DICT)
+    {
+	EMSG(_(e_invarg));
+	return FAIL;
+    }
+    dict = tv->vval.v_dict;
+    if (dict == NULL)
+	return OK;
+
+    todo = (int)dict->dv_hashtab.ht_used;
+    for (hi = dict->dv_hashtab.ht_array; todo > 0; ++hi)
+	if (!HASHITEM_EMPTY(hi))
+	{
+	    item = &HI2DI(hi)->di_tv;
+
+	    if (STRCMP(hi->hi_key, "mode") == 0)
+	    {
+		if (!(supported & JO_MODE))
+		    break;
+		opt->jo_set |= JO_MODE;
+		mode = get_tv_string(item);
+		if (STRCMP(mode, "nl") == 0)
+		    opt->jo_mode = MODE_NL;
+		else if (STRCMP(mode, "raw") == 0)
+		    opt->jo_mode = MODE_RAW;
+		else if (STRCMP(mode, "js") == 0)
+		    opt->jo_mode = MODE_JS;
+		else if (STRCMP(mode, "json") == 0)
+		    opt->jo_mode = MODE_JSON;
+		else
+		{
+		    EMSG2(_(e_invarg2), mode);
+		    return FAIL;
+		}
+	    }
+	    else if (STRCMP(hi->hi_key, "callback") == 0)
+	    {
+		if (!(supported & JO_CALLBACK))
+		    break;
+		opt->jo_set |= JO_CALLBACK;
+		opt->jo_callback = get_callback(item);
+		if (opt->jo_callback == NULL)
+		{
+		    EMSG2(_(e_invarg2), "callback");
+		    return FAIL;
+		}
+	    }
+	    else if (STRCMP(hi->hi_key, "waittime") == 0)
+	    {
+		if (!(supported & JO_WAITTIME))
+		    break;
+		opt->jo_set |= JO_WAITTIME;
+		opt->jo_waittime = get_tv_number(item);
+	    }
+	    else if (STRCMP(hi->hi_key, "timeout") == 0)
+	    {
+		if (!(supported & JO_TIMEOUT))
+		    break;
+		opt->jo_set |= JO_TIMEOUT;
+		opt->jo_timeout = get_tv_number(item);
+	    }
+	    else
+		break;
+	    --todo;
+	}
+    if (todo > 0)
+    {
+	EMSG2(_(e_invarg2), hi->hi_key);
+	return FAIL;
+    }
+
+    return OK;
 }
 #endif
 
@@ -9890,19 +10004,18 @@ f_ch_close(typval_T *argvars, typval_T *rettv UNUSED)
 }
 
 /*
- * Get a callback from "arg".  It can be a Funcref or a function name.
- * When "arg" is zero return an empty string.
- * Return NULL for an invalid argument.
+ * "ch_log()" function
  */
-    static char_u *
-get_callback(typval_T *arg)
+    static void
+f_ch_log(typval_T *argvars, typval_T *rettv UNUSED)
 {
-    if (arg->v_type == VAR_FUNC || arg->v_type == VAR_STRING)
-	return arg->vval.v_string;
-    if (arg->v_type == VAR_NUMBER && arg->vval.v_number == 0)
-	return (char_u *)"";
-    EMSG(_("E999: Invalid callback argument"));
-    return NULL;
+    char_u	*msg = get_tv_string(&argvars[0]);
+    channel_T	*channel = NULL;
+
+    if (argvars[1].v_type != VAR_UNKNOWN)
+	channel = get_channel_arg(&argvars[1]);
+
+    ch_log(channel, (char *)msg);
 }
 
 /*
@@ -9938,14 +10051,10 @@ f_ch_logfile(typval_T *argvars, typval_T *rettv UNUSED)
 f_ch_open(typval_T *argvars, typval_T *rettv)
 {
     char_u	*address;
-    char_u	*mode;
-    char_u	*callback = NULL;
     char_u	*p;
     char	*rest;
     int		port;
-    int		waittime = 0;
-    int		timeout = 2000;
-    ch_mode_T	ch_mode = MODE_JSON;
+    jobopt_T    opt;
     channel_T	*channel;
 
     /* default: fail */
@@ -9976,48 +10085,26 @@ f_ch_open(typval_T *argvars, typval_T *rettv)
 	return;
     }
 
-    if (argvars[1].v_type == VAR_DICT)
-    {
-	dict_T	    *dict = argvars[1].vval.v_dict;
-	dictitem_T  *item;
-
-	/* parse argdict */
-	if ((item = dict_find(dict, (char_u *)"mode", -1)) != NULL)
-	{
-	    mode = get_tv_string(&item->di_tv);
-	    if (STRCMP(mode, "raw") == 0)
-		ch_mode = MODE_RAW;
-	    else if (STRCMP(mode, "js") == 0)
-		ch_mode = MODE_JS;
-	    else if (STRCMP(mode, "json") == 0)
-		ch_mode = MODE_JSON;
-	    else
-	    {
-		EMSG2(_(e_invarg2), mode);
-		return;
-	    }
-	}
-	if ((item = dict_find(dict, (char_u *)"waittime", -1)) != NULL)
-	    waittime = get_tv_number(&item->di_tv);
-	if ((item = dict_find(dict, (char_u *)"timeout", -1)) != NULL)
-	    timeout = get_tv_number(&item->di_tv);
-	if ((item = dict_find(dict, (char_u *)"callback", -1)) != NULL)
-	    callback = get_callback(&item->di_tv);
-    }
-    if (waittime < 0 || timeout < 0)
+    /* parse options */
+    opt.jo_mode = MODE_JSON;
+    opt.jo_callback = NULL;
+    opt.jo_waittime = 0;
+    opt.jo_timeout = 2000;
+    if (get_job_options(&argvars[1], &opt,
+		JO_MODE + JO_CALLBACK + JO_WAITTIME + JO_TIMEOUT) == FAIL)
+	return;
+    if (opt.jo_timeout < 0)
     {
 	EMSG(_(e_invarg));
 	return;
     }
 
-    channel = channel_open((char *)address, port, waittime, NULL);
+    channel = channel_open((char *)address, port, opt.jo_waittime, NULL);
     if (channel != NULL)
     {
 	rettv->vval.v_channel = channel;
-	channel_set_json_mode(channel, ch_mode);
-	channel_set_timeout(channel, timeout);
-	if (callback != NULL && *callback != NUL)
-	    channel_set_callback(channel, callback);
+	opt.jo_set = JO_ALL;
+	channel_set_options(channel, &opt);
     }
 }
 
@@ -10033,28 +10120,11 @@ f_ch_readraw(typval_T *argvars, typval_T *rettv)
     rettv->v_type = VAR_STRING;
     rettv->vval.v_string = NULL;
 
+    /* TODO: use timeout from the options */
+
     channel = get_channel_arg(&argvars[0]);
     if (channel != NULL)
 	rettv->vval.v_string = channel_read_block(channel);
-}
-
-/*
- * "ch_status()" function
- */
-    static void
-f_ch_status(typval_T *argvars, typval_T *rettv)
-{
-    /* return an empty string by default */
-    rettv->v_type = VAR_STRING;
-
-    if (argvars[0].v_type != VAR_CHANNEL)
-    {
-	EMSG2(_(e_invarg2), get_tv_string(&argvars[0]));
-	rettv->vval.v_string = NULL;
-    }
-    else
-	rettv->vval.v_string = vim_strsave(
-			 (char_u *)channel_status(argvars[0].vval.v_channel));
 }
 
 /*
@@ -10066,24 +10136,22 @@ f_ch_status(typval_T *argvars, typval_T *rettv)
 send_common(typval_T *argvars, char_u *text, int id, char *fun)
 {
     channel_T	*channel;
-    char_u	*callback = NULL;
+    jobopt_T	opt;
 
     channel = get_channel_arg(&argvars[0]);
     if (channel == NULL)
 	return NULL;
 
-    if (argvars[2].v_type != VAR_UNKNOWN)
-    {
-	callback = get_callback(&argvars[2]);
-	if (callback == NULL)
-	    return NULL;
-    }
+    opt.jo_callback = NULL;
+    if (get_job_options(&argvars[2], &opt, JO_CALLBACK) == FAIL)
+	return NULL;
+
     /* Set the callback. An empty callback means no callback and not reading
      * the response. */
-    if (callback != NULL && *callback != NUL)
-	channel_set_req_callback(channel, callback, id);
+    if (opt.jo_callback != NULL && *opt.jo_callback != NUL)
+	channel_set_req_callback(channel, opt.jo_callback, id);
 
-    if (channel_send(channel, text, fun) == OK && callback == NULL)
+    if (channel_send(channel, text, fun) == OK && opt.jo_callback == NULL)
 	return channel;
     return NULL;
 }
@@ -10156,6 +10224,42 @@ f_ch_sendraw(typval_T *argvars, typval_T *rettv)
     channel = send_common(argvars, text, 0, "sendraw");
     if (channel != NULL)
 	rettv->vval.v_string = channel_read_block(channel);
+}
+
+/*
+ * "ch_setoptions()" function
+ */
+    static void
+f_ch_setoptions(typval_T *argvars, typval_T *rettv UNUSED)
+{
+    channel_T	*channel;
+    jobopt_T	opt;
+
+    channel = get_channel_arg(&argvars[0]);
+    if (channel == NULL)
+	return;
+    if (get_job_options(&argvars[1], &opt, JO_CALLBACK + JO_TIMEOUT) == FAIL)
+	return;
+    channel_set_options(channel, &opt);
+}
+
+/*
+ * "ch_status()" function
+ */
+    static void
+f_ch_status(typval_T *argvars, typval_T *rettv)
+{
+    /* return an empty string by default */
+    rettv->v_type = VAR_STRING;
+
+    if (argvars[0].v_type != VAR_CHANNEL)
+    {
+	EMSG2(_(e_invarg2), get_tv_string(&argvars[0]));
+	rettv->vval.v_string = NULL;
+    }
+    else
+	rettv->vval.v_string = vim_strsave(
+			 (char_u *)channel_status(argvars[0].vval.v_channel));
 }
 #endif
 
@@ -10406,7 +10510,7 @@ f_copy(typval_T *argvars, typval_T *rettv)
     static void
 f_cos(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -10421,7 +10525,7 @@ f_cos(typval_T *argvars, typval_T *rettv)
     static void
 f_cosh(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -10969,7 +11073,7 @@ f_exists(typval_T *argvars, typval_T *rettv)
     static void
 f_exp(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -11550,7 +11654,7 @@ f_findfile(typval_T *argvars, typval_T *rettv)
     static void
 f_float2nr(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     if (get_float_arg(argvars, &f) == OK)
     {
@@ -11569,7 +11673,7 @@ f_float2nr(typval_T *argvars, typval_T *rettv)
     static void
 f_floor(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -11584,7 +11688,7 @@ f_floor(typval_T *argvars, typval_T *rettv)
     static void
 f_fmod(typval_T *argvars, typval_T *rettv)
 {
-    float_T	fx, fy;
+    float_T	fx = 0.0, fy = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &fx) == OK
@@ -13126,7 +13230,10 @@ f_has(typval_T *argvars, typval_T *rettv)
 	"mac",
 #endif
 #if defined(MACOS_X_UNIX)
-	"macunix",
+	"macunix",  /* built with 'darwin' enabled */
+#endif
+#if defined(__APPLE__) && __APPLE__ == 1
+	"osx",	    /* built with or without 'darwin' enabled */
 #endif
 #ifdef __QNX__
 	"qnx",
@@ -14502,15 +14609,16 @@ f_job_getchannel(typval_T *argvars, typval_T *rettv)
     static void
 f_job_start(typval_T *argvars UNUSED, typval_T *rettv)
 {
-    job_T *job;
-    char_u *cmd = NULL;
+    job_T	*job;
+    char_u	*cmd = NULL;
 #if defined(UNIX)
 # define USE_ARGV
-    char    **argv = NULL;
-    int	    argc = 0;
+    char	**argv = NULL;
+    int		argc = 0;
 #else
-    garray_T ga;
+    garray_T	ga;
 #endif
+    jobopt_T	opt;
 
     rettv->v_type = VAR_JOB;
     job = job_alloc();
@@ -14519,6 +14627,13 @@ f_job_start(typval_T *argvars UNUSED, typval_T *rettv)
 	return;
 
     rettv->vval.v_job->jv_status = JOB_FAILED;
+
+    /* Default mode is NL. */
+    opt.jo_mode = MODE_NL;
+    opt.jo_callback = NULL;
+    if (get_job_options(&argvars[1], &opt, JO_MODE + JO_CALLBACK) == FAIL)
+	return;
+
 #ifndef USE_ARGV
     ga_init2(&ga, (int)sizeof(char*), 20);
 #endif
@@ -14580,10 +14695,31 @@ f_job_start(typval_T *argvars UNUSED, typval_T *rettv)
 	cmd = ga.ga_data;
 #endif
     }
+
 #ifdef USE_ARGV
-    mch_start_job(argv, job);
+# ifdef FEAT_CHANNEL
+    if (ch_log_active())
+    {
+	garray_T    ga;
+	int	    i;
+
+	ga_init2(&ga, (int)sizeof(char), 200);
+	for (i = 0; i < argc; ++i)
+	{
+	    if (i > 0)
+		ga_concat(&ga, (char_u *)"  ");
+	    ga_concat(&ga, (char_u *)argv[i]);
+	}
+	ch_logs(NULL, "Starting job: %s", (char *)ga.ga_data);
+	ga_clear(&ga);
+    }
+# endif
+    mch_start_job(argv, job, &opt);
 #else
-    mch_start_job(cmd, job);
+# ifdef FEAT_CHANNEL
+    ch_logs(NULL, "Starting job: %s", (char *)cmd);
+# endif
+    mch_start_job((char *)cmd, job, &opt);
 #endif
 
 theend:
@@ -14999,7 +15135,7 @@ get_maparg(typval_T *argvars, typval_T *rettv, int exact)
     static void
 f_log(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -15014,7 +15150,7 @@ f_log(typval_T *argvars, typval_T *rettv)
     static void
 f_log10(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -15828,7 +15964,7 @@ f_perleval(typval_T *argvars, typval_T *rettv)
     static void
 f_pow(typval_T *argvars, typval_T *rettv)
 {
-    float_T	fx, fy;
+    float_T	fx = 0.0, fy = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &fx) == OK
@@ -16461,7 +16597,7 @@ f_remote_peek(typval_T *argvars UNUSED, typval_T *rettv)
 	return;		/* type error; errmsg already given */
     }
 # ifdef WIN32
-    sscanf(serverid, SCANF_HEX_LONG_U, &n);
+    sscanf((const char *)serverid, SCANF_HEX_LONG_U, &n);
     if (n == 0)
 	rettv->vval.v_number = -1;
     else
@@ -16509,7 +16645,7 @@ f_remote_read(typval_T *argvars UNUSED, typval_T *rettv)
 	/* The server's HWND is encoded in the 'id' parameter */
 	long_u		n = 0;
 
-	sscanf(serverid, SCANF_HEX_LONG_U, &n);
+	sscanf((char *)serverid, SCANF_HEX_LONG_U, &n);
 	if (n != 0)
 	    r = serverGetReply((HWND)n, FALSE, TRUE, TRUE);
 	if (r == NULL)
@@ -17119,7 +17255,7 @@ vim_round(float_T f)
     static void
 f_round(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -18291,7 +18427,7 @@ f_simplify(typval_T *argvars, typval_T *rettv)
     static void
 f_sin(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -18306,7 +18442,7 @@ f_sin(typval_T *argvars, typval_T *rettv)
     static void
 f_sinh(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -18892,7 +19028,7 @@ f_split(typval_T *argvars, typval_T *rettv)
     static void
 f_sqrt(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -19954,7 +20090,7 @@ f_test(typval_T *argvars UNUSED, typval_T *rettv UNUSED)
     static void
 f_tan(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -19969,7 +20105,7 @@ f_tan(typval_T *argvars, typval_T *rettv)
     static void
 f_tanh(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -20158,7 +20294,7 @@ error:
     static void
 f_trunc(typval_T *argvars, typval_T *rettv)
 {
-    float_T	f;
+    float_T	f = 0.0;
 
     rettv->v_type = VAR_FLOAT;
     if (get_float_arg(argvars, &f) == OK)
@@ -21886,7 +22022,10 @@ get_tv_string_buf_chk(typval_T *varp, char_u *buf)
 		channel_T *channel = varp->vval.v_channel;
 		char      *status = channel_status(channel);
 
-		vim_snprintf((char *)buf, NUMBUFLEN,
+		if (channel == NULL)
+		    vim_snprintf((char *)buf, NUMBUFLEN, "channel %s", status);
+		else
+		    vim_snprintf((char *)buf, NUMBUFLEN,
 				     "channel %d %s", channel->ch_id, status);
 		return buf;
 	    }
@@ -22525,7 +22664,8 @@ copy_tv(typval_T *from, typval_T *to)
 	case VAR_CHANNEL:
 #ifdef FEAT_CHANNEL
 	    to->vval.v_channel = from->vval.v_channel;
-	    ++to->vval.v_channel->ch_refcount;
+	    if (to->vval.v_channel != NULL)
+		++to->vval.v_channel->ch_refcount;
 	    break;
 #endif
 	case VAR_STRING:
@@ -25466,7 +25606,7 @@ get_short_pathname(char_u **fnamep, char_u **bufp, int *fnamelen)
     char_u	*newbuf;
 
     len = *fnamelen;
-    l = GetShortPathName(*fnamep, *fnamep, len);
+    l = GetShortPathName((LPSTR)*fnamep, (LPSTR)*fnamep, len);
     if (l > len - 1)
     {
 	/* If that doesn't work (not enough space), then save the string
@@ -25479,7 +25619,7 @@ get_short_pathname(char_u **fnamep, char_u **bufp, int *fnamelen)
 	*fnamep = *bufp = newbuf;
 
 	/* Really should always succeed, as the buffer is big enough. */
-	l = GetShortPathName(*fnamep, *fnamep, l+1);
+	l = GetShortPathName((LPSTR)*fnamep, (LPSTR)*fnamep, l+1);
     }
 
     *fnamelen = l;
@@ -25771,7 +25911,7 @@ repeat:
 	    p = alloc(_MAX_PATH + 1);
 	    if (p != NULL)
 	    {
-		if (GetLongPathName(*fnamep, p, _MAX_PATH))
+		if (GetLongPathName((LPSTR)*fnamep, (LPSTR)p, _MAX_PATH))
 		{
 		    vim_free(*bufp);
 		    *bufp = *fnamep = p;
