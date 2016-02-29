@@ -40,6 +40,9 @@ static int s_directx_load_attempted = 0;
 static int gui_mswin_get_menu_height(int fix_window);
 #endif
 
+static int get_caption_height(void);
+static int get_caption_width_adjustment(void);
+
 #if defined(FEAT_DIRECTX) || defined(PROTO)
     int
 directx_enabled(void)
@@ -3114,11 +3117,12 @@ gui_mswin_get_valid_dimensions(
 
     base_width = gui_get_base_width()
 	+ (GetSystemMetrics(SM_CXFRAME) +
-	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2;
+	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
+	+ get_caption_width_adjustment();
     base_height = gui_get_base_height()
 	+ (GetSystemMetrics(SM_CYFRAME) +
 	   GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
-	+ GetSystemMetrics(SM_CYCAPTION)
+	+ get_caption_height()
 #ifdef FEAT_MENU
 	+ gui_mswin_get_menu_height(FALSE)
 #endif
@@ -3513,9 +3517,11 @@ gui_mch_newfont(void)
     if (win_socket_id == 0)
     {
 	gui_resize_shell(rect.right - rect.left
+	    - get_caption_width_adjustment()
 	    - (GetSystemMetrics(SM_CXFRAME) +
 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
 	    rect.bottom - rect.top
+	    - get_caption_height()
 	    - (GetSystemMetrics(SM_CYFRAME) +
 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
 	    - GetSystemMetrics(SM_CYCAPTION)
@@ -4617,6 +4623,14 @@ typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
 static TMonitorFromWindow   pMonitorFromWindow = NULL;
 static TGetMonitorInfo	    pGetMonitorInfo = NULL;
 static HANDLE		    user32_lib = NULL;
+
+/*
+ * For Transparent Window.
+ */
+typedef DWORD (WINAPI *FWINLAYER)(HWND hwnd, DWORD crKey, BYTE bAlpha,
+	DWORD dwFlags);
+static void w32_set_transparency(HWND hwnd, BYTE bAlpha);
+
 /*
  * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
  * less fancy GUI APIs.
@@ -5541,6 +5555,7 @@ gui_mch_prepare(int *argc, char **argv)
     {
 	WSADATA wsaData;
 	int wsaerr;
+	extern int WSInitialized;
 
 	/* Init WinSock */
 	wsaerr = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -6088,7 +6103,6 @@ gui_mch_set_sp_color(guicolor_T color)
     gui.currSpColor = color;
 }
 
-#if USE_LAYERED_WINDOW
     void
 w32_set_transparency(HWND hwnd, BYTE bAlpha)
 {
@@ -6126,7 +6140,6 @@ gui_mch_set_transparency(int alpha)
 {
     w32_set_transparency(NULL, (BYTE)alpha);
 }
-#endif /* USE_LAYERED_WINDOW */
 
 #if defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)
 /*
