@@ -1,4 +1,4 @@
-*index.txt*     For Vim バージョン 7.4.  Last change: 2015 Sep 08
+*index.txt*     For Vim バージョン 7.4.  Last change: 2016 Feb 27
 
 
 		  VIMリファレンスマニュアル	  by Bram Moolenaar
@@ -236,7 +236,7 @@ Note: 1 = カーソル移動コマンド  2 = アンドゥ/リドゥ可能
 				   つかった場所へ移動。
 |$|		$		1  カーソルを N 行下の行末へ移動。
 |%|		%		1  現在の行にある次の括弧やC風コメント(/* */)
-				   の対、対応するプリプロセッサなどに移動
+				   の対、対応するプリプロセッサーなどに移動
 |N%|		{count}%	1  ファイルの N パーセントの位置に移動。
 |&|		&		2  最後に実行した :s コマンドを繰り返す。
 |'|		'{a-zA-Z0-9}	1  {a-zA-Z0-9} でマークした行の先頭の CHAR へ
@@ -1071,7 +1071,7 @@ Note: 1 = カーソル移動コマンド  2 = アンドゥ/リドゥ可能
 |c_<Insert>|	<Insert>	挿入モード/置換モードを変更
 |c_<LeftMouse>|	<LeftMouse>	カーソルをマウスクリック位置へ移動
 
-You found it, Arthur!				*holy-grail*
+ついに見つけたんだね、セイバー!			*holy-grail* *:smile*
 
 ==============================================================================
 5. EX コマンド					*ex-cmd-index* *:index*
@@ -1367,7 +1367,8 @@ You found it, Arthur!				*holy-grail*
 |:lnewer|	:lnew[er]	新しいロケーションリストへ移動
 |:lnfile|	:lnf[ile]	次のファイルの最初のロケーションへ移動
 |:lnoremap|	:ln[oremap]	":noremap!" と同じだが、Lang-Argモードも対象
-|:loadkeymap|	:loadk[eymap]	次の行からEOFまでキーマップをロードする
+|:loadkeymap|	:loadk[eymap]	次の行からEOFまでキーマップを読み込む
+|:loadplugin|	:loadp[lugin]	'packpath' からプラグインを読み込む
 |:loadview|	:lo[adview]	カレントウィンドウにビューを読み込む
 |:lockmarks|	:loc[kmarks]	マークを調整せずにコマンドを実行する
 |:lockvar|	:lockv[ar]	変数をロックする
@@ -1398,7 +1399,7 @@ You found it, Arthur!				*holy-grail*
 |:marks|	:marks		すべてのマークを表示
 |:match|	:mat[ch]	指定したパターンの文字を強調表示する
 |:menu|		:me[nu]		新しいメニュー項目を追加
-|:menutranslate| :menut[ranslate] 翻訳したメニュー項目を追加する
+|:menutranslate|  :menut[ranslate] 翻訳したメニュー項目を追加する
 |:messages|	:mes[sages]	直前に表示されたメッセージの表示
 |:mkexrc|	:mk[exrc]	現在のマップと設定をファイルに書き出す
 |:mksession|	:mks[ession]	セッション情報をファイルに書き出す
@@ -1555,9 +1556,9 @@ You found it, Arthur!				*holy-grail*
 |:smap|		:smap		":map" と同様。選択モード用
 |:smapclear|	:smapc[lear]	選択モードのすべてのマップを削除する
 |:smenu|	:sme[nu]	選択モードのメニューを追加する
+|:smile|	:smi[le]	ユーザーを幸せにする
 |:snext|	:sn[ext]	ウィンドウを分割して引数リストの次のファイルを
 				開く
-|:sniff|	:sni[ff]	sniffにリクエストを送信する
 |:snomagic|	:sno[magic]	'nomagic' オプションの下で :substitute を実行
 |:snoremap|	:snor[emap]	":noremap" と同様。選択モード用
 |:snoremenu|	:snoreme[nu]	":noremenu" と同様。選択モード用
@@ -1577,7 +1578,7 @@ You found it, Arthur!				*holy-grail*
 |:stop|		:st[op]		Vimをサスペンドする
 |:stag|		:sta[g]		ウィンドウを分割して、タグへジャンプする
 |:startinsert|	:star[tinsert]	挿入モードを開始する
-|:startgreplace| :startg[replace] 仮想置換モードを開始する
+|:startgreplace|  :startg[replace] 仮想置換モードを開始する
 |:startreplace|	:startr[eplace]	置換モードを開始する
 |:stopinsert|	:stopi[nsert]	挿入モードを終了する
 |:stjump|	:stj[ump]	ウィンドウを分割して、":tjump" を実行

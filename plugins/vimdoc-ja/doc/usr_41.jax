@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim バージョン 7.4.  Last change: 2014 Aug 16
+*usr_41.txt*	For Vim バージョン 7.4.  Last change: 2016 Feb 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -860,11 +860,24 @@ Vimサーバー:					*server-functions*
 	winsaveview()		カレントウィンドウのビューを取得
 	winrestview()		カレントウィンドウのビューを復元
 
-マッピング:				    *mapping-functions*
+マッピング:					*mapping-functions*
 	hasmapto()		マップの存在をチェック
 	mapcheck()		マッチするマップの存在をチェック
 	maparg()		マップのrhs(展開結果)を得る
 	wildmenumode()		wildmodeが有効かどうかをチェック
+
+テスト用:					*test-functions*
+	assert_equal()		2つの式が等しいかどうかテストする
+	assert_false()		式がfalseかどうかテストする
+	assert_true()		式がtrueかどうかテストする
+
+プロセス間通信:
+	ch_open()		チャンネルを開く
+	ch_close()		チャンネルを閉じる
+	ch_sendexpr()		チャンネルにJSONメッセージを送る
+	ch_sendraw()		チャンネルにrawメッセージを送る
+	jsonencode()		式をJSONの文字列に変換する
+	jsondecode()		JSONの文字列を式に変換する
 
 その他:						*various-functions*
 	mode()			現在の編集モードを得る
@@ -892,10 +905,12 @@ Vimサーバー:					*server-functions*
 	taglist()		マッチするタグのリストを取得
 	tagfiles()		タグファイルのリストを取得
 
-	luaeval()		Luaの式を評価する
+	luaeval()		|Lua|の式を評価する
 	mzeval()		|MzScheme| の式を評価する
-	py3eval()		Pythonの式を評価する (|+python3|)
-	pyeval()		Pythonの式を評価する (|+python|)
+	perleval()		|Perl|の式を評価する (|+perl|)
+	py3eval()		|Python|の式を評価する (|+python3|)
+	pyeval()		|Python|の式を評価する (|+python|)
+	wordcount()		バッファ内のバイト数/単語数/文字数などを得る
 
 ==============================================================================
 *41.7*	関数を定義する
@@ -920,7 +935,7 @@ Vimサーバー:					*server-functions*
 
 	:  if a:num1 < a:num2
 
-"a:" は特殊なプレフィクスで、この変数が関数の引数であることを示します。小さい
+"a:" は特殊なプリフィックスで、この変数が関数の引数であることを示します。小さい
 方の値を変数 "smaller" に代入しましょう: >
 
 	:  if a:num1 < a:num2
@@ -930,7 +945,7 @@ Vimサーバー:					*server-functions*
 	:  endif
 
 変数 "smaller" はローカル変数です。関数の中で使われた変数はローカル変数になり
-ます。ただし、"g:"、"a:"、"s:" などのプレフィクスを付けた場合は別です。
+ます。ただし、"g:"、"a:"、"s:" などのプリフィックスを付けた場合は別です。
 
 	Note:
 	関数の内からグローバル変数にアクセスするには "g:" を付ける必要がありま
@@ -1672,13 +1687,13 @@ Vim スクリプトを書いて、それを多くの人に使ってもらうこ�
 ください。
 
 
-ヘッダ
+ヘッダー
 ------
 
 新しい単語を追加していくと、プラグインには複数のバージョンが存在することになり
 ます。ファイルを配布したとき、それを使った人は、誰がこの素晴らしいプラグインを
 書いたのかを知りたいと思うでしょうし、感想を伝えたいと思うかもしれません。
-というわけで、次のようなヘッダをプラグインに書いてください: >
+というわけで、次のようなヘッダーをプラグインに書いてください: >
 
   1	" Vim global plugin for correcting typing mistakes
   2	" Last Change:	2000 Oct 15

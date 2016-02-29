@@ -1,4 +1,4 @@
-*if_lua.txt*    For Vim バージョン 7.4.  Last change: 2012 Jun 29
+*if_lua.txt*    For Vim バージョン 7.4.  Last change: 2015 Oct 16
 
 
 		  VIMリファレンスマニュアル    by Luis Carvalho
@@ -10,9 +10,11 @@ Vim の Lua インターフェイス				*lua* *Lua*
 2. vim モジュール		|lua-vim|
 3. List ユーザーデータ		|lua-list|
 4. Dict ユーザーデータ		|lua-dict|
-5. バッファユーザーデータ	|lua-buffer|
-6. ウィンドウユーザーデータ	|lua-window|
-7. luaeval 関数			|lua-luaeval|
+5. Funcref ユーザーデータ	|lua-funcref|
+6. バッファユーザーデータ	|lua-buffer|
+7. ウィンドウユーザーデータ	|lua-window|
+8. luaeval 関数			|lua-luaeval|
+9. 動的ローディング		|lua-dynamic|
 
 {Vi にはこれらのコマンドはありません}
 
@@ -90,11 +92,11 @@ Lua インターフェイスは Vim が |+lua| 機能付きでコンパイルさ
 <
 
 これらすべてのコマンドはコマンドライン (:lua と :luado) かファイル (:luafile)
-で指定された Lua チャンクを範囲指定 [range] に対して実行します。Lua インタプリ
-タと同様に各チャンクはそれぞれのスコープを持つため、各コマンドの実行で共有され
-るのはグローバル変数だけです。すべての Lua デフォルトライブラリが利用可能で
-す。加えて、Lua の "print" 関数の出力先は Vim のメッセージエリアになり、引数は
-タブ文字ではなくスペースで区切られます。
+で指定された Lua チャンクを範囲指定 [range] に対して実行します。Lua インタープ
+リターと同様に各チャンクはそれぞれのスコープを持つため、各コマンドの実行で共有
+されるのはグローバル変数だけです。すべての Lua デフォルトライブラリが利用可能
+です。加えて、Lua の "print" 関数の出力先は Vim のメッセージエリアになり、引数
+はタブ文字ではなくスペースで区切られます。
 
 Lua は "vim" モジュール (|lua-vim| 参照) を使って、Vim コマンドを発行したり
 バッファ (|lua-buffer|) やウィンドウ (|lua-window|) を管理したりします。ただ
@@ -110,9 +112,31 @@ Lua からは "vim" モジュールを使って Vim を操作します。範囲�
 バッファ操作、ウィンドウ操作、現在行の取得、Vim 式評価、Vim コマンド実行、など
 のルーチンが含まれています。
 
-	vim.list()		空のリストを返す (|List| 参照)。
-
-	vim.dict()		空の辞書を返す (|Dictionary| 参照)。
+	vim.list([arg])		"arg" が 1, ..., n の数値をキーに持つ Lua のテ
+				ーブルの時、i = 1, ..., n に対して l[i] =
+				arg[i] となるようなリスト l を返し (|List| を参
+				照) 、そうでなければ空のリストを返します。
+				数値以外のキーは戻り値のリストの初期化に使われ
+				ません。変換のルールについては |lua-eval| を参照
+				してください。例: >
+					:lua t = {math.pi, false, say = 'hi'}
+					:echo luaeval('vim.list(t)')
+					:" [3.141593, 0], 'say' is ignored
+<
+	vim.dict([arg])		"arg" が Lua のテーブルの時、"arg" のそれぞれの
+				キー k に対して d[k] = arg[k] となるような辞書
+				を返し (|Dictionary| を参照) 、そうでなければ
+				空の辞書を返します。数値のキーは文字列に変換さ
+				れます。文字列以外のキーは戻り値の辞書の初期化
+				に使われません。変換のルールについては
+				|lua-eval| を参照してください。例: >
+					:lua t = {math.pi, false, say = 'hi'}
+					:echo luaeval('vim.dict(t)')
+					:" {'say': 'hi'}, numeric keys ignored
+<
+	vim.funcref({name})	関数 {name} への関数参照を返します (|Funcref|
+				を参照) 。その値は Vim の "function" と等価で
+				す。 まだ実装されていません。
 
 	vim.buffer([arg])	"arg" が数値ならバッファリストの "arg" 番の
 				バッファを返す。"arg" が文字列ならフルパスか
@@ -131,9 +155,9 @@ Lua からは "vim" モジュールを使って Vim を操作します。範囲�
 
 	vim.type({arg})		{arg} の型を返す。これは Lua の "type" 関数と
 				同じようなものですが、{arg} がリスト、辞書、
-				バッファ、ウィンドウのときに、 "list"、
-				"dict"、"buffer"、"window" をそれぞれ返しま
-				す。例: >
+				関数参照、バッファ、ウィンドウのときに、
+				"list"、"dict"、"funcref"、"buffer"、"window"
+				をそれぞれ返します。例: >
 					:lua l = vim.list()
 					:lua print(type(l), vim.type(l))
 					:" userdata list
@@ -226,7 +250,40 @@ list ユーザーデータと同様、dict ユーザーデータは vim の辞�
 <
 
 ==============================================================================
-5. バッファユーザーデータ				*lua-buffer*
+5. Funcref ユーザーデータ				*lua-funcref*
+
+Funcref ユーザーデータは Vim における関数参照変数を表します。"dict" 属性付きで
+定義された Vim の関数参照 はその呼び出し時に "self" に適切に辞書が代入できるよ
+うに、辞書のメンバーとして取得できなければなりません (下記の例を参照してくださ
+い) 。Lua の関数参照 "f" は次のプロパティを持っています:
+
+プロパティ
+----------
+	o "#f" は "f" が参照している関数の名前です
+	o "f(...)" は "f" が参照している関数を (引数と共に) 呼びます
+
+例:
+>
+	:function I(x)
+	:  return a:x
+	:  endfunction
+	:let R = function('I')
+	:lua i1 = vim.funcref('I')
+	:lua i2 = vim.eval('R')
+	:lua print(#i1, #i2) -- both 'I'
+	:lua print(i1, i2, #i2(i1) == #i1(i2))
+	:function Mylen() dict
+	:  return len(self.data)
+	:  endfunction
+	:let mydict = {'data': [0, 1, 2, 3]}
+	:lua d = vim.eval('mydict'); d.len = vim.funcref('Mylen')
+	:echo mydict.len()
+	:lua l = d.len -- assign d as 'self'
+	:lua print(l())
+<
+
+==============================================================================
+6. バッファユーザーデータ				*lua-buffer*
 
 バッファユーザーデータは Vim のバッファを表します。バッファユーザーデータ "b"
 は以下のプロパティとメソッドを持っています:
@@ -277,7 +334,7 @@ list ユーザーデータと同様、dict ユーザーデータは vim の辞�
 <
 
 ==============================================================================
-6. ウィンドウユーザーデータ				*lua-window*
+7. ウィンドウユーザーデータ				*lua-window*
 
 ウィンドウオブジェクトは Vim のウィンドウを表します。ウィンドウユーザーデータ
 "w" は以下のプロパティとメソッドを持っています:
@@ -309,7 +366,7 @@ list ユーザーデータと同様、dict ユーザーデータは vim の辞�
 <
 
 ==============================================================================
-7. luaeval 関数						*lua-luaeval* *lua-eval*
+8. luaeval 関数						*lua-luaeval* *lua-eval*
 
 "luaeval" は "vim.eval" と対となる関数で Lua の値を Vim に渡すことができます。
 "luaeval" は式文字列と任意の引数を受け取り、式の結果を返します。意味的には次の
@@ -321,7 +378,12 @@ Lua コードと同じです:
 	    return chunk(arg) -- return typval
 	end
 <
-Note "_A" には "luaeval" の引数が渡されます。例: >
+Note "_A" には "luaeval" の引数が渡されます。Lua の数値、文字列、リスト、辞書
+そして Funcref ユーザーデータはそれぞれの Vim の型に変換されます。ただし、Lua
+のブール値は数値に変換されます。リスト、辞書および関数参照以外のユーザーデータ
+を含む、それ以外の Lua の型を変換しようとするとエラーが返されます。
+
+例: >
 
 	:echo luaeval('math.pi')
 	:lua a = vim.list():add('newlist')
@@ -331,6 +393,26 @@ Note "_A" には "luaeval" の引数が渡されます。例: >
 	:  return luaeval('(_A.y-_A.x)*math.random()+_A.x', {'x':a:x,'y':a:y})
 	:  endfunction
 	:echo Rand(1,10)
+
+
+==============================================================================
+9. 動的ローディング					*lua-dynamic*
+
+MS-Windows と Unix では Lua ライブラリを動的にロードすることができます。
+|+lua/dyn| が |:version| の出力に含まれている時に利用できます。
+
+これにより、Vim は必要な時だけ Lua DLL もしくは共有ライブラリを検索します。
+もしあなたが Lua インターフェイスを必要としておらず使わなければ Lua DLL もしく
+は共有ライブラリ無しで Vim を使うことができます。
+
+MS-Windows で Lua インターフェイスを利用するには Lua DLL が検索パス内になければ
+なりません。コンソールウィンドウ内で "path" と入力し、どのディレクトリが使われ
+ているかを確認してください。DLL のバージョンは Vim と共にコンパイルされた Lua
+のバージョンと一致していなければなりません。
+
+Unix ではコンパイル時に指定された DYNAMIC_LUA_DLL ファイルの代わりに 'luadll'
+オプションで Lua 共有ライブラリを指定できます。共有ライブラリのバージョンは
+Vim と共にコンパイルされた Lua のバージョンと一致していなければなりません。
 
 
 ==============================================================================
