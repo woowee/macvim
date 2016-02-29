@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim バージョン 7.4.  Last change: 2014 Aug 22
+*autocmd.txt*   For Vim バージョン 7.4.  Last change: 2015 Dec 05
 
 
 		  VIMリファレンスマニュアル    by Bram Moolenaar
@@ -514,6 +514,8 @@ ColorScheme			カラースキームを読み込んだ後。 |:colorscheme|
 							*CompleteDone*
 CompleteDone			挿入モード補完が完了したとき。補完が実行されて
 				も中止されても発行される。 |ins-completion|
+				変数 |v:completed_item| には補完された候補につい
+				ての情報が含まれている。
 
 							*CursorHold*
 CursorHold			'updatetime' の時間の間、ユーザーがキーを押さ
@@ -529,6 +531,12 @@ CursorHold			'updatetime' の時間の間、ユーザーがキーを押さ
 				い。
 				レコーディングの最中にはCursorHoldイベントは発
 				生しない。|q|
+							*<CursorHold>*
+				この自動コマンドは内部的に <CursorHold> キーが
+				引き金になっている。式による指定のマッピング内
+				では |getchar()| によってこの文字が取得されるこ
+				とがある。
+
 				Note: このイベントには対話的なコマンドは使えな
 				いことに注意。「続けるには」プロンプトは現れず、
 				スクリーンは必要に応じて直接更新される。
@@ -880,7 +888,7 @@ TextChanged			ノーマルモードでカレントバッファのテキストが
 				更されたとき。つまり |b:changedtick| が更新さ
 				れるとき。
 				未処理のキー入力がまだあるとき、またはオペレー
-				ターを待機しているときは、発生しない。
+				タを待機しているときは、発生しない。
 				注意: このイベントは頻繁に発生するので、ユー
 				ザーが予期しないことや時間のかかる処理は行わな
 				いこと。
@@ -941,6 +949,13 @@ WinLeave			ウィンドウを離れる前。次に入るウィンドウで他の
 
 ==============================================================================
 6. パターン					*autocmd-patterns* *{pat}*
+
+引数 {pat} にはコンマ区切りのリストを指定することができる。これによりコマンドは
+指定されたそれぞれのパターンについて実行される。例えばこのコマンド: >
+	:autocmd BufRead *.txt,*.info set et
+は下記と等しくなる:
+	:autocmd BufRead *.txt set et
+	:autocmd BufRead *.info set et
 
 ファイルパターン {pat} がファイル名とマッチするかどうかは、2通りの方法で調べら
 れる。
@@ -1045,7 +1060,7 @@ Note: パスの途中だけにマッチさせ、ルートディレクトリに�
 例: >
     :au CursorHold <buffer>  echo 'hold'
     :au CursorHold <buffer=33>  echo 'hold'
-    :au CursorHold <buffer=abuf>  echo 'hold'
+    :au BufNewFile * au CursorHold <buffer=abuf>  echo 'hold'
 
 自動コマンドに対するコマンドは全てバッファローカルな自動コマンドに対しても機能
 する。パターンの代わりに特別な文字列を使う。例: >
@@ -1104,6 +1119,9 @@ Note: パスの途中だけにマッチさせ、ルートディレクトリに�
 :aug[roup] {name}		後に続くコマンド ":autocmd" のためのグループ名
 				を定義する。{name} を "end" や "END" にすると
 				既定のグループが選ばれる。
+				混乱を避けるため、既存の {event} の名前とは違う
+				名前をつけるべきである。これはたいてい意図しな
+				い動作を引き起こす。
 
 						*:augroup-delete* *E367*
 :aug[roup]! {name}		自動コマンドのグループ {name} を削除する。その

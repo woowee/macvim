@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim バージョン 7.4.  Last change: 2014 Aug 06
+*quickref.txt*  For Vim バージョン 7.4.  Last change: 2016 Feb 24
 
 
 		  VIMリファレンスマニュアル    by Bram Moolenaar
@@ -635,6 +635,7 @@
 'balloondelay'	  'bdlay'   バルーンウィンドウが出るまでの遅延時間(ms)
 'ballooneval'	  'beval'   バルーン評価のON/OFF
 'balloonexpr'	  'bexpr'   バルーンウィンドウに表示する式
+'belloff'	  'bo'	    指定した場合にベルを鳴らさない
 'binary'	  'bin'     バイナリモードで、読み/書き/編集する
 'bioskey'	  'biosk'   MS-DOS専用: 文字入力にbiosコールを使う
 'bomb'			    ファイルの先頭にBOMを付加する
@@ -674,7 +675,7 @@
 'cscopepathcomp'  'cspc'    表示するファイルパスの深さ
 'cscopeprg'	  'csprg'   cscopeの実行ファイル
 'cscopequickfix'  'csqf'    cscopeの結果の表示にquickfixウィンドウを使う
-'cscoperelative'  'csre'    cscope.out のディレクトリパスをプレフィックスとし
+'cscoperelative'  'csre'    cscope.out のディレクトリパスをプリフィックスとし
 		            て使う
 'cscopetag'	  'cst'     タグコマンドでcscopeを使う
 'cscopetagorder'  'csto'    |:cstag|が検索する順番を決める
@@ -713,6 +714,7 @@
 'fileignorecase'  'fic'     ファイル名の大文字と小文字を区別するかどうか
 'filetype'	  'ft'      オートコマンドで使うファイルタイプ名
 'fillchars'	  'fcs'     特殊な表示に使う文字
+'fixendofline'	  'fixeol'  ファイル末尾に <EOL> を必ずつける
 'fkmap'		  'fk'      ペルシア語のキーボードマッピング
 'foldclose'	  'fcl'     カーソル下以外の折畳みを閉じる
 'foldcolumn'	  'fdc'     折畳みを示すのに使う列幅
@@ -727,10 +729,10 @@
 'foldnestmax'	  'fdn'     折畳みの深さの制限
 'foldopen'	  'fdo'     折畳みを開くことのできるコマンド
 'foldtext'	  'fdt'     閉じた折畳みの表示に使う式
-'formatlistpat'	  'flp'     リストのヘッダを認識するためのパターン
+'formatexpr'	  'fex'     |gq|で使う式
+'formatlistpat'	  'flp'     リストのヘッダーを認識するためのパターン
 'formatoptions'	  'fo'      自動整形の動作定義
 'formatprg'	  'fp'      |gq|で使う外部プログラム
-'formatexpr'	  'fex'     |gq|で使う式
 'fsync'		  'fs'      ファイルを書き込んだ後に fsync() を呼ぶかどうか
 'gdefault'	  'gd'      |:substitute|で "g" を既定で有効にする
 'grepformat'	  'gfm'     'grepprg' の出力の書式
@@ -749,15 +751,15 @@
 'helplang'	  'hlg'     優先するヘルプ用の言語
 'hidden'	  'hid'     バッファが|abandon|(捨て)られても破棄しない
 'highlight'	  'hl'      様々な対象に対する強調表示モードの設定
-'hlsearch'	  'hls'     最後に検索したパターンを強調表示する
 'history'	  'hi'      コマンドライン履歴の記録数
 'hkmap'		  'hk'      ヘブライ語のキーボードマッピング
 'hkmapp'	  'hkp'     発音に即したヘブライ語のキーボードマッピング
+'hlsearch'	  'hls'     最後に検索したパターンを強調表示する
 'icon'			    Vimのアイコン表示でテキストを変更するようにする
 'iconstring'		    Vimのアイコン表示に使用するテキスト
 'ignorecase'	  'ic'      検索パターンで大文字と小文字を区別しない
-'imactivatekey'	  'imak'    X のインプットメソッドをオンにするキー
 'imactivatefunc'  'imaf'    X のインプットメソッドをオン/オフにする関数
+'imactivatekey'	  'imak'    X のインプットメソッドをオンにするキー
 'imcmdline'	  'imc'     コマンドライン入力時にIMを有効にする
 'imdisable'	  'imd'     どのモードでもIMを使わない
 'iminsert'	  'imi'     挿入モードで|:lmap|やIMを使う
@@ -781,6 +783,7 @@
 'keywordprg'	  'kp'      |K|で使う外部プログラム
 'langmap'	  'lmap'    他の言語モードでの文字
 'langmenu'	  'lm'      メニュー表示用言語
+'langnoremap'	  'lnr'	    マッピングされた文字に 'langmap' を適用しない
 'laststatus'	  'ls'      最下ウィンドウにいつステータス行を表示するか
 'lazyredraw'	  'lz'      マクロ実行中に表示を更新しない
 'linebreak'	  'lbr'     長い行を空白で折り返す
@@ -791,6 +794,7 @@
 'list'			    <Tab>や<EOL>を表示する
 'listchars'	  'lcs'     'list' オン時に使う文字
 'loadplugins'	  'lpl'     起動時にプラグインスクリプトを読み込む
+'luadll'		    Lua 動的ライブラリの名前
 'macatsui'		    Mac GUI: ATSUI テキスト描画を使う
 'magic'			    検索パターン内の特殊文字を変更する
 'makeef'	  'mef'     |:make|用のエラーファイル
@@ -823,13 +827,15 @@
 'omnifunc'	  'ofu'     ファイルタイプごとの補完に使われる
 'opendevice'	  'odev'    MS-Windows上でデバイスの読み書きを許可する
 'operatorfunc'	  'opfunc'  オペレータ|g@|で呼ばれる関数
-'osfiletype' 	  'oft'     サポートされていない
+'osfiletype'	  'oft'     もうサポートされていない
+'packpath'	  'pp'      パッケージのために使われるディレクトリのリスト
 'paragraphs'	  'para'    段落を分けるためのnroffのマクロ
 'paste'			    Pasteモードに移行
 'pastetoggle'	  'pt'      'paste' を切替えるキー
 'patchexpr'	  'pex'     パッチを適用するための式
 'patchmode'	  'pm'      最初のバージョンを保全する
 'path'		  'pa'      |gf|などでファイルを検索するディレクトリのリスト
+'perldll'		    Perl 動的ライブラリの名前
 'preserveindent'  'pi'      再インデント時にインデントの構造を保つ
 'previewheight'	  'pvh'     プレビューウィンドウの高さ
 'previewwindow'	  'pvw'     プレビューウィンドウかどうか
@@ -837,11 +843,13 @@
 'printencoding'	  'penc'    印刷で使う文字コード
 'printexpr'	  'pexpr'   |:hardcopy|でPostScriptを印刷するための式
 'printfont'	  'pfn'     |:hardcopy|で使用するフォント
-'printheader'	  'pheader' |:hardcopy|で使用するヘッダ
+'printheader'	  'pheader' |:hardcopy|で使用するヘッダー
 'printmbcharset'  'pmbcs'   |:hardcopy|に使われるCJK文字集合
 'printmbfont'	  'pmbfn'   |:hardcopy|の出力に使われるフォント名
 'printoptions'	  'popt'    |:hardcopy|の出力をコントロールする
 'pumheight'	  'ph'	    ポップアップメニューの高さの最大値
+'pythondll'		    Python 2 動的ライブラリの名前
+'pythonthreedll'	    Python 3 動的ライブラリの名前
 'quoteescape'	  'qe'	    文字列中に使われるエスケープ文字
 'readonly'	  'ro'      バッファの書き込みを制限する
 'redrawtime'	  'rdt'     'hlsearch' と |:match| のハイライトのタイムアウト
@@ -854,6 +862,7 @@
 'revins'	  'ri'      挿入モードで入力方向が逆になる
 'rightleft'	  'rl'      "右から左" 指向のウィンドウ
 'rightleftcmd'	  'rlc'     "右から左" に入力するコマンド
+'rubydll'		    name of the Ruby dynamic library
 'ruler'		  'ru'      ステータスラインにカーソルが位置する場所を表示する
 'rulerformat'	  'ruf'     'ruler' 用のフォーマット
 'runtimepath'	  'rtp'     ランタイムファイル用のディレクトリのリスト
@@ -909,14 +918,16 @@
 'switchbuf'	  'swb'     バッファ切替え時の動作
 'synmaxcol'	  'sws'     この桁までしか構文アイテムを探さない
 'syntax'	  'syn'     カレントバッファの構文強調表示の定義
-'tabstop'	  'ts'      <Tab>の表示幅
 'tabline'	  'tal'     コンソールのタブページラインのカスタムフォーマット
-'tabpagemax'	  'tpm'     タブページの最大数。|-p|と "tab all" に使われる。
+'tabpagemax'	  'tpm'     タブページの最大数。|-p|と "tab all" に使われる
+'tabstop'	  'ts'      <Tab>の表示幅
 'tagbsearch'	  'tbs'     タグファイル内の検索にバイナリサーチを使う
+'tagcase'	  'tc'      タグファイル内検索で大文字小文字の扱いを指定する
 'taglength'	  'tl'      タグ名はこの文字数までしか意味を持たない
 'tagrelative'	  'tr'      タグファイル内のファイル名が相対的になる
 'tags'		  'tag'     タグコマンドで使うファイルのリスト
 'tagstack'	  'tgst'    タグスタックにタグをプッシュする
+'tcldll'		    Tcl 動的ライブラリの名前
 'term'			    ターミナルの名前
 'termbidi'	  'tbidi'   ターミナルが双方向性を持っている
 'termencoding'	  'tenc'    ターミナルが使用する文字コード

@@ -216,9 +216,6 @@ getcmdline(
 	count = -count;
     }
 #endif
-#ifdef FEAT_SNIFF
-    want_sniff_request = 0;
-#endif
 #ifdef FEAT_EVAL
     if (firstc == -1)
     {
