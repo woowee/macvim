@@ -9219,7 +9219,7 @@ f_argidx(typval_T *argvars UNUSED, typval_T *rettv)
  * "arglistid()" function
  */
     static void
-f_arglistid(typval_T *argvars UNUSED, typval_T *rettv)
+f_arglistid(typval_T *argvars, typval_T *rettv)
 {
     win_T	*wp;
 
@@ -17840,7 +17840,7 @@ f_round(typval_T *argvars, typval_T *rettv)
  * "screenattr()" function
  */
     static void
-f_screenattr(typval_T *argvars UNUSED, typval_T *rettv)
+f_screenattr(typval_T *argvars, typval_T *rettv)
 {
     int		row;
     int		col;
@@ -17860,7 +17860,7 @@ f_screenattr(typval_T *argvars UNUSED, typval_T *rettv)
  * "screenchar()" function
  */
     static void
-f_screenchar(typval_T *argvars UNUSED, typval_T *rettv)
+f_screenchar(typval_T *argvars, typval_T *rettv)
 {
     int		row;
     int		col;
@@ -21027,7 +21027,7 @@ f_virtcol(typval_T *argvars, typval_T *rettv)
  * "visualmode()" function
  */
     static void
-f_visualmode(typval_T *argvars UNUSED, typval_T *rettv UNUSED)
+f_visualmode(typval_T *argvars, typval_T *rettv)
 {
     char_u	str[2];
 
