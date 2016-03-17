@@ -1,4 +1,4 @@
-*eval.txt*	For Vim version 7.4.  Last change: 2016 Mar 12
+*eval.txt*	For Vim version 7.4.  Last change: 2016 Mar 15
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -349,10 +349,6 @@ This works like: >
 	:   :call Doit(item)
 	:   let index = index + 1
 	:endwhile
-
-Note that all items in the list should be of the same type, otherwise this
-results in error |E706|.  To avoid this |:unlet| the variable at the end of
-the loop.
 
 If all you want to do is modify each item in the list then the |map()|
 function will be a simpler method than a for loop.
@@ -764,13 +760,23 @@ expressions are referring to the same |List| or |Dictionary| instance.  A copy
 of a |List| is different from the original |List|.  When using "is" without
 a |List| or a |Dictionary| it is equivalent to using "equal", using "isnot"
 equivalent to using "not equal".  Except that a different type means the
-values are different: "4 == '4'" is true, "4 is '4'" is false and "0 is []" is
-false and not an error. "is#"/"isnot#" and "is?"/"isnot?" can be used to match
-and ignore case.
+values are different: >
+	echo 4 == '4'
+	1
+	echo 4 is '4'
+	0
+	echo 0 is []
+	0
+"is#"/"isnot#" and "is?"/"isnot?" can be used to match and ignore case.
 
 When comparing a String with a Number, the String is converted to a Number,
-and the comparison is done on Numbers.	This means that "0 == 'x'" is TRUE,
-because 'x' converted to a Number is zero.
+and the comparison is done on Numbers.	This means that: >
+	echo 0 == 'x'
+	1
+because 'x' converted to a Number is zero.  However: >
+	echo [0] == ['x']
+	0
+Inside a List or Dictionary this conversion is not used.
 
 When comparing two Strings, this is done with strcmp() or stricmp().  This
 results in the mathematical difference (comparing byte values), not
@@ -1885,7 +1891,8 @@ foldlevel( {lnum})		Number	fold level at {lnum}
 foldtext()			String	line displayed for closed fold
 foldtextresult( {lnum})		String	text for closed fold at {lnum}
 foreground()			Number	bring the Vim window to the foreground
-function( {name})		Funcref reference to function {name}
+function({name} [, {arglist}] [, {dict}])
+				Funcref reference to function {name}
 garbagecollect( [{atexit}])	none	free memory, breaking cyclic references
 get( {list}, {idx} [, {def}])	any	get item {idx} from {list} or {def}
 get( {dict}, {key} [, {def}])	any	get item {key} from {dict} or {def}
@@ -2122,9 +2129,12 @@ tabpagewinnr( {tabarg}[, {arg}])
 				Number	number of current window in tab page
 taglist( {expr})		List	list of tags matching {expr}
 tagfiles()			List	tags files used
-tempname()			String	name for a temporary file
 tan( {expr})			Float	tangent of {expr}
 tanh( {expr})			Float	hyperbolic tangent of {expr}
+tempname()			String	name for a temporary file
+timer_start( {time}, {callback} [, {options}])
+				Number	create a timer
+timer_stop( {timer})		none	stop a timer
 tolower( {expr})		String	the String {expr} switched to lowercase
 toupper( {expr})		String	the String {expr} switched to uppercase
 tr( {src}, {fromstr}, {tostr})	String	translate chars of {src} in {fromstr}
@@ -2139,6 +2149,11 @@ values( {dict})			List	values in {dict}
 virtcol( {expr})		Number	screen column of cursor or mark
 visualmode( [expr])		String	last visual mode used
 wildmenumode()			Number	whether 'wildmenu' mode is active
+win_findbuf( {bufnr}) 		List	find windows containing {bufnr}
+win_getid( [{win} [, {tab}]]) 	Number	get window ID for {win} in {tab}
+win_gotoid( {expr})		Number	go to window with ID {expr}
+win_id2tabwin( {expr})		List	get tab and window nr from window ID
+win_id2win( {expr})		Number	get window nr from window ID
 winbufnr( {nr})			Number	buffer number of window {nr}
 wincol()			Number	window column of the cursor
 winheight( {nr})		Number	height of window {nr}
@@ -3553,9 +3568,56 @@ foreground()	Move the Vim window to the foreground.	Useful when sent from
 		Win32 console version}
 
 
-function({name})					*function()* *E700*
+					*function()* *E700* *E922* *E923*
+function({name} [, {arglist}] [, {dict}])
 		Return a |Funcref| variable that refers to function {name}.
-		{name} can be a user defined function or an internal function.
+		{name} can be the name of a user defined function or an
+		internal function.
+
+		{name} can also be a Funcref, also a partial.  When it is a
+		partial the dict stored in it will be used and the {dict}
+		argument is not allowed. E.g.: >
+			let FuncWithArg = function(dict.Func, [arg])
+			let Broken = function(dict.Func, [arg], dict)
+<
+		When {arglist} or {dict} is present this creates a partial.
+		That mans the argument list and/or the dictionary is stored in
+		the Funcref and will be used when the Funcref is called.
+		
+		The arguments are passed to the function in front of other
+		arguments.  Example: >
+			func Callback(arg1, arg2, name)
+			...
+			let Func = function('Callback', ['one', 'two'])
+			...
+			call Func('name')
+<		Invokes the function as with: >
+			call Callback('one', 'two', 'name')
+
+<		The Dictionary is only useful when calling a "dict" function.
+		In that case the {dict} is passed in as "self". Example: >
+			function Callback() dict
+			   echo "called for " . self.name
+			endfunction
+			...
+			let context = {"name": "example"}
+			let Func = function('Callback', context)
+			...
+			call Func()	" will echo: called for example
+<		The use of function() is not needed when there are no extra
+		arguments, these two are equivalent: >
+			let Func = function('Callback', context)
+			let Func = context.Callback
+
+<		The argument list and the Dictionary can be combined: >
+			function Callback(arg1, count) dict
+			...
+			let context = {"name": "example"}
+			let Func = function('Callback', ['one'], context)
+			...
+			call Func(500)
+<		Invokes the function as with: >
+			call context.Callback('one', 500)
 
 
 garbagecollect([{atexit}])				*garbagecollect()*
@@ -4471,13 +4533,13 @@ job_info({job})						*job_info()*
 		   "status"	what |job_status()| returns
 		   "channel"	what |job_getchannel()| returns
 		   "exitval"	only valid when "status" is "dead"
-		   "exit-cb"	function to be called on exit
+		   "exit_cb"	function to be called on exit
 		   "stoponexit"	|job-stoponexit|
 
 job_setoptions({job}, {options})			*job_setoptions()*
 		Change options for {job}.  Supported are:
 		   "stoponexit"	|job-stoponexit|
-		   "exit-cb"	|job-exit-cb|
+		   "exit_cb"	|job-exit_cb|
 
 job_start({command} [, {options}])			*job_start()*
 		Start a job and return a Job object.  Unlike |system()| and
@@ -6845,8 +6907,7 @@ systemlist({expr} [, {input}])				*systemlist()*
 		is the same as |readfile()| will output with {binary} argument 
 		set to "b".
 
-		Returns an empty string on error, so be careful not to run 
-		into |E706|.
+		Returns an empty string on error.
 
 
 tabpagebuflist([{arg}])					*tabpagebuflist()*
@@ -6961,6 +7022,33 @@ tanh({expr})						*tanh()*
 <			-0.761594
 		{only available when compiled with the |+float| feature}
 
+
+							*timer_start()*
+timer_start({time}, {callback} [, {options}])
+		Create a timer and return the timer ID.
+
+		{time} is the waiting time in milliseconds. This is the
+		minimum time before invoking the callback.  When the system is
+		busy or Vim is not waiting for input the time will be longer.
+
+		{callback} is the function to call.  It can be the name of a
+		function or a Funcref.  It is called with one argument, which
+		is the timer ID.  The callback is only invoked when Vim is
+		waiting for input.
+
+		{options} is a dictionary.  Supported entries:
+		   "repeat"	Number of times to repeat calling the
+		   		callback.  -1 means forever.
+
+		Example: >
+			func MyHandler(timer)
+			  echo 'Handler called'
+			endfunc
+			let timer = timer_start(500, 'MyHandler',
+				\ {'repeat': 3})
+<		This will invoke MyHandler() three times at 500 msec
+		intervals.
+		{only available when compiled with the |+timers| feature}
 
 tolower({expr})						*tolower()*
 		The result is a copy of the String given, with all uppercase
@@ -7161,6 +7249,33 @@ wildmenumode()					*wildmenumode()*
 <
 		(Note, this needs the 'wildcharm' option set appropriately).
 
+
+win_findbuf({bufnr})					*win_findbuf()*
+		Returns a list with window IDs for windows that contain buffer
+		{bufnr}.  When there is none the list is empty.
+
+win_getid([{win} [, {tab}]])				*win_getid()*
+		Get the window ID for the specified window.
+		When {win} is missing use the current window.
+		With {win} this is the window number.  The top window has
+		number 1.
+		Without {tab} use the current tab, otherwise the tab with
+		number {tab}.  The first tab has number one.
+		Return zero if the window cannot be found.
+
+win_gotoid({expr})					*win_gotoid()*
+		Go to window with ID {expr}.  This may also change the current
+		tabpage.
+		Return 1 if successful, 0 if the window cannot be found.
+
+win_id2tabwin({expr}					*win_id2tabwin()*
+		Return a list with the tab number and window number of window
+		with ID {expr}: [tabnr, winnr].
+		Return [0, 0] if the window cannot be found.
+
+win_id2win({expr})					*win_id2win()*
+		Return the window number of window with ID {expr}.
+		Return 0 if the window cannot be found in the current tabpage.
 
 							*winbufnr()*
 winbufnr({nr})	The result is a Number, which is the number of the buffer
@@ -7491,6 +7606,7 @@ termresponse		Compiled with support for |t_RV| and |v:termresponse|.
 textobjects		Compiled with support for |text-objects|.
 tgetent			Compiled with tgetent support, able to use a termcap
 			or terminfo file.
+timers			Compiled with |timer_start()| support.
 title			Compiled with window title support |'title'|.
 toolbar			Compiled with support for |gui-toolbar|.
 unix			Unix version of Vim.
