@@ -1436,19 +1436,6 @@ utf_char2cells(int c)
 	{0x100000, 0x10fffd}
     };
 
-#ifdef USE_AMBIWIDTH_AUTO
-    if (gui.in_use && *p_ambw == 'a')
-    {
-	int cell;
-
-	/* This is required by screen.c implicitly. */
-	if (c == 0)
-	    return 1;
-	if ((cell = gui_mch_get_charwidth(c)) > 0)
-	    return cell;
-    }
-#endif
-
     /* Sorted list of non-overlapping intervals of Emoji characters,
      * based on http://unicode.org/emoji/charts/emoji-list.html */
     static struct interval emoji[] =
@@ -1590,6 +1577,19 @@ utf_char2cells(int c)
 	{0x1f645, 0x1f64f},
 	{0x1f680, 0x1f6c5}
     };
+
+#ifdef USE_AMBIWIDTH_AUTO
+    if (gui.in_use && *p_ambw == 'a')
+    {
+	int cell;
+
+	/* This is required by screen.c implicitly. */
+	if (c == 0)
+	    return 1;
+	if ((cell = gui_mch_get_charwidth(c)) > 0)
+	    return cell;
+    }
+#endif
 
     if (c >= 0x100)
     {
