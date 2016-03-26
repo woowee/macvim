@@ -1637,6 +1637,7 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 05.5	usr_05.txt	/*05.5*
 05.6	usr_05.txt	/*05.6*
 05.7	usr_05.txt	/*05.7*
+05.8	usr_05.txt	/*05.8*
 06.1	usr_06.txt	/*06.1*
 06.2	usr_06.txt	/*06.2*
 06.3	usr_06.txt	/*06.3*
@@ -4453,6 +4454,8 @@ E921	channel.txt	/*E921*
 E922	eval.txt	/*E922*
 E923	eval.txt	/*E923*
 E924	quickfix.txt	/*E924*
+E925	quickfix.txt	/*E925*
+E926	quickfix.txt	/*E926*
 E93	windows.txt	/*E93*
 E94	windows.txt	/*E94*
 E95	message.txt	/*E95*
@@ -4886,6 +4889,7 @@ add-filetype-plugin	usr_05.txt	/*add-filetype-plugin*
 add-global-plugin	usr_05.txt	/*add-global-plugin*
 add-local-help	usr_05.txt	/*add-local-help*
 add-option-flags	options.txt	/*add-option-flags*
+add-package	usr_05.txt	/*add-package*
 add-plugin	usr_05.txt	/*add-plugin*
 added-5.1	version5.txt	/*added-5.1*
 added-5.2	version5.txt	/*added-5.2*

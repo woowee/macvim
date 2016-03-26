@@ -6,6 +6,7 @@ g:stdinencoding	vimproc.txt	/*g:stdinencoding*
 g:stdoutencoding	vimproc.txt	/*g:stdoutencoding*
 g:vimproc#disable	vimproc.txt	/*g:vimproc#disable*
 g:vimproc#dll_path	vimproc.txt	/*g:vimproc#dll_path*
+g:vimproc#download_windows_dll	vimproc.txt	/*g:vimproc#download_windows_dll*
 g:vimproc#password_pattern	vimproc.txt	/*g:vimproc#password_pattern*
 g:vimproc#popen2_commands	vimproc.txt	/*g:vimproc#popen2_commands*
 g:vimproc_dll_path	vimproc.txt	/*g:vimproc_dll_path*
