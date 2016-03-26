@@ -47,6 +47,13 @@ if &encoding =~# '^euc-jp'
 endif
 "}}}
 
+" Version info "{{{
+let s:MAJOR_VERSION = 9
+let s:MINOR_VERSION = 2
+let s:VERSION_NUMBER = str2nr(printf('%2d%02d', s:MAJOR_VERSION, s:MINOR_VERSION))
+let s:VERSION_STRING = printf('%d.%d', s:MAJOR_VERSION, s:MINOR_VERSION)
+"}}}
+
 " Global options definition. "{{{
 " Set the default of g:vimproc_dll_path by judging OS "{{{
 if vimproc#util#is_windows()
@@ -75,6 +82,8 @@ call vimproc#util#set_default(
       \ 'g:vimproc_dll_path')
 unlet s:vimproc_dll_basename
 
+call vimproc#util#set_default(
+      \'g:vimproc#download_windows_dll', 0)
 call vimproc#util#set_default(
       \ 'g:vimproc#password_pattern',
       \ '\%(Enter \|Repeat \|[Oo]ld \|[Nn]ew \|login ' .
@@ -116,6 +125,11 @@ let g:vimproc#dll_path =
 " Backward compatibility.
 let g:vimproc_password_pattern = g:vimproc#password_pattern
 
+if g:vimproc#download_windows_dll && !filereadable(g:vimproc#dll_path)
+      \ && vimproc#util#is_windows()
+  call vimproc#util#try_download_windows_dll(s:VERSION_STRING)
+endif
+
 if !filereadable(g:vimproc#dll_path) || !has('libcall') "{{{
   function! vimproc#get_last_status() abort
     return v:shell_error
@@ -141,7 +155,7 @@ if !filereadable(g:vimproc#dll_path) || !has('libcall') "{{{
 endif"}}}
 
 function! vimproc#version() abort "{{{
-  return str2nr(printf('%2d%02d', 9, 2))
+  return s:VERSION_NUMBER
 endfunction"}}}
 function! vimproc#dll_version() abort "{{{
   let [dll_version] = s:libcall('vp_dlversion', [])
@@ -717,7 +731,7 @@ endfunction"}}}
 function! vimproc#kill(pid, sig) abort "{{{
   if a:sig == 0 && vimproc#util#is_windows()
     " Use waitpid().
-    let cond = s:waitpid(a:pid)[0]
+    let cond = s:waitpid(a:pid, 1)[0]
     if cond ==# 'error'
       let s:last_errmsg = 'waitpid error'
     endif
@@ -927,7 +941,7 @@ function! s:read_lines(...) dict "{{{
 
   let out = call(self.read, a:000, self)
   if out !=# ''
-    let outs = split(out, '\r*\n', 1)
+    let outs = split(out, '\r*\n\|\r', 1)
     let res .= outs[0]
     if len(outs) > 1
       let lines += [substitute(res, '\r*$', '', '')] + outs[1:-2]
@@ -1593,7 +1607,7 @@ function! s:vp_kill(...) dict
 
   let ret = 0
   for pid in get(self, 'pid_list', [self.pid])
-    call s:waitpid(pid)
+    call s:waitpid(pid, 1)
     let ret = vimproc#kill(pid, sig)
   endfor
 
@@ -1615,14 +1629,20 @@ function! s:vp_pgroup_kill(...) dict
   return self.current_proc.kill(sig)
 endfunction
 
-function! s:waitpid(pid) abort
+function! s:waitpid(pid, ...) abort
+  let nohang = a:0 ? a:1 : 0
   try
-    let [cond, status] = s:libcall('vp_waitpid', [a:pid])
-    " echomsg string([a:pid, cond, status])
+    while 1
+      let [cond, status] = s:libcall('vp_waitpid', [a:pid])
+      " echomsg string([a:pid, cond, status])
+      if cond !=# 'run' || nohang
+        break
+      endif
+    endwhile
+
     if cond ==# 'run'
       " Add process list.
       let s:bg_processes[a:pid] = a:pid
-
       let [cond, status] = ['exit', '0']
     elseif vimproc#util#is_windows()
       call s:libcall('vp_close_handle', [a:pid])
@@ -1653,7 +1673,8 @@ function! s:vp_checkpid() dict
   return [cond, str2nr(status)]
 endfunction
 
-function! s:vp_waitpid() dict
+function! s:vp_waitpid(...) dict
+  let nohang = a:0 ? a:1 : 0
   call s:close_all(self)
 
   let self.is_valid = 0
@@ -1662,7 +1683,7 @@ function! s:vp_waitpid() dict
     " Use cache.
     let [cond, status] = [self.cond, self.status]
   else
-    let [cond, status] = s:waitpid(self.pid)
+    let [cond, status] = s:waitpid(self.pid, nohang)
   endif
 
   if cond ==# 'exit'
@@ -1671,7 +1692,7 @@ function! s:vp_waitpid() dict
 
   if has_key(self, 'pid_list')
     for pid in self.pid_list[: -2]
-      call s:waitpid(pid)
+      call s:waitpid(pid, nohang)
     endfor
   endif
 
@@ -1736,6 +1757,12 @@ try
     call s:print_error(printf('Your vimproc binary version is "%d",'.
           \ ' but vimproc version is "%d".',
           \ vimproc#dll_version(), vimproc#version()))
+    if g:vimproc#download_windows_dll && vimproc#util#is_windows()
+      if vimproc#util#try_update_windows_dll(s:VERSION_STRING)
+        call s:print_error('DLL automatically update succeeded.')
+        call s:print_error('Please restart Vim.')
+      endif
+    endif
   endif
 catch
   call s:print_error(v:throwpoint)
