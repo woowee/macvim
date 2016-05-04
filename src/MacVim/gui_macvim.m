@@ -1574,6 +1574,9 @@ gui_mch_flash(int msec)
     guicolor_T
 gui_mch_get_color(char_u *name)
 {
+    if (![MMBackend sharedInstance])
+	return INVALCOLOR;
+
 #ifdef FEAT_MBYTE
     name = CONVERT_TO_UTF8(name);
 #endif
