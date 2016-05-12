@@ -3482,7 +3482,7 @@ if test -z "$CPP"; then
   $as_echo_n "(cached) " >&6
 else
       # Double quotes because CPP needs to be expanded
-    for CPP in "$CC -E" "$CC -E -traditional-cpp" "/lib/cpp" "/usr/bin/cpp"
+    for CPP in "$CC -E" "$CC -E -traditional-cpp" "/lib/cpp"
     do
       ac_preproc_ok=false
 for ac_c_preproc_warn_flag in '' yes
@@ -4311,7 +4311,7 @@ $as_echo_n "checking if SDK is supported... " >&6; }
     if test "x$MACSDK" = "x10.4"; then
       sdkflags="$sdkflags""u"
     fi
-    sdkflags="$sdkflags.sdk"
+    sdkflags="$sdkflags.sdk -mmacosx-version-min=$MACSDK"
     CFLAGS="$CFLAGS -isysroot $sdkflags"
     LDFLAGS="$LDFLAGS -Wl,-syslibroot,$sdkflags"
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -4328,7 +4328,7 @@ _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-        XCODEFLAGS="$XCODEFLAGS -sdk macosx$MACSDK"
+        XCODEFLAGS="$XCODEFLAGS -sdk macosx$MACSDK MACOSX_DEPLOYMENT_TARGET=$MACSDK"
 else
    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
@@ -4983,6 +4983,7 @@ fi
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: $vi_cv_with_luajit" >&5
 $as_echo "$vi_cv_with_luajit" >&6; }
 
+  LUA_INC=
   if test "X$vi_cv_path_lua_pfx" != "X"; then
     if test "x$vi_cv_with_luajit" != "xno"; then
             # Extract the first word of "luajit", so it can be a program name with args.
@@ -5245,7 +5246,7 @@ $as_echo "yes" >&6; }
       LUA_CFLAGS="-DDYNAMIC_LUA_DLL=\\\"${vi_cv_dll_name_lua}\\\" $LUA_CFLAGS"
     fi
     if test "X$LUA_CFLAGS$LUA_LIBS" != "X" && \
-       test "x$MACOSX" = "xyes" && \
+       test "x$MACOSX" = "xyes" && test "x$vi_cv_with_luajit" != "xno" && \
        test "`(uname -m) 2>/dev/null`" = "x86_64"; then
             LUA_LIBS="-pagezero_size 10000 -image_base 100000000 $LUA_LIBS"
     fi
