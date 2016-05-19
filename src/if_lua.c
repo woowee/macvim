@@ -1938,6 +1938,7 @@ int set_ref_in_lua(int copyID)
     switch (dynamic_lua_version) {
     case DYNAMIC_LUA_VER51: return set_ref_in_lua51(copyID);
     case DYNAMIC_LUA_VER52: return set_ref_in_lua52(copyID);
+    default: return 0;
     }
 }
 
