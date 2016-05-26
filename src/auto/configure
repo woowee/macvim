@@ -3593,8 +3593,9 @@ if $ac_preproc_ok; then :
 else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+cat auto/config.log
 as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; cat auto/config.log; }
+See \`config.log' for more details" "$LINENO" 5; }
 fi
 
 ac_ext=c
