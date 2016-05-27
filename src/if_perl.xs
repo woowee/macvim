@@ -304,6 +304,9 @@ typedef int perl_key;
 #  define PerlIOBase_pushed dll_PerlIOBase_pushed
 #  define PerlIO_define_layer dll_PerlIO_define_layer
 # endif
+# if (PERL_REVISION == 5) && (PERL_VERSION >= 24)
+#  define Perl_savetmps dll_Perl_savetmps
+# endif
 
 /*
  * Declare HANDLE for perl.dll and function pointers.
@@ -460,6 +463,9 @@ static NV (*Perl_sv_2nv_flags)(pTHX_ SV *const, const I32);
 static IV (*PerlIOBase_pushed)(pTHX_ PerlIO *, const char *, SV *, PerlIO_funcs *);
 static void (*PerlIO_define_layer)(pTHX_ PerlIO_funcs *);
 #endif
+#if (PERL_REVISION == 5) && (PERL_VERSION >= 24)
+static void (*Perl_savetmps)(pTHX);
+#endif
 
 /*
  * Table of name to function pointer of perl.
@@ -604,17 +610,27 @@ static struct {
     {"PerlIOBase_pushed", (PERL_PROC*)&PerlIOBase_pushed, FALSE},
     {"PerlIO_define_layer", (PERL_PROC*)&PerlIO_define_layer, FALSE},
 #endif
+#if (PERL_REVISION == 5) && (PERL_VERSION >= 24)
+    {"Perl_savetmps", (PERL_PROC*)&Perl_savetmps},
+#endif
     {"", NULL},
 };
 
 /* Work around for perl-5.18.
- * The definitions of S_SvREFCNT_inc and S_SvREFCNT_dec are needed, so include
- * "perl\lib\CORE\inline.h", after Perl_sv_free2 is defined.
- * The linker won't complain about undefined __impl_Perl_sv_free2. */
+ * For now, only the definitions of S_SvREFCNT_dec are needed in
+ * "perl\lib\CORE\inline.h". */
 #if (PERL_REVISION == 5) && (PERL_VERSION >= 18)
-# define PL_memory_wrap "panic: memory wrap" /* Dummy */
-# include <inline.h>
-# undef PL_memory_wrap
+static void
+S_SvREFCNT_dec(pTHX_ SV *sv)
+{
+    if (LIKELY(sv != NULL)) {
+	U32 rc = SvREFCNT(sv);
+	if (LIKELY(rc > 1))
+	    SvREFCNT(sv) = rc - 1;
+	else
+	    Perl_sv_free2(aTHX_ sv, rc);
+    }
+}
 #endif
 
 /*
@@ -784,7 +800,7 @@ newWINrv(SV *rv, win_T *ptr)
 	sv_setiv(ptr->w_perl_private, PTR2IV(ptr));
     }
     else
-	SvREFCNT_inc(ptr->w_perl_private);
+	SvREFCNT_inc_void_NN(ptr->w_perl_private);
     SvRV(rv) = ptr->w_perl_private;
     SvROK_on(rv);
     return sv_bless(rv, gv_stashpv("VIWIN", TRUE));
@@ -800,7 +816,7 @@ newBUFrv(SV *rv, buf_T *ptr)
 	sv_setiv(ptr->b_perl_private, PTR2IV(ptr));
     }
     else
-	SvREFCNT_inc(ptr->b_perl_private);
+	SvREFCNT_inc_void_NN(ptr->b_perl_private);
     SvRV(rv) = ptr->b_perl_private;
     SvROK_on(rv);
     return sv_bless(rv, gv_stashpv("VIBUF", TRUE));
