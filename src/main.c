@@ -3240,7 +3240,7 @@ process_env(
 	sourcing_name = save_sourcing_name;
 	sourcing_lnum = save_sourcing_lnum;
 #ifdef FEAT_EVAL
-	current_SID = save_sid;;
+	current_SID = save_sid;
 #endif
 	return OK;
     }
