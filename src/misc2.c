@@ -851,7 +851,7 @@ alloc_clear(unsigned size)
     char_u *
 alloc_check(unsigned size)
 {
-#if !defined(UNIX) && !defined(__EMX__)
+#if !defined(UNIX)
     if (sizeof(int) == 2 && size > 0x7fff)
     {
 	/* Don't hide this message */
@@ -1173,9 +1173,12 @@ free_all_mem(void)
 #endif
     for (buf = firstbuf; buf != NULL; )
     {
+	bufref_T    bufref;
+
+	set_bufref(&bufref, buf);
 	nextbuf = buf->b_next;
 	close_buffer(NULL, buf, DOBUF_WIPE, FALSE);
-	if (buf_valid(buf))
+	if (bufref_valid(&bufref))
 	    buf = nextbuf;	/* didn't work, try next one */
 	else
 	    buf = firstbuf;
@@ -2725,7 +2728,7 @@ find_special_key(
     int		modifiers;
     int		bit;
     int		key;
-    unsigned long n;
+    uvarnumber_T	n;
     int		l;
 
     src = *srcp;
@@ -2747,8 +2750,10 @@ find_special_key(
 		else
 #endif
 		    l = 1;
-		if (bp[l + 1] == '>')
-		    bp += l;	/* anything accepted, like <C-?> */
+		/* Anything accepted, like <C-?>, except <C-">, because the "
+		 * ends the string. */
+		if (bp[l] != '"' && bp[l + 1] == '>')
+		    bp += l;
 	    }
 	}
 	if (bp[0] == 't' && bp[1] == '_' && bp[2] && bp[3])
@@ -5051,7 +5056,7 @@ ff_check_visited(
 {
     ff_visited_T	*vp;
 #ifdef UNIX
-    struct stat		st;
+    stat_T		st;
     int			url = FALSE;
 #endif
 
@@ -6076,12 +6081,12 @@ get4c(FILE *fd)
 }
 
 /*
- * Read 8 bytes from "fd" and turn them into a time_t, MSB first.
+ * Read 8 bytes from "fd" and turn them into a time_T, MSB first.
  */
-    time_t
+    time_T
 get8ctime(FILE *fd)
 {
-    time_t	n = 0;
+    time_T	n = 0;
     int		i;
 
     for (i = 0; i < 8; ++i)
@@ -6143,11 +6148,11 @@ put_bytes(FILE *fd, long_u nr, int len)
 #endif
 
 /*
- * Write time_t to file "fd" in 8 bytes.
+ * Write time_T to file "fd" in 8 bytes.
  * Returns FAIL when the write failed.
  */
     int
-put_time(FILE *fd, time_t the_time)
+put_time(FILE *fd, time_T the_time)
 {
     char_u	buf[8];
 
@@ -6156,26 +6161,26 @@ put_time(FILE *fd, time_t the_time)
 }
 
 /*
- * Write time_t to "buf[8]".
+ * Write time_T to "buf[8]".
  */
     void
-time_to_bytes(time_t the_time, char_u *buf)
+time_to_bytes(time_T the_time, char_u *buf)
 {
     int		c;
     int		i;
     int		bi = 0;
-    time_t	wtime = the_time;
+    time_T	wtime = the_time;
 
-    /* time_t can be up to 8 bytes in size, more than long_u, thus we
+    /* time_T can be up to 8 bytes in size, more than long_u, thus we
      * can't use put_bytes() here.
      * Another problem is that ">>" may do an arithmetic shift that keeps the
      * sign.  This happens for large values of wtime.  A cast to long_u may
-     * truncate if time_t is 8 bytes.  So only use a cast when it is 4 bytes,
+     * truncate if time_T is 8 bytes.  So only use a cast when it is 4 bytes,
      * it's safe to assume that long_u is 4 bytes or more and when using 8
      * bytes the top bit won't be set. */
     for (i = 7; i >= 0; --i)
     {
-	if (i + 1 > (int)sizeof(time_t))
+	if (i + 1 > (int)sizeof(time_T))
 	    /* ">>" doesn't work well when shifting more bits than avail */
 	    buf[bi++] = 0;
 	else

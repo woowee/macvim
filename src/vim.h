@@ -9,7 +9,7 @@
 #ifndef VIM__H
 # define VIM__H
 
-/* use fastcall for Borland, when compiling for Win32 (not for DOS16) */
+/* use fastcall for Borland, when compiling for Win32 */
 #if defined(__BORLANDC__) && defined(WIN32) && !defined(DEBUG)
 #if defined(FEAT_PERL) || \
     defined(FEAT_PYTHON) || \
@@ -33,7 +33,7 @@
 #if defined(FEAT_RUBY19) && !defined(DYNAMIC_RUBY)
     Error: FEAT_RUBY19 && !DYNAMIC_RUBY is not supported.
 #endif
-#if defined(WIN32) || defined(_WIN64) || defined(__EMX__)
+#if defined(WIN32) || defined(_WIN64)
 # include "vimio.h"
 #endif
 
@@ -88,10 +88,6 @@
 # endif
 #else
 # define ROOT_UID 0
-#endif
-
-#ifdef __EMX__		/* hand-edited config.h for OS/2 with EMX */
-# include "os_os2_cfg.h"
 #endif
 
 /*
@@ -259,7 +255,7 @@
 # include "os_beos.h"
 #endif
 
-#if (defined(UNIX) || defined(__EMX__) || defined(VMS)) \
+#if (defined(UNIX) || defined(VMS)) \
 	&& (!defined(MACOS_X) || defined(HAVE_CONFIG_H))
 # include "os_unix.h"	    /* bring lots of system header files */
 #endif
@@ -282,12 +278,6 @@
 #if !defined(__cplusplus) && defined(UNIX) \
   && !defined(MACOS_X) /* MACOS_X doesn't yet support osdef.h */
 # include "auto/osdef.h"	/* bring missing declarations in */
-#endif
-
-#ifdef __EMX__
-# define    getcwd  _getcwd2
-# define    chdir   _chdir2
-# undef	    CHECK_INODE
 #endif
 
 #ifdef AMIGA
@@ -403,6 +393,36 @@ typedef		 long __w64     long_i;
 #endif
 
 /*
+ * We use 64-bit file functions here, if available.  E.g. ftello() returns
+ * off_t instead of long, which helps if long is 32 bit and off_t is 64 bit.
+ * We assume that when fseeko() is available then ftello() is too.
+ * Note that Windows has different function names.
+ */
+#if (defined(_MSC_VER) && (_MSC_VER >= 1300)) || defined(__MINGW32__)
+typedef __int64 off_T;
+# ifdef __MINGW32__
+#  define vim_lseek lseek64
+#  define vim_fseek fseeko64
+#  define vim_ftell ftello64
+# else
+#  define vim_lseek _lseeki64
+#  define vim_fseek _fseeki64
+#  define vim_ftell _ftelli64
+# endif
+#else
+typedef off_t off_T;
+# ifdef HAVE_FSEEKO
+#  define vim_lseek lseek
+#  define vim_ftell ftello
+#  define vim_fseek fseeko
+# else
+#  define vim_lseek lseek
+#  define vim_ftell ftell
+#  define vim_fseek(a, b, c)	fseek(a, (long)b, c)
+# endif
+#endif
+
+/*
  * The characters and attributes cached for the screen.
  */
 typedef char_u schar_T;
@@ -454,7 +474,7 @@ typedef unsigned long u8char_T;	    /* long should be 32 bits or more */
 #endif
 
 #if defined(HAVE_ERRNO_H) \
-	|| defined(WIN32) || defined(_WIN64) || defined(__EMX__)
+	|| defined(WIN32) || defined(_WIN64)
 # include <errno.h>
 #endif
 
@@ -491,6 +511,9 @@ typedef unsigned long u8char_T;	    /* long should be 32 bits or more */
 # include <wctype.h>
 #endif
 #include <stdarg.h>
+
+/* for offsetof() */
+#include <stddef.h>
 
 #if defined(HAVE_SYS_SELECT_H) && \
 	(!defined(HAVE_SYS_TIME_H) || defined(SYS_SELECT_WITH_SYS_TIME))
@@ -936,6 +959,8 @@ extern char *(*dyn_libintl_textdomain)(const char *domainname);
 #define BLN_LISTED	2	/* put new buffer in buffer list */
 #define BLN_DUMMY	4	/* allocating dummy buffer */
 #define BLN_NEW		8	/* create a new buffer */
+#define BLN_NOOPT	16	/* don't copy options to existing buffer */
+#define BLN_DUMMY_OK	32	/* also find an existing dummy buffer */
 
 /* Values for in_cinkeys() */
 #define KEY_OPEN_FORW	0x101
@@ -1100,14 +1125,19 @@ extern char *(*dyn_libintl_textdomain)(const char *domainname);
 /* The type numbers are fixed for backwards compatibility. */
 #define BARTYPE_VERSION 1
 #define BARTYPE_HISTORY 2
+#define BARTYPE_REGISTER 3
+#define BARTYPE_MARK 4
+
+#define VIMINFO_VERSION 4
+#define VIMINFO_VERSION_WITH_HISTORY 2
+#define VIMINFO_VERSION_WITH_REGISTERS 3
+#define VIMINFO_VERSION_WITH_MARKS 4
 
 typedef enum {
     BVAL_NR,
     BVAL_STRING,
     BVAL_EMPTY
 } btype_T;
-
-#define BVAL_MAX 4	/* Maximum number of fields in a barline. */
 
 typedef struct {
     btype_T	bv_type;
@@ -1519,7 +1549,7 @@ typedef UINT32_TYPEDEF UINT32_T;
  * EMX doesn't have a global way of making open() use binary I/O.
  * Use O_BINARY for all open() calls.
  */
-#if defined(__EMX__) || defined(__CYGWIN32__)
+#if defined(__CYGWIN32__)
 # define O_EXTRA    O_BINARY
 #else
 # define O_EXTRA    0
@@ -1781,6 +1811,17 @@ typedef struct timeval proftime_T;
 typedef int proftime_T;	    /* dummy for function prototypes */
 #endif
 
+/*
+ * When compiling with 32 bit Perl time_t is 32 bits in the Perl code but 64
+ * bits elsewhere.  That causes memory corruption.  Define time_T and use it
+ * for global variables to avoid that.
+ */
+#ifdef WIN3264
+typedef __time64_t  time_T;
+#else
+typedef time_t	    time_T;
+#endif
+
 #ifdef _WIN64
 typedef __int64 sock_T;
 #else
@@ -2026,6 +2067,23 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 
 # define stat(a,b) (access(a,0) ? -1 : stat(a,b))
 #endif
+
+/* Use 64-bit stat structure if available. */
+#if (defined(_MSC_VER) && (_MSC_VER >= 1300)) || defined(__MINGW32__)
+# define HAVE_STAT64
+typedef struct _stat64 stat_T;
+#else
+typedef struct stat stat_T;
+#endif
+
+typedef enum
+{
+    ASSERT_EQUAL,
+    ASSERT_NOTEQUAL,
+    ASSERT_MATCH,
+    ASSERT_NOTMATCH,
+    ASSERT_OTHER
+} assert_type_T;
 
 #include "ex_cmds.h"	    /* Ex command defines */
 #include "proto.h"	    /* function prototypes */
@@ -2381,5 +2439,34 @@ int vim_main2(int argc, char **argv);
 
 /* Lowest number used for window ID. Cannot have this many windows. */
 #define LOWEST_WIN_ID 1000
+
+/* Used by the garbage collector. */
+#define COPYID_INC 2
+#define COPYID_MASK (~0x1)
+
+/* Values for trans_function_name() argument: */
+#define TFN_INT		1	/* internal function name OK */
+#define TFN_QUIET	2	/* no error messages */
+#define TFN_NO_AUTOLOAD	4	/* do not use script autoloading */
+
+/* Values for get_lval() flags argument: */
+#define GLV_QUIET	TFN_QUIET	/* no error messages */
+#define GLV_NO_AUTOLOAD	TFN_NO_AUTOLOAD	/* do not use script autoloading */
+
+#define DO_NOT_FREE_CNT 99999	/* refcount for dict or list that should not
+				   be freed. */
+
+/* errors for when calling a function */
+#define ERROR_UNKNOWN	0
+#define ERROR_TOOMANY	1
+#define ERROR_TOOFEW	2
+#define ERROR_SCRIPT	3
+#define ERROR_DICT	4
+#define ERROR_NONE	5
+#define ERROR_OTHER	6
+
+/* flags for find_name_end() */
+#define FNE_INCL_BR	1	/* include [] in name */
+#define FNE_CHECK_START	2	/* check name starts with valid character */
 
 #endif /* VIM__H */

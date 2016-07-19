@@ -89,26 +89,31 @@ CFLAGS4 = $(DEFINES) DATAMEMORY=$(MEMORYTYPE)
 PROPT = DEF=PROTO GPROTO GPPARM MAXIMUMERRORS=999 GENPROTOSTATICS GENPROTOPARAMETERS
 
 SRC = \
+	arabic.c \
 	blowfish.c \
 	buffer.c \
 	charset.c \
 	crypt.c \
 	crypt_zip.c \
+	dict.c \
 	diff.c \
 	digraph.c \
 	edit.c \
 	eval.c \
+	evalfunc.c \
 	ex_cmds.c \
 	ex_cmds2.c \
 	ex_docmd.c \
 	ex_eval.c \
 	ex_getln.c \
+	farsi.c \
 	fileio.c \
 	fold.c \
 	getchar.c \
 	hardcopy.c \
 	hashtab.c \
 	json.c \
+	list.c \
 	main.c \
 	mark.c \
 	memfile.c \
@@ -135,30 +140,36 @@ SRC = \
 	term.c \
 	ui.c \
 	undo.c \
+	userfunc.c \
 	window.c \
 	version.c
 
 OBJ = \
+	arabic.o \
 	blowfish.o \
 	buffer.o \
 	charset.o \
 	crypt.o \
 	crypt_zip.o \
+	dict.o \
 	diff.o \
 	digraph.o \
 	edit.o \
 	eval.o \
+	evalfunc.o \
 	ex_cmds.o \
 	ex_cmds2.o \
 	ex_docmd.o \
 	ex_eval.o \
 	ex_getln.o \
+	farsi.o \
 	fileio.o \
 	fold.o \
 	getchar.o \
 	hardcopy.o \
 	hashtab.o \
 	json.o \
+	list.o \
 	main.o \
 	mark.o \
 	memfile.o \
@@ -185,30 +196,36 @@ OBJ = \
 	term.o \
 	ui.o \
 	undo.o \
+	userfunc.o \
 	window.o \
 	$(TERMLIB)
 
 PRO = \
+	proto/arabic.pro \
 	proto/blowfish.pro \
 	proto/buffer.pro \
 	proto/charset.pro \
 	proto/crypt.pro \
 	proto/crypt_zip.pro \
+	proto/dict.pro \
 	proto/diff.pro \
 	proto/digraph.pro \
 	proto/edit.pro \
 	proto/eval.pro \
+	proto/evalfunc.pro \
 	proto/ex_cmds.pro \
 	proto/ex_cmds2.pro \
 	proto/ex_docmd.pro \
 	proto/ex_eval.pro \
 	proto/ex_getln.pro \
+	proto/farsi.pro \
 	proto/fileio.pro \
 	proto/fold.pro \
 	proto/getchar.pro \
 	proto/hardcopy.pro \
 	proto/hashtab.pro \
 	proto/json.pro \
+	proto/list.pro \
 	proto/main.pro \
 	proto/mark.pro \
 	proto/memfile.pro \
@@ -236,6 +253,7 @@ PRO = \
 	proto/termlib.pro \
 	proto/ui.pro \
 	proto/undo.pro \
+	proto/userfunc.pro \
 	proto/window.pro
 
 all: proto Vim
@@ -293,6 +311,8 @@ $(PRO): $(GST) vim.h
 	$(CC) $(CFLAGS) GPFILE=proto/$*.pro $(PROPT) $*.c
 
 # dependencies
+arabic.o:		arabic.c
+proto/arabic.pro:	arabic.c
 blowfish.o:		blowfish.c
 proto/blowfish.pro:	blowfish.c
 buffer.o:		buffer.c
@@ -303,6 +323,8 @@ crypt.o:		crypt.c
 proto/crypt.pro:	crypt.c
 crypt_zip.o:		crypt_zip.c
 proto/crypt_zip.pro:	crypt_zip.c
+dict.o:			dict.c
+proto/dict.pro:		dict.c
 diff.o:			diff.c
 proto/diff.pro:		diff.c
 digraph.o:		digraph.c
@@ -311,6 +333,8 @@ edit.o:			edit.c
 proto/edit.pro:		edit.c
 eval.o:			eval.c
 proto/eval.pro:		eval.c
+evalfunc.o:		evalfunc.c
+proto/evalfunc.pro:	evalfunc.c
 ex_cmds.o:		ex_cmds.c
 proto/ex_cmds.pro:	ex_cmds.c
 ex_cmds2.o:		ex_cmds2.c
@@ -321,6 +345,8 @@ ex_eval.o:		ex_eval.c ex_cmds.h
 proto/ex_eval.pro:	ex_eval.c ex_cmds.h
 ex_getln.o:		ex_getln.c
 proto/ex_getln.pro:	ex_getln.c
+farsi.o:		farsi.c
+proto/farsi.pro:	farsi.c
 fileio.o:		fileio.c
 proto/fileio.pro:	fileio.c
 fold.o:			fold.c
@@ -333,6 +359,8 @@ hashtab.o:		hashtab.c
 proto/hashtab.pro:	hashtab.c
 json.o:			json.c
 proto/json.pro:		json.c
+list.o:			list.c
+proto/list.pro:		list.c
 main.o:			main.c
 proto/main.pro:		main.c
 mark.o:			mark.c
@@ -387,4 +415,6 @@ ui.o:			ui.c
 proto/ui.pro:		ui.c
 undo.o:			undo.c
 proto/undo.pro:		undo.c
+userfunc.o:		userfunc.c
+proto/userfunc.pro:	userfunc.c
 window.o:		window.c

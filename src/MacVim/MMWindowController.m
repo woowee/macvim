@@ -81,10 +81,10 @@
 
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
-# define TABBAR_STYLE_UNIFINED @"Yosemite"
+# define TABBAR_STYLE_UNIFIED  @"Yosemite"
 # define TABBAR_STYLE_METAL    @"Yosemite"
 #else
-# define TABBAR_STYLE_UNIFINED @"Unified"
+# define TABBAR_STYLE_UNIFIED  @"Unified"
 # define TABBAR_STYLE_METAL    @"Metal"
 #endif
 
@@ -1181,7 +1181,7 @@
         [[window animator] setAlphaValue:0];
     } completionHandler:^{
         [window setStyleMask:([window styleMask] | NSFullScreenWindowMask)];
-        [[vimView tabBarControl] setStyleNamed:TABBAR_STYLE_UNIFINED];
+        [[vimView tabBarControl] setStyleNamed:TABBAR_STYLE_UNIFIED];
         [self updateTablineSeparator];
 
         // Stay dark for some time to wait for things to sync, then do the full screen operation
@@ -1207,6 +1207,9 @@
     // Store window frame and use it when exiting full-screen.
     preFullScreenFrame = [decoratedWindow frame];
 
+    // The separator should never be visible in fullscreen or split-screen.
+    [decoratedWindow hideTablineSeparator:YES];
+  
     // ASSUMPTION: fullScreenEnabled always reflects the state of Vim's 'fu'.
     if (!fullScreenEnabled) {
         ASLogDebug(@"Full-screen out of sync, tell Vim to set 'fu'");
@@ -1306,6 +1309,8 @@
         // full-screen by moving the window out from Split View.
         [vimController sendMessage:BackingPropertiesChangedMsgID data:nil];
     }
+  
+    [self updateTablineSeparator];
 }
 
 - (void)windowDidFailToExitFullScreen:(NSWindow *)window
@@ -1317,7 +1322,7 @@
     fullScreenEnabled = YES;
     [window setAlphaValue:1];
     [window setStyleMask:([window styleMask] | NSFullScreenWindowMask)];
-    [[vimView tabBarControl] setStyleNamed:TABBAR_STYLE_UNIFINED];
+    [[vimView tabBarControl] setStyleNamed:TABBAR_STYLE_UNIFIED];
     [self updateTablineSeparator];
     [self maximizeWindow:fullScreenOptions];
 }
