@@ -41,7 +41,7 @@ static char_u *readfile_charconvert(char_u *fname, char_u *fenc, int *fdp);
 static void check_marks_read(void);
 #endif
 #ifdef FEAT_CRYPT
-static char_u *check_for_cryptkey(char_u *cryptkey, char_u *ptr, long *sizep, off_t *filesizep, int newfile, char_u *fname, int *did_ask);
+static char_u *check_for_cryptkey(char_u *cryptkey, char_u *ptr, long *sizep, off_T *filesizep, int newfile, char_u *fname, int *did_ask);
 #endif
 #ifdef UNIX
 static void set_file_time(char_u *fname, time_t atime, time_t mtime);
@@ -49,7 +49,7 @@ static void set_file_time(char_u *fname, time_t atime, time_t mtime);
 static int set_rw_fname(char_u *fname, char_u *sfname);
 static int msg_add_fileformat(int eol_type);
 static void msg_add_eol(void);
-static int check_mtime(buf_T *buf, struct stat *s);
+static int check_mtime(buf_T *buf, stat_T *s);
 static int time_differs(long t1, long t2);
 #ifdef FEAT_AUTOCMD
 static int apply_autocmds_exarg(event_T event, char_u *fname, char_u *fname_io, int force, buf_T *buf, exarg_T *eap);
@@ -483,7 +483,7 @@ readfile(
     colnr_T	len;
     long	size = 0;
     char_u	*p;
-    off_t	filesize = 0;
+    off_T	filesize = 0;
     int		skip_read = FALSE;
 #ifdef FEAT_CRYPT
     char_u	*cryptkey = NULL;
@@ -507,7 +507,7 @@ readfile(
 #endif
     int		fileformat = 0;		/* end-of-line format */
     int		keep_fileformat = FALSE;
-    struct stat	st;
+    stat_T	st;
     int		file_readonly;
     linenr_T	skip_count = 0;
     linenr_T	read_count = 0;
@@ -605,7 +605,7 @@ readfile(
      */
     if (sfname == NULL)
 	sfname = fname;
-#if defined(UNIX) || defined(__EMX__)
+#if defined(UNIX)
     fname = sfname;
 #endif
 
@@ -1123,7 +1123,7 @@ readfile(
 		/* Read the first line (and a bit more).  Immediately rewind to
 		 * the start of the file.  If the read() fails "len" is -1. */
 		len = read_eintr(fd, firstline, 80);
-		lseek(fd, (off_t)0L, SEEK_SET);
+		vim_lseek(fd, (off_T)0L, SEEK_SET);
 		for (p = firstline; p < firstline + len; ++p)
 		    if (*p >= 0x80)
 		    {
@@ -1187,7 +1187,7 @@ retry:
 	    read_buf_lnum = 1;
 	    read_buf_col = 0;
 	}
-	else if (read_stdin || lseek(fd, (off_t)0L, SEEK_SET) != 0)
+	else if (read_stdin || vim_lseek(fd, (off_T)0L, SEEK_SET) != 0)
 	{
 	    /* Can't rewind the file, give up. */
 	    error = TRUE;
@@ -2502,7 +2502,8 @@ rewind_retry:
 				if (   try_unix
 				    && !read_stdin
 				    && (read_buffer
-					|| lseek(fd, (off_t)0L, SEEK_SET) == 0))
+					|| vim_lseek(fd, (off_T)0L, SEEK_SET)
+									  == 0))
 				{
 				    fileformat = EOL_UNIX;
 				    if (set_options)
@@ -3207,7 +3208,7 @@ check_for_cryptkey(
     char_u	*cryptkey,	/* previous encryption key or NULL */
     char_u	*ptr,		/* pointer to read bytes */
     long	*sizep,		/* length of read bytes */
-    off_t	*filesizep,	/* nr of bytes used from file */
+    off_T	*filesizep,	/* nr of bytes used from file */
     int		newfile,	/* editing a new buffer */
     char_u	*fname,		/* file name to display */
     int		*did_ask)	/* flag: whether already asked for key */
@@ -3394,11 +3395,11 @@ buf_write(
     int		    overwriting;	    /* TRUE if writing over original */
     int		    no_eol = FALSE;	    /* no end-of-line written */
     int		    device = FALSE;	    /* writing to a device */
-    struct stat	    st_old;
+    stat_T	    st_old;
     int		    prev_got_int = got_int;
     int		    file_readonly = FALSE;  /* overwritten file is read-only */
     static char	    *err_readonly = "is read-only (cannot override: \"W\" in 'cpoptions')";
-#if defined(UNIX) || defined(__EMX__XX)	    /*XXX fix me sometime? */
+#if defined(UNIX)			    /*XXX fix me sometime? */
     int		    made_writable = FALSE;  /* 'w' bit has been set */
 #endif
 					/* writing everything */
@@ -3535,6 +3536,7 @@ buf_write(
 	int		did_cmd = FALSE;
 	int		nofile_err = FALSE;
 	int		empty_memline = (buf->b_ml.ml_mfp == NULL);
+	bufref_T	bufref;
 
 	/*
 	 * Apply PRE autocommands.
@@ -3552,6 +3554,7 @@ buf_write(
 
 	/* set curwin/curbuf to buf and save a few things */
 	aucmd_prepbuf(&aco, buf);
+	set_bufref(&bufref, buf);
 
 	if (append)
 	{
@@ -3624,7 +3627,7 @@ buf_write(
 	 * 2. The autocommands abort script processing.
 	 * 3. If one of the "Cmd" autocommands was executed.
 	 */
-	if (!buf_valid(buf))
+	if (!bufref_valid(&bufref))
 	    buf = NULL;
 	if (buf == NULL || (buf->b_ml.ml_mfp == NULL && !empty_memline)
 				       || did_cmd || nofile_err
@@ -3923,7 +3926,7 @@ buf_write(
     if (!(append && *p_pm == NUL) && !filtering && perm >= 0 && dobackup)
     {
 #if defined(UNIX) || defined(WIN32)
-	struct stat st;
+	stat_T	    st;
 #endif
 
 	if ((bkc & BKC_YES) || append)	/* "yes" */
@@ -4062,7 +4065,7 @@ buf_write(
 	    int		bfd;
 	    char_u	*copybuf, *wp;
 	    int		some_error = FALSE;
-	    struct stat	st_new;
+	    stat_T	st_new;
 	    char_u	*dirp;
 	    char_u	*rootname;
 #if defined(UNIX)
@@ -4592,7 +4595,7 @@ buf_write(
 	if (errmsg == NULL)
 	{
 #ifdef UNIX
-	    struct stat	st;
+	    stat_T	st;
 
 	    /* Don't delete the file when it's a hard or symbolic link. */
 	    if ((!newfile && st_old.st_nlink > 1)
@@ -4625,7 +4628,7 @@ buf_write(
 
 restore_backup:
 	{
-	    struct stat st;
+	    stat_T	st;
 
 	    /*
 	     * If we failed to open the file, we don't need a backup. Throw it
@@ -4922,7 +4925,7 @@ restore_backup:
     if (backup != NULL && !backup_copy)
     {
 # ifdef HAVE_FCHOWN
-	struct stat	st;
+	stat_T	st;
 
 	/* don't change the owner when it's already OK, some systems remove
 	 * permission or ACL stuff */
@@ -4955,9 +4958,17 @@ restore_backup:
     if (perm >= 0)		/* set perm. of new file same as old file */
 	(void)mch_setperm(wfname, perm);
 #ifdef HAVE_ACL
-    /* Probably need to set the ACL before changing the user (can't set the
-     * ACL on a file the user doesn't own). */
+    /*
+     * Probably need to set the ACL before changing the user (can't set the
+     * ACL on a file the user doesn't own).
+     * On Solaris, with ZFS and the aclmode property set to "discard" (the
+     * default), chmod() discards all part of a file's ACL that don't represent
+     * the mode of the file.  It's non-trivial for us to discover whether we're
+     * in that situation, so we simply always re-set the ACL.
+     */
+# ifndef HAVE_SOLARIS_ZFS_ACL
     if (!backup_copy)
+# endif
 	mch_set_acl(wfname, acl);
 #endif
 #ifdef FEAT_CRYPT
@@ -5178,7 +5189,7 @@ restore_backup:
 
 	if (backup != NULL)
 	{
-	    struct stat st;
+	    stat_T	st;
 
 	    /*
 	     * If the original file does not exist yet
@@ -5411,7 +5422,7 @@ set_rw_fname(char_u *fname, char_u *sfname)
     if (*curbuf->b_p_ft == NUL)
     {
 	if (au_has_group((char_u *)"filetypedetect"))
-	    (void)do_doautocmd((char_u *)"filetypedetect BufRead", FALSE);
+	    (void)do_doautocmd((char_u *)"filetypedetect BufRead", FALSE, NULL);
 	do_modelines(0);
     }
 #endif
@@ -5470,7 +5481,7 @@ msg_add_fileformat(int eol_type)
 msg_add_lines(
     int	    insert_space,
     long    lnum,
-    off_t   nchars)
+    off_T   nchars)
 {
     char_u  *p;
 
@@ -5479,14 +5490,8 @@ msg_add_lines(
     if (insert_space)
 	*p++ = ' ';
     if (shortmess(SHM_LINES))
-#ifdef LONG_LONG_OFF_T
-	sprintf((char *)p,
-		"%ldL, %lldC", lnum, (long long)nchars);
-#else
-	sprintf((char *)p,
-		/* Explicit typecast avoids warning on Mac OS X 10.6 */
-		"%ldL, %ldC", lnum, (long)nchars);
-#endif
+	vim_snprintf((char *)p, IOSIZE - (p - IObuff),
+		"%ldL, %lldC", lnum, (varnumber_T)nchars);
     else
     {
 	if (lnum == 1)
@@ -5497,14 +5502,8 @@ msg_add_lines(
 	if (nchars == 1)
 	    STRCPY(p, _("1 character"));
 	else
-#ifdef LONG_LONG_OFF_T
-	    sprintf((char *)p,
-		    _("%lld characters"), (long long)nchars);
-#else
-	    sprintf((char *)p,
-		    /* Explicit typecast avoids warning on Mac OS X 10.6 */
-		    _("%ld characters"), (long)nchars);
-#endif
+	    vim_snprintf((char *)p, IOSIZE - (p - IObuff),
+		    _("%lld characters"), (varnumber_T)nchars);
     }
 }
 
@@ -5523,7 +5522,7 @@ msg_add_eol(void)
  * using the same timestamp but can't set the size.
  */
     static int
-check_mtime(buf_T *buf, struct stat *st)
+check_mtime(buf_T *buf, stat_T *st)
 {
     if (buf->b_mtime_read != 0
 	    && time_differs((long)st->st_mtime, buf->b_mtime_read))
@@ -6690,7 +6689,7 @@ vim_rename(char_u *from, char_u *to)
 #ifdef AMIGA
     BPTR	flock;
 #endif
-    struct stat	st;
+    stat_T	st;
     long	perm;
 #ifdef HAVE_ACL
     vim_acl_T	acl;		/* ACL from original file */
@@ -6718,7 +6717,7 @@ vim_rename(char_u *from, char_u *to)
 
 #ifdef UNIX
     {
-	struct stat	st_to;
+	stat_T	st_to;
 
 	/* It's possible for the source and destination to be the same file.
 	 * This happens when "from" and "to" differ in case and are on a FAT32
@@ -6935,10 +6934,13 @@ check_timestamps(
 	    /* Only check buffers in a window. */
 	    if (buf->b_nwindows > 0)
 	    {
+		bufref_T bufref;
+
+		set_bufref(&bufref, buf);
 		n = buf_check_timestamp(buf, focus);
 		if (didit < n)
 		    didit = n;
-		if (n > 0 && !buf_valid(buf))
+		if (n > 0 && !bufref_valid(&bufref))
 		{
 		    /* Autocommands have removed the buffer, start at the
 		     * first one again. */
@@ -7017,7 +7019,7 @@ buf_check_timestamp(
     buf_T	*buf,
     int		focus UNUSED)	/* called for GUI focus event */
 {
-    struct stat	st;
+    stat_T	st;
     int		stat_res;
     int		retval = 0;
     char_u	*path;
@@ -7026,10 +7028,11 @@ buf_check_timestamp(
     char	*mesg2 = "";
     int		helpmesg = FALSE;
     int		reload = FALSE;
+    char	*reason;
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
     int		can_reload = FALSE;
 #endif
-    off_t	orig_size = buf->b_orig_size;
+    off_T	orig_size = buf->b_orig_size;
     int		orig_mode = buf->b_orig_mode;
 #ifdef FEAT_GUI
     int		save_mouse_correct = need_mouse_correct;
@@ -7038,8 +7041,10 @@ buf_check_timestamp(
     static int	busy = FALSE;
     int		n;
     char_u	*s;
+    bufref_T	bufref;
+
+    set_bufref(&bufref, buf);
 #endif
-    char	*reason;
 
     /* If there is no file name, the buffer is not loaded, 'buftype' is
      * set, we are in the middle of a save or being called recursively: ignore
@@ -7128,7 +7133,7 @@ buf_check_timestamp(
 	    busy = FALSE;
 	    if (n)
 	    {
-		if (!buf_valid(buf))
+		if (!bufref_valid(&bufref))
 		    EMSG(_("E246: FileChangedShell autocommand deleted buffer"));
 # ifdef FEAT_EVAL
 		s = get_vim_var_str(VV_FCS_CHOICE);
@@ -7286,7 +7291,7 @@ buf_check_timestamp(
 
 #ifdef FEAT_AUTOCMD
     /* Trigger FileChangedShell when the file was changed in any way. */
-    if (buf_valid(buf) && retval != 0)
+    if (bufref_valid(&bufref) && retval != 0)
 	(void)apply_autocmds(EVENT_FILECHANGEDSHELLPOST,
 				      buf->b_fname, buf->b_fname, FALSE, buf);
 #endif
@@ -7313,6 +7318,7 @@ buf_reload(buf_T *buf, int orig_mode)
     linenr_T	old_topline;
     int		old_ro = buf->b_p_ro;
     buf_T	*savebuf;
+    bufref_T	bufref;
     int		saved = OK;
     aco_save_T	aco;
     int		flags = READ_NEW;
@@ -7350,6 +7356,7 @@ buf_reload(buf_T *buf, int orig_mode)
 	{
 	    /* Allocate a buffer without putting it in the buffer list. */
 	    savebuf = buflist_new(NULL, NULL, (linenr_T)1, BLN_DUMMY);
+	    set_bufref(&bufref, savebuf);
 	    if (savebuf != NULL && buf == curbuf)
 	    {
 		/* Open the memline. */
@@ -7382,7 +7389,7 @@ buf_reload(buf_T *buf, int orig_mode)
 		if (!aborting())
 #endif
 		    EMSG2(_("E321: Could not reload \"%s\""), buf->b_fname);
-		if (savebuf != NULL && buf_valid(savebuf) && buf == curbuf)
+		if (savebuf != NULL && bufref_valid(&bufref) && buf == curbuf)
 		{
 		    /* Put the text back from the save buffer.  First
 		     * delete any lines that readfile() added. */
@@ -7410,7 +7417,7 @@ buf_reload(buf_T *buf, int orig_mode)
 	}
 	vim_free(ea.cmd);
 
-	if (savebuf != NULL && buf_valid(savebuf))
+	if (savebuf != NULL && bufref_valid(&bufref))
 	    wipe_buffer(savebuf, FALSE);
 
 #ifdef FEAT_DIFF
@@ -7458,7 +7465,7 @@ buf_reload(buf_T *buf, int orig_mode)
 }
 
     void
-buf_store_time(buf_T *buf, struct stat *st, char_u *fname UNUSED)
+buf_store_time(buf_T *buf, stat_T *st, char_u *fname UNUSED)
 {
     buf->b_mtime = (long)st->st_mtime;
     buf->b_orig_size = st->st_size;
@@ -7562,12 +7569,7 @@ vim_settempdir(char_u *tempdir)
     {
 	if (vim_FullName(tempdir, buf, MAXPATHL, FALSE) == FAIL)
 	    STRCPY(buf, tempdir);
-# ifdef __EMX__
-	if (vim_strchr(buf, '/') != NULL)
-	    STRCAT(buf, "/");
-	else
-# endif
-	    add_pathsep(buf);
+	add_pathsep(buf);
 	vim_tempdir = vim_strsave(buf);
 	vim_free(buf);
     }
@@ -7577,8 +7579,8 @@ vim_settempdir(char_u *tempdir)
 /*
  * vim_tempname(): Return a unique name that can be used for a temp file.
  *
- * The temp file is NOT garanteed to be created.  If "keep" is FALSE it is
- * garanteed to NOT be created.
+ * The temp file is NOT guaranteed to be created.  If "keep" is FALSE it is
+ * guaranteed to NOT be created.
  *
  * The returned pointer is to allocated memory.
  * The returned pointer is NULL if no valid name was found.
@@ -7598,7 +7600,7 @@ vim_tempname(
     static char	*(tempdirs[]) = {TEMPDIRNAMES};
     int		i;
 # ifndef EEXIST
-    struct stat	st;
+    stat_T	st;
 # endif
 
     /*
@@ -7627,15 +7629,7 @@ vim_tempname(
 	    if (itmp[0] != '$' && mch_isdir(itmp))
 	    {
 		/* directory exists */
-# ifdef __EMX__
-		/* If $TMP contains a forward slash (perhaps using bash or
-		 * tcsh), don't add a backslash, use a forward slash!
-		 * Adding 2 backslashes didn't work. */
-		if (vim_strchr(itmp, '/') != NULL)
-		    STRCAT(itmp, "/");
-		else
-# endif
-		    add_pathsep(itmp);
+		add_pathsep(itmp);
 
 # ifdef HAVE_MKDTEMP
 		{
@@ -8937,11 +8931,15 @@ do_autocmd_event(
     int
 do_doautocmd(
     char_u	*arg,
-    int		do_msg)	    /* give message for no matching autocmds? */
+    int		do_msg,	    /* give message for no matching autocmds? */
+    int		*did_something)
 {
     char_u	*fname;
     int		nothing_done = TRUE;
     int		group;
+
+    if (did_something != NULL)
+	*did_something = FALSE;
 
     /*
      * Check for a legal group name.  If not, use AUGROUP_ALL.
@@ -8976,6 +8974,8 @@ do_doautocmd(
 
     if (nothing_done && do_msg)
 	MSG(_("No matching autocommands"));
+    if (did_something != NULL)
+	*did_something = !nothing_done;
 
 #ifdef FEAT_EVAL
     return aborting() ? FAIL : OK;
@@ -8993,8 +8993,10 @@ ex_doautoall(exarg_T *eap)
     int		retval;
     aco_save_T	aco;
     buf_T	*buf;
+    bufref_T	bufref;
     char_u	*arg = eap->arg;
     int		call_do_modelines = check_nomodeline(&arg);
+    int		did_aucmd;
 
     /*
      * This is a bit tricky: For some commands curwin->w_buffer needs to be
@@ -9009,11 +9011,12 @@ ex_doautoall(exarg_T *eap)
 	{
 	    /* find a window for this buffer and save some values */
 	    aucmd_prepbuf(&aco, buf);
+	    set_bufref(&bufref, buf);
 
 	    /* execute the autocommands for this buffer */
-	    retval = do_doautocmd(arg, FALSE);
+	    retval = do_doautocmd(arg, FALSE, &did_aucmd);
 
-	    if (call_do_modelines)
+	    if (call_do_modelines && did_aucmd)
 	    {
 		/* Execute the modeline settings, but don't set window-local
 		 * options if we are using the current window for another
@@ -9025,7 +9028,7 @@ ex_doautoall(exarg_T *eap)
 	    aucmd_restbuf(&aco);
 
 	    /* stop if there is some error or buffer was deleted */
-	    if (retval == FAIL || !buf_valid(buf))
+	    if (retval == FAIL || !bufref_valid(&bufref))
 		break;
 	}
     }
@@ -9151,7 +9154,7 @@ aucmd_prepbuf(
     }
     curbuf = buf;
     aco->new_curwin = curwin;
-    aco->new_curbuf = curbuf;
+    set_bufref(&aco->new_curbuf, curbuf);
 }
 
 /*
@@ -9245,16 +9248,16 @@ win_found:
 	     * it was changed, we are still the same window and the buffer is
 	     * valid. */
 	    if (curwin == aco->new_curwin
-		    && curbuf != aco->new_curbuf
-		    && buf_valid(aco->new_curbuf)
-		    && aco->new_curbuf->b_ml.ml_mfp != NULL)
+		    && curbuf != aco->new_curbuf.br_buf
+		    && bufref_valid(&aco->new_curbuf)
+		    && aco->new_curbuf.br_buf->b_ml.ml_mfp != NULL)
 	    {
 # if defined(FEAT_SYN_HL) || defined(FEAT_SPELL)
 		if (curwin->w_s == &curbuf->b_s)
-		    curwin->w_s = &aco->new_curbuf->b_s;
+		    curwin->w_s = &aco->new_curbuf.br_buf->b_s;
 # endif
 		--curbuf->b_nwindows;
-		curbuf = aco->new_curbuf;
+		curbuf = aco->new_curbuf.br_buf;
 		curwin->w_buffer = curbuf;
 		++curbuf->b_nwindows;
 	    }
@@ -9433,6 +9436,10 @@ has_funcundefined(void)
     return (first_autopat[(int)EVENT_FUNCUNDEFINED] != NULL);
 }
 
+/*
+ * Execute autocommands for "event" and file name "fname".
+ * Return TRUE if some commands were executed.
+ */
     static int
 apply_autocmds_group(
     event_T	event,
@@ -9716,7 +9723,7 @@ apply_autocmds_group(
 
 #ifdef FEAT_EVAL
 	/* set v:cmdarg (only when there is a matching pattern) */
-	save_cmdbang = get_vim_var_nr(VV_CMDBANG);
+	save_cmdbang = (long)get_vim_var_nr(VV_CMDBANG);
 	if (eap != NULL)
 	{
 	    save_cmdarg = set_cmdarg(eap, NULL);

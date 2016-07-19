@@ -26,26 +26,31 @@ LD = dcc
 	${CC} ${PRE} ${CFLAGS} $< -o $@
 
 SRC = \
+	arabic.c \
 	blowfish.c \
 	buffer.c \
 	charset.c \
 	crypt.c \
 	crypt_zip.c \
+	dict.c \
 	diff.c \
 	digraph.c \
 	edit.c \
 	eval.c \
+	evalfunc.c \
 	ex_cmds.c \
 	ex_cmds2.c \
 	ex_docmd.c \
 	ex_eval.c \
 	ex_getln.c \
+	farsi.c \
 	fileio.c \
 	fold.c \
 	getchar.c \
 	hardcopy.c \
 	hashtab.c \
 	json.c \
+	list.c \
 	main.c \
 	mark.c \
 	memfile.c \
@@ -72,29 +77,35 @@ SRC = \
 	term.c \
 	ui.c \
 	undo.c \
+	userfunc.c \
 	window.c \
 	version.c
 
-OBJ =	o/blowfish.o \
+OBJ =	o/arabic.o \
+	o/blowfish.o \
 	o/buffer.o \
 	o/charset.o \
 	o/crypt.o \
 	o/crypt_zip.o \
+	o/dict.o \
 	o/diff.o \
 	o/digraph.o \
 	o/edit.o \
 	o/eval.o \
+	o/evalfunc.o \
 	o/ex_cmds.o \
 	o/ex_cmds2.o \
 	o/ex_docmd.o \
 	o/ex_eval.o \
 	o/ex_getln.o \
+	o/farsi.o \
 	o/fileio.o \
 	o/fold.o \
 	o/getchar.o \
 	o/hardcopy.o \
 	o/hashtab.o \
 	o/json.o \
+	o/list.o \
 	o/main.o \
 	o/mark.o \
 	o/memfile.o \
@@ -121,6 +132,7 @@ OBJ =	o/blowfish.o \
 	o/term.o \
 	o/ui.o \
 	o/undo.o \
+	o/userfunc.o \
 	o/window.o \
 	$(TERMLIB)
 
@@ -143,6 +155,8 @@ $(SYMS)  : vim.h globals.h keymap.h macros.h ascii.h term.h os_amiga.h structs.h
 
 ###########################################################################
 
+o/arabic.o:	arabic.c  $(SYMS)
+
 o/blowfish.o:	blowfish.c  $(SYMS)
 
 o/buffer.o:	buffer.c  $(SYMS)
@@ -153,6 +167,8 @@ o/crypt.o:	crypt.c  $(SYMS)
 
 o/crypt_zip.o:	crypt_zip.c  $(SYMS)
 
+o/dict.o:	dict.c	$(SYMS)
+
 o/diff.o:	diff.c	$(SYMS)
 
 o/digraph.o:	digraph.c  $(SYMS)
@@ -160,6 +176,8 @@ o/digraph.o:	digraph.c  $(SYMS)
 o/edit.o:	edit.c	$(SYMS)
 
 o/eval.o:	eval.c  $(SYMS)
+
+o/evalfunc.o:	evalfunc.c  $(SYMS)
 
 o/ex_cmds.o:	ex_cmds.c  $(SYMS)
 
@@ -170,6 +188,8 @@ o/ex_docmd.o:	ex_docmd.c  $(SYMS) ex_cmds.h
 o/ex_eval.o:	ex_eval.c  $(SYMS) ex_cmds.h
 
 o/ex_getln.o:	ex_getln.c  $(SYMS)
+
+o/farsi.o:	farsi.c  $(SYMS)
 
 o/fileio.o:	fileio.c  $(SYMS)
 
@@ -182,6 +202,8 @@ o/hardcopy.o: hardcopy.c	$(SYMS)
 o/hashtab.o: hashtab.c	$(SYMS)
 
 o/json.o:	json.c  $(SYMS)
+
+o/list.o:	list.c  $(SYMS)
 
 o/main.o: main.c $(SYMS)
 
@@ -238,8 +260,10 @@ o/term.o:	term.c  $(SYMS) term.h
 
 o/termlib.o:	termlib.c $(SYMS)
 
-o/ui.o: ui.c	$(SYMS)
+o/ui.o: 	ui.c	$(SYMS)
 
-o/undo.o: undo.c	$(SYMS)
+o/undo.o: 	undo.c	$(SYMS)
 
-o/window.o: window.c	$(SYMS)
+o/userfunc.o: 	userfunc.c  $(SYMS)
+
+o/window.o: 	window.c  $(SYMS)
