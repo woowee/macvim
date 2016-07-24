@@ -1,5 +1,4 @@
 " Test for channel functions.
-scriptencoding utf-8
 
 if !has('channel')
   finish
@@ -1345,4 +1344,4 @@ func Test_close_lambda()
 endfunc
 
 " Uncomment this to see what happens, output is in src/testdir/channellog.
- call ch_logfile('channellog', 'w')
+" call ch_logfile('channellog', 'w')
