@@ -988,7 +988,7 @@ call_vim_function(
     }
 
     rettv->v_type = VAR_UNKNOWN;		/* clear_tv() uses this */
-    ret = call_func(func, (int)STRLEN(func), rettv, argc, argvars,
+    ret = call_func(func, (int)STRLEN(func), rettv, argc, argvars, NULL,
 		    curwin->w_cursor.lnum, curwin->w_cursor.lnum,
 		    &doesrange, TRUE, NULL, NULL);
     if (safe)
@@ -8992,6 +8992,39 @@ assert_match_common(typval_T *argvars, assert_type_T atype)
     }
 }
 
+    void
+assert_inrange(typval_T *argvars)
+{
+    garray_T	ga;
+    int		error = FALSE;
+    varnumber_T	lower = get_tv_number_chk(&argvars[0], &error);
+    varnumber_T	upper = get_tv_number_chk(&argvars[1], &error);
+    varnumber_T	actual = get_tv_number_chk(&argvars[2], &error);
+    char_u	*tofree;
+    char	msg[200];
+    char_u	numbuf[NUMBUFLEN];
+
+    if (error)
+	return;
+    if (actual < lower || actual > upper)
+    {
+	prepare_assert_error(&ga);
+	if (argvars[3].v_type != VAR_UNKNOWN)
+	{
+	    ga_concat(&ga, tv2string(&argvars[3], &tofree, numbuf, 0));
+	    vim_free(tofree);
+	}
+	else
+	{
+	    vim_snprintf(msg, 200, "Expected range %ld - %ld, but got %ld",
+				       (long)lower, (long)upper, (long)actual);
+	    ga_concat(&ga, (char_u *)msg);
+	}
+	assert_error(&ga);
+	ga_clear(&ga);
+    }
+}
+
 /*
  * Common for assert_true() and assert_false().
  */
@@ -9930,8 +9963,8 @@ filter_map_one(typval_T *tv, typval_T *expr, int map, int *remp)
     if (expr->v_type == VAR_FUNC)
     {
 	s = expr->vval.v_string;
-	if (call_func(s, (int)STRLEN(s),
-		    &rettv, 2, argv, 0L, 0L, &dummy, TRUE, NULL, NULL) == FAIL)
+	if (call_func(s, (int)STRLEN(s), &rettv, 2, argv, NULL,
+				     0L, 0L, &dummy, TRUE, NULL, NULL) == FAIL)
 	    goto theend;
     }
     else if (expr->v_type == VAR_PARTIAL)
@@ -9939,9 +9972,8 @@ filter_map_one(typval_T *tv, typval_T *expr, int map, int *remp)
 	partial_T   *partial = expr->vval.v_partial;
 
 	s = partial->pt_name;
-	if (call_func(s, (int)STRLEN(s),
-		    &rettv, 2, argv, 0L, 0L, &dummy, TRUE, partial, NULL)
-								      == FAIL)
+	if (call_func(s, (int)STRLEN(s), &rettv, 2, argv, NULL,
+				  0L, 0L, &dummy, TRUE, partial, NULL) == FAIL)
 	    goto theend;
     }
     else

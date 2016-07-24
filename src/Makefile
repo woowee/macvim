@@ -368,6 +368,9 @@ CClink = $(CC)
 # Carbon GUI for Mac OS X
 #CONF_OPT_GUI = --enable-gui=carbon
 
+# Uncomment this line to run an indivisual test with gvim.
+#GUI_TESTARG = GUI_FLAG=-g 
+
 # DARWIN - detecting Mac OS X
 # Uncomment this line when you want to compile a Unix version of Vim on
 # Darwin.  None of the Mac specific options or files will be used.
@@ -2059,7 +2062,6 @@ test1 \
 	test_search_mbyte \
 	test_signs \
 	test_tagcase \
-	test_textobjects \
 	test_utf8 \
 	test_wordcount \
 	test_writefile \
@@ -2089,6 +2091,7 @@ test_arglist \
 	test_cscope \
 	test_cursor_func \
 	test_delete \
+	test_digraph \
 	test_ex_undo \
 	test_execute_func \
 	test_expand \
@@ -2139,6 +2142,7 @@ test_arglist \
 	test_syntax \
 	test_tabline \
 	test_tagjump \
+	test_textobjects \
 	test_timers \
 	test_true_false \
 	test_undolevels \

@@ -199,14 +199,17 @@ get_function_args(
 		break;
 	    }
 	    if (newargs != NULL && ga_grow(newargs, 1) == FAIL)
-		return FAIL;
+		goto err_ret;
 	    if (newargs != NULL)
 	    {
 		c = *p;
 		*p = NUL;
 		arg = vim_strsave(arg);
 		if (arg == NULL)
+		{
+		    *p = c;
 		    goto err_ret;
+		}
 
 		/* Check for duplicate argument name. */
 		for (i = 0; i < newargs->ga_len; ++i)
@@ -477,7 +480,7 @@ get_func_tv(
 								  &argvars[i];
 	}
 
-	ret = call_func(name, len, rettv, argcount, argvars,
+	ret = call_func(name, len, rettv, argcount, argvars, NULL,
 		 firstline, lastline, doesrange, evaluate, partial, selfdict);
 
 	funcargs.ga_len -= i;
@@ -1136,7 +1139,7 @@ func_call(
     }
 
     if (item == NULL)
-	r = call_func(name, (int)STRLEN(name), rettv, argc, argv,
+	r = call_func(name, (int)STRLEN(name), rettv, argc, argv, NULL,
 				 curwin->w_cursor.lnum, curwin->w_cursor.lnum,
 					     &dummy, TRUE, partial, selfdict);
 
@@ -1149,6 +1152,11 @@ func_call(
 
 /*
  * Call a function with its resolved parameters
+ *
+ * "argv_func", when not NULL, can be used to fill in arguments only when the
+ * invoked function uses them.  It is called like this:
+ *   new_argcount = argv_func(current_argcount, argv, called_func_argcount)
+ *
  * Return FAIL when the function can't be called,  OK otherwise.
  * Also returns OK when an error was encountered while executing the function.
  */
@@ -1160,6 +1168,8 @@ call_func(
     int		argcount_in,	/* number of "argvars" */
     typval_T	*argvars_in,	/* vars for arguments, must have "argcount"
 				   PLUS ONE elements! */
+    int		(* argv_func)(int, typval_T *, int),
+				/* function to fill in argvars */
     linenr_T	firstline,	/* first line of range */
     linenr_T	lastline,	/* last line of range */
     int		*doesrange,	/* return: function handled range */
@@ -1251,6 +1261,9 @@ call_func(
 
 	    if (fp != NULL)
 	    {
+		if (argv_func != NULL)
+		    argcount = argv_func(argcount, argvars, fp->uf_args.ga_len);
+
 		if (fp->uf_flags & FC_RANGE)
 		    *doesrange = TRUE;
 		if (argcount < fp->uf_args.ga_len)
@@ -2541,8 +2554,9 @@ get_user_func_name(expand_T *xp, int idx)
 	    ++hi;
 	fp = HI2UF(hi);
 
-	if (fp->uf_flags & FC_DICT)
-	    return (char_u *)""; /* don't show dict functions */
+	if ((fp->uf_flags & FC_DICT)
+				|| STRNCMP(fp->uf_name, "<lambda>", 8) == 0)
+	    return (char_u *)""; /* don't show dict and lambda functions */
 
 	if (STRLEN(fp->uf_name) + 4 >= IOSIZE)
 	    return fp->uf_name;	/* prevents overflow */
