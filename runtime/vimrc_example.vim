@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2016 Jun 21
+" Last change:	2016 Apr 05
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -72,8 +72,9 @@ if has("autocmd")
   augroup vimrcEx
   au!
 
-  " For all text files set 'textwidth' to 78 characters.
-  autocmd FileType text setlocal textwidth=78
+  " +kaoriya: disabled, it is hard to repressed.
+  "" For all text files set 'textwidth' to 78 characters.
+  "autocmd FileType text setlocal textwidth=78
 
   " When editing a file, always jump to the last known cursor position.
   " Don't do it when the position is invalid or when inside an event handler
@@ -109,8 +110,7 @@ endif
 
 " Add optional packages.
 "
-" The matchit plugin makes the % command work better, but it is not backwards
-" compatible.
-if has('syntax') && has('eval')
-  packadd matchit
-endif
+" +kaoriya: disabled, it is hard to repressed.
+"" The matchit plugin makes the % command work better, but it is not backwards
+"" compatible.
+"packadd matchit

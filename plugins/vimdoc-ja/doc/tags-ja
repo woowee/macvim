@@ -1279,6 +1279,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 +termresponse	various.jax	/*+termresponse*
 +textobjects	various.jax	/*+textobjects*
 +tgetent	various.jax	/*+tgetent*
++timers	various.jax	/*+timers*
 +title	various.jax	/*+title*
 +toolbar	various.jax	/*+toolbar*
 +user_commands	various.jax	/*+user_commands*
@@ -2609,6 +2610,10 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 :ounmenu	gui.jax	/*:ounmenu*
 :ownsyntax	syntax.jax	/*:ownsyntax*
 :p	various.jax	/*:p*
+:pa	repeat.jax	/*:pa*
+:packadd	repeat.jax	/*:packadd*
+:packl	repeat.jax	/*:packl*
+:packloadall	repeat.jax	/*:packloadall*
 :pc	windows.jax	/*:pc*
 :pclose	windows.jax	/*:pclose*
 :pe	if_perl.jax	/*:pe*
@@ -4055,7 +4060,6 @@ E564	if_cscop.jax	/*E564*
 E566	if_cscop.jax	/*E566*
 E567	if_cscop.jax	/*E567*
 E568	if_cscop.jax	/*E568*
-E569	if_cscop.jax	/*E569*
 E57	pattern.jax	/*E57*
 E570	message.jax	/*E570*
 E571	if_tcl.jax	/*E571*
@@ -4399,7 +4403,6 @@ E885	sign.jax	/*E885*
 E886	starting.jax	/*E886*
 E887	if_pyth.jax	/*E887*
 E888	pattern.jax	/*E888*
-E889	map.jax	/*E889*
 E89	message.jax	/*E89*
 E890	syntax.jax	/*E890*
 E891	eval.jax	/*E891*
@@ -4408,7 +4411,9 @@ E893	eval.jax	/*E893*
 E894	eval.jax	/*E894*
 E895	if_mzsch.jax	/*E895*
 E90	message.jax	/*E90*
+E909	eval.jax	/*E909*
 E91	options.jax	/*E91*
+E919	repeat.jax	/*E919*
 E92	message.jax	/*E92*
 E93	windows.jax	/*E93*
 E94	windows.jax	/*E94*
@@ -7314,6 +7319,8 @@ os_vms.txt	os_vms.jax	/*os_vms.txt*
 os_win32.txt	os_win32.jax	/*os_win32.txt*
 other-features	vi_diff.jax	/*other-features*
 p	change.jax	/*p*
+pack-add	repeat.jax	/*pack-add*
+packages	repeat.jax	/*packages*
 page-down	intro.jax	/*page-down*
 page-up	intro.jax	/*page-up*
 page_down	intro.jax	/*page_down*
@@ -8613,6 +8620,7 @@ vim-script-intro	usr_41.jax	/*vim-script-intro*
 vim-variable	eval.jax	/*vim-variable*
 vim.vim	syntax.jax	/*vim.vim*
 vim:	options.jax	/*vim:*
+vim_starting	eval.jax	/*vim_starting*
 vimball	pi_vimball.jax	/*vimball*
 vimball-contents	pi_vimball.jax	/*vimball-contents*
 vimball-extract	pi_vimball.jax	/*vimball-extract*

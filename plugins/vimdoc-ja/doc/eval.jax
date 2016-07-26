@@ -123,7 +123,7 @@ empty()を使用して次のようにする。 >
 	:echo Fn()
 <							*E704* *E705* *E707*
 関数参照の変数名は、大文字、"s:"、"w:"、"t:"、"b:" のいずれかで始めなければな
-らない。"g:" も使えるが、次に述べる名前は大文字で始めなければならない。関数参
+らない。"g:" も使えるが、あとに続く名前は大文字で始めなければならない。関数参
 照と参照先の関数の名前を同じにすることはできない。
 
 関数を定義して、それへの参照を直接辞書に入れるための特別な形式がある。例: >
@@ -141,7 +141,7 @@ empty()を使用して次のようにする。 >
 参照先の関数名は|string()|で得られる。 >
 	:let func = string(Fn)
 
-関数参照を呼び出すには|call()|を使い、引数にはリスト型の変数を使う: >
+|call()|を使うと、リスト型の変数を引数として関数参照を呼び出すことができる: >
 	:let r = call(Fn, mylist)
 
 
@@ -835,7 +835,7 @@ expr7							*expr7*
 expr8							*expr8*
 -----
 expr8[expr1]		文字列またはリストの要素	*expr-[]* *E111*
-
+							*E909*
 expr8が数値か文字列ならば、この値は文字列 expr8 の第 expr1 番目のバイトからな
 る 1 バイトの文字列となる。expr8は文字列、expr1は数として扱われる。ただし
 expr8 がマルチバイト文字列である場合、この値は単なるバイトコードであり、1文字
@@ -1603,9 +1603,9 @@ v:servername	|x11-clientserver|に登録されている名前。
 
 v:searchforward			*v:searchforward* *searchforward-variable*
 		検索方向: 前方検索の後なら1、後方検索の後なら0。|quote/| で示す
-		方法によって最終検索パターンを直接セットしたときは0(前方検索)
-		にセットされる。関数から戻るとき、この値は呼び出し前の値に復元
-		される。
+		方法によって最終検索パターンを直接セットしたときは1(前方検索)
+		にリセットされる。
+		関数から戻るとき、この値は呼び出し前の値に復元される。
 		|function-search-undo|。
 		読み書き両用。
 
@@ -1919,9 +1919,9 @@ log10( {expr})			浮動小数点数	浮動小数点数 {expr} の 10 を底
 						とする対数
 luaeval( {expr}[, {expr}])	任意	|Lua| の式を評価する
 map( {expr}, {string})		リスト/辞書  {expr}の各要素を{expr}に変える
-matchadd( {group}, {pattern}[, {priority}[, {id}]])
+matchadd( {group}, {pattern}[, {priority}[, {id} [, {dict}]]])
 				数値	{pattern} を {group} で強調表示する
-matchaddpos( {group}, {list}[, {priority}[, {id}]])
+matchaddpos( {group}, {pos}[, {priority}[, {id}[, {dict}]]])
 				数値	位置を {group} で強調表示する
 maparg( {name}[, {mode} [, {abbr} [, {dict}]]])
 				文字列/辞書
@@ -2165,7 +2165,7 @@ argidx()	引数リスト内の現在のインデックスを返す。最初の�
 		る。argc() - 1が最後のファイルとなる。|arglist|を参照。
 
 							*arglistid()*
-arglistid([{winnr}, [ {tabnr} ]])
+arglistid([{winnr} [, {tabnr}]])
 		引数リストの ID を返す。値は引数リストを区別するための数値であ
 		る。ゼロはグローバル引数リストを意味する。 |arglist| 参照。
 		引数が無効な場合は -1 を返す。
@@ -2220,16 +2220,16 @@ assert_fails({cmd} [, {error}])					*assert_fails()*
 		{error}が渡された場合、|v:errmsg|と一致しなければならない。
 
 assert_false({actual} [, {msg}])				*assert_false()*
-		{actual}がfalseでない場合、|v:errors|にエラーメッセージを追加す
-		る。|assert_equal()|のような。
+		|assert_equal()|と同様に、{actual}がfalseでない場合、|v:errors|
+		にエラーメッセージを追加する。
 		ゼロである時、その値はfalseである。{actual}が数値でない場合、
 		テストが失敗する。
 		{msg}が省略された場合、"Expected False but got {actual}"という
 		形式のメッセージが生成される。
 
 assert_true({actual} [, {msg}])					*assert_true()*
-		{actual}がtrueでない場合、|v:errors|にエラーメッセージを追加する
-		。|assert_equal()|のような。
+		|assert_equal()|と同様に、{actual}がtrueでない場合、|v:errors|
+		にエラーメッセージを追加する。
 		非ゼロである時、その値はtrueである。{actual}が数値でない場合、
 		テストが失敗する。
 		{msg}が省略された場合、"Expected True but got {actual}"という
@@ -2391,6 +2391,7 @@ bufwinnr({expr})
 
 <		この番号は|CTRL-W_w|や ":wincmd w" |:wincmd|で使える。
 		カレントタブページ内のウィンドウだけを探す。
+
 							*byte2line()*
 byte2line({byte})
 		カレントバッファの先頭から{byte}番目の文字が、何行目に含まれる
@@ -3766,7 +3767,7 @@ glob2regpat({expr})					 *glob2regpat()*
 			if filename =~ '^Make.*\.mak$'
 <
 								*globpath()*
-globpath({path}, {expr} [, {nosuf} [, {list} [, {allinks}]]])
+globpath({path}, {expr} [, {nosuf} [, {list} [, {alllinks}]]])
 		{path}の中の全ディレクトリに対して|glob()|を実行し、結果を連結
 		する。例: >
 			:echo globpath(&rtp, "syntax/c.vim")
@@ -3792,7 +3793,7 @@ globpath({path}, {expr} [, {nosuf} [, {list} [, {allinks}]]])
 		は <NL> 文字で連結されてしまう。例: >
 			:echo globpath(&rtp, "syntax/c.vim", 0, 1)
 <
-		{allinks} は|glob()|の場合と同様に扱われる。
+		{alllinks} は|glob()|の場合と同様に扱われる。
 
 		"**" を使ってディレクトリツリーを再帰的に検索することができる。
 		例えば、'runtimepath' とそれ以下のディレクトリから全ての
@@ -4487,7 +4488,7 @@ match({expr}, {pat}[, {start}[, {count}]])			*match()*
 		'magic' をオン、'cpoptions' を空にした状態で行われる。
 
 					*matchadd()* *E798* *E799* *E801*
-matchadd({group}, {pattern}[, {priority}[, {id} [, {dict}]]])
+matchadd({group}, {pattern}[, {priority}[, {id}[, {dict}]]])
 		カレントウィンドウで強調表示するパターンを定義する。このパター
 		ンのことを「マッチ」と呼ぶ。構文グループ {group}で強調する。戻
 		り値は、マッチを識別する ID である。|matchdelete()|でこの ID
@@ -5597,7 +5598,7 @@ setqflist({list} [, {action}])				*setqflist()*
 
 
 							*setreg()*
-setreg({regname}, {value} [,{options}])
+setreg({regname}, {value} [, {options}])
 		レジスタ{regname}に{value}をセットする。
 		{value} には |getreg()| の返り値ならどんな値でも (リストでも)
 		指定できる。
@@ -6268,7 +6269,7 @@ systemlist({expr} [, {input}])				*systemlist()*
 		で区切られ、NUL 文字は NL 文字に変換される。出力は
 		|readfile()| の {binary} 引数に "b" を指定したのと同様である。
 
-		エラー時には空文字列が返るので |E706| エラーに注意。
+		エラー時には空文字列が返る。
 
 
 tabpagebuflist([{arg}])					*tabpagebuflist()*
@@ -6428,6 +6429,8 @@ type({expr})	{expr}の型を示す数値を返す:
 			浮動小数点数: 5
 			真偽値:	      6 (v:false と v:true)
 			特殊値:	      7 (v:null と v:none)
+			ジョブ:	      8
+			チャンネル:   9
 		マジックナンバーを使わずに、次のような使い方をすべきである: >
 			:if type(myvar) == type(0)
 			:if type(myvar) == type("")
@@ -6783,7 +6786,7 @@ dos32			32ビットDOSバージョン (DJGPP)
 ebcdic			EBCDIC文字集合のマシン用
 emacs_tags		Emacs式のタグファイルをサポート
 eval			式評価をサポート。もちろん常に真。
-ex_extra		拡張exコマンドをサポート |+ex_extra|
+ex_extra		今は常に真 |+ex_extra|
 extra_search		|'incsearch'| と |'hlsearch'| をサポート
 farsi			|farsi|をサポート
 file_in_path		|gf|と|<cfile>|をサポート
@@ -6802,6 +6805,7 @@ gui_athena		AthenaのGUIが有効である
 gui_gnome		Gnomeサポート(gui_gtkも定義される)
 gui_gtk			GTK+のGUIが有効である
 gui_gtk2		GTK+ 2のGUIが有効である (gui_gtkも定義される)
+gui_gtk3		GTK+ 3のGUIが有効である (gui_gtkも定義される)
 gui_mac			マッキントッシュのGUIが有効である
 gui_motif		MotifのGUIが有効である
 gui_photon		PhotonのGUIが有効である
@@ -6863,7 +6867,6 @@ scrollbind		'scrollbind' をサポート
 showcmd			'showcmd' をサポート
 signs			|:sign|をサポート
 smartindent		'smartindent' をサポート
-sniff			SniFFインターフェイスをサポート
 spell			スペルチェックをサポート |spell|
 startuptime		|--startuptime| をサポート
 statusline		'statusline', 'rulerformat' そして 'titlestring' と
@@ -6880,12 +6883,14 @@ terminfo		termcapの代わりにterminfoをサポート
 termresponse		|t_RV|と|v:termresponse|をサポート
 textobjects		|text-objects|をサポート
 tgetent			tgetentをサポート。termcapかterminfoファイルが使用可能
+timers                  |timer_start()| をサポート
 title			ウィンドウタイトルをサポート |'title'|
 toolbar			|gui-toolbar|をサポート
 unix			UNIXバージョン
 user_commands		ユーザー定義コマンドをサポート
 vertsplit		ウィンドウの垂直分割をサポート |:vsplit|
 vim_starting		Vimの初期化プロセス中は真となる。|startup|
+			*vim_starting*
 viminfo			viminfoをサポート
 virtualedit		オプション 'virtualedit' をサポート
 visual			ビジュアルモードをサポート
@@ -6894,7 +6899,6 @@ vms			VMSバージョン
 vreplace		コマンド|gR|と|gr|をサポート
 wildignore		オプション 'wildignore' をサポート
 wildmenu		オプション 'wildmenu' を指定してコンパイル
-win16			Win16バージョン(MS-Windows 3.1)
 win32			Win32バージョン(MS-Windows 95 以上の 32 or 64 ビット)
 win32unix		Win32バージョン。Unixファイルを使用 (Cygwin)
 win64			Win64バージョン(MS-Windows 64 bit)
