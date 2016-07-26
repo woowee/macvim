@@ -589,6 +589,7 @@ static struct {
     {"Perl_Iop_ptr", (PERL_PROC*)&Perl_Iop_ptr, FALSE},
     {"Perl_Iscopestack_ix_ptr", (PERL_PROC*)&Perl_Iscopestack_ix_ptr, FALSE},
     {"Perl_Iunitcheckav_ptr", (PERL_PROC*)&Perl_Iunitcheckav_ptr, FALSE},
+#  endif
 # endif
 # if (PERL_REVISION == 5) && (PERL_VERSION >= 22)
     {"Perl_xs_handshake", (PERL_PROC*)&Perl_xs_handshake},
