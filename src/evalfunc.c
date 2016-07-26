@@ -255,6 +255,7 @@ static void f_matchlist(typval_T *argvars, typval_T *rettv);
 static void f_matchstr(typval_T *argvars, typval_T *rettv);
 static void f_matchstrpos(typval_T *argvars, typval_T *rettv);
 static void f_max(typval_T *argvars, typval_T *rettv);
+static void f_migemo(typval_T *argvars, typval_T *rettv);
 static void f_min(typval_T *argvars, typval_T *rettv);
 #ifdef vim_mkdir
 static void f_mkdir(typval_T *argvars, typval_T *rettv);
@@ -673,6 +674,7 @@ static struct fst
     {"matchstr",	2, 4, f_matchstr},
     {"matchstrpos",	2, 4, f_matchstrpos},
     {"max",		1, 1, f_max},
+    {"migemo",		1, 1, f_migemo},
     {"min",		1, 1, f_min},
 #ifdef vim_mkdir
     {"mkdir",		1, 3, f_mkdir},
@@ -5164,6 +5166,7 @@ f_has(typval_T *argvars, typval_T *rettv)
 #ifdef FEAT_GETTEXT
 	"gettext",
 #endif
+	"guess_encode",
 #ifdef FEAT_GUI
 	"gui",
 #endif
@@ -5215,6 +5218,7 @@ f_has(typval_T *argvars, typval_T *rettv)
 #ifdef FEAT_JUMPLIST
 	"jumplist",
 #endif
+	"kaoriya",
 #ifdef FEAT_KEYMAP
 	"keymap",
 #endif
@@ -5243,6 +5247,11 @@ f_has(typval_T *argvars, typval_T *rettv)
 #endif
 #ifdef FEAT_MENU
 	"menu",
+#endif
+#ifdef USE_MIGEMO
+# ifndef DYNAMIC_MIGEMO
+	"migemo",
+# endif
 #endif
 #ifdef FEAT_SESSION
 	"mksession",
@@ -5596,6 +5605,10 @@ f_has(typval_T *argvars, typval_T *rettv)
 #ifdef FEAT_NETBEANS_INTG
 	else if (STRICMP(name, "netbeans_enabled") == 0)
 	    n = netbeans_active();
+#endif
+#ifdef USE_MIGEMO
+	else if (STRICMP(name, "migemo") == 0)
+	    n = migemo_enabled() ? TRUE : FALSE;
 #endif
     }
 
@@ -7225,6 +7238,24 @@ max_min(typval_T *argvars, typval_T *rettv, int domax)
 f_max(typval_T *argvars, typval_T *rettv)
 {
     max_min(argvars, rettv, TRUE);
+}
+
+/*
+ * "migemo()" function
+ */
+    static void
+f_migemo(argvars, rettv)
+    typval_T	*argvars;
+    typval_T	*rettv;
+{
+    char_u* arg = get_tv_string(&argvars[0]);
+
+    rettv->v_type = VAR_STRING;
+#ifdef USE_MIGEMO
+    rettv->vval.v_string = query_migemo(arg);
+#else
+    rettv->vval.v_string = vim_strsave(arg);
+#endif
 }
 
 /*

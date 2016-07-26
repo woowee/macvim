@@ -1203,7 +1203,7 @@ dyn_migemo_init()
 }
 # endif /* DYNAMIC_MIGEMO */
 
-    static int 
+    static int
 vimigemo_char2int(unsigned char* p, unsigned int* code)
 {
     unsigned int ch = *p;
@@ -1390,7 +1390,7 @@ searchit_migemo(win, buf, pos, dir, str, count, options, pat_use, stop_lnum,
 	{
 	    char_u	*query;
 	    char_u	*newstr = NULL;
-	    
+
 	    /* Remove backslash in str */
 	    if (vim_strchr(str, '\\') && (newstr = vim_strsave(str)))
 	    {
