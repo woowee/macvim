@@ -6345,7 +6345,7 @@ shorten_fnames(int force)
     char_u	*p;
 
     mch_dirname(dirname, MAXPATHL);
-    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+    FOR_ALL_BUFFERS(buf)
     {
 	if (buf->b_fname != NULL
 #ifdef FEAT_QUICKFIX
@@ -6944,7 +6944,7 @@ check_timestamps(
 #ifdef FEAT_GUI_MACVIM
 	default_reload_choice = 0;
 #endif
-	for (buf = firstbuf; buf != NULL; )
+	FOR_ALL_BUFFERS(buf)
 	{
 	    /* Only check buffers in a window. */
 	    if (buf->b_nwindows > 0)
@@ -6963,7 +6963,6 @@ check_timestamps(
 		    continue;
 		}
 	    }
-	    buf = buf->b_next;
 	}
 #ifdef FEAT_GUI_MACVIM
 	default_reload_choice = 0;
@@ -9050,7 +9049,7 @@ ex_doautoall(exarg_T *eap)
      * gives problems when the autocommands make changes to the list of
      * buffers or windows...
      */
-    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+    FOR_ALL_BUFFERS(buf)
     {
 	if (buf->b_ml.ml_mfp != NULL)
 	{
@@ -9122,7 +9121,7 @@ aucmd_prepbuf(
 	win = curwin;
     else
 #ifdef FEAT_WINDOWS
-	for (win = firstwin; win != NULL; win = win->w_next)
+	FOR_ALL_WINDOWS(win)
 	    if (win->w_buffer == buf)
 		break;
 #else
