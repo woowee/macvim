@@ -1452,6 +1452,7 @@ Now the viminfo will have:
    BBB   - value from session B
    BOTH  - value from session B, value from session A is lost
 
+							*viminfo-timestamp*
 For some items a timestamp is used to keep the last changed version.  Here it
 doesn't matter in which sequence Vim sessions exit, the newest item(s) are
 always kept.  This is used for:
