@@ -38,6 +38,8 @@ matrix:
     - os: osx
       env: BUILD=yes TEST=scripttests COVERAGE=yes CFLAGS=--coverage LDFLAGS=--coverage FEATURES=huge SHADOWOPT= SRCDIR=./src CHECK_AUTOCONF=no
             "CONFOPT='--enable-perlinterp --enable-pythoninterp --enable-python3interp --enable-rubyinterp --enable-luainterp'"
+    - os: osx
+      env: BUILD=yes TEST=test COVERAGE=no FEATURES=tiny  CONFOPT= SHADOWOPT= SRCDIR=./src CHECK_AUTOCONF=no
     - os: linux
       compiler: clang
       env: BUILD=no TEST=unittests COVERAGE=yes CFLAGS=--coverage LDFLAGS=--coverage FEATURES=huge SHADOWOPT= SRCDIR=./src CHECK_AUTOCONF=yes
