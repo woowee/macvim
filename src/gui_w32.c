@@ -250,6 +250,7 @@ gui_mch_set_rendering_options(char_u *s)
 # define CONST
 # define FAR
 # define NEAR
+# undef _cdecl
 # define _cdecl
 typedef int BOOL;
 typedef int BYTE;
@@ -291,6 +292,7 @@ typedef void VOID;
 typedef int LPNMHDR;
 typedef int LONG;
 typedef int WNDPROC;
+typedef int UINT_PTR;
 #endif
 
 #ifndef GET_X_LPARAM
@@ -3457,7 +3459,7 @@ gui_mch_settitle(
     set_window_title(s_hwnd, (title == NULL ? "VIM" : (char *)title));
 }
 
-#ifdef FEAT_MOUSESHAPE
+#if defined(FEAT_MOUSESHAPE) || defined(PROTO)
 /* Table for shape IDCs.  Keep in sync with the mshape_names[] table in
  * misc2.c! */
 static LPCSTR mshape_idcs[] =
@@ -3520,7 +3522,7 @@ mch_set_mouse_shape(int shape)
 }
 #endif
 
-#ifdef FEAT_BROWSE
+#if defined(FEAT_BROWSE) || defined(PROTO)
 /*
  * The file browser exists in two versions: with "W" uses wide characters,
  * without "W" the current codepage.  When FEAT_MBYTE is defined and on
