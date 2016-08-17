@@ -500,7 +500,7 @@ close_buffer(
 
     if (win != NULL
 #ifdef FEAT_WINDOWS
-	&& win_valid(win)	/* in case autocommands closed the window */
+	&& win_valid_any_tab(win) /* in case autocommands closed the window */
 #endif
 	    )
     {
@@ -606,7 +606,7 @@ aucmd_abort:
 
     if (
 #ifdef FEAT_WINDOWS
-	win_valid(win) &&
+	win_valid_any_tab(win) &&
 #else
 	win != NULL &&
 #endif
