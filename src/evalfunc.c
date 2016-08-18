@@ -3293,10 +3293,10 @@ f_float2nr(typval_T *argvars, typval_T *rettv)
     if (get_float_arg(argvars, &f) == OK)
     {
 # ifdef FEAT_NUM64
-	if (f < -0x7fffffffffffffff)
-	    rettv->vval.v_number = -0x7fffffffffffffff;
-	else if (f > 0x7fffffffffffffff)
-	    rettv->vval.v_number = 0x7fffffffffffffff;
+	if (f < -0x7fffffffffffffffLL)
+	    rettv->vval.v_number = -0x7fffffffffffffffLL;
+	else if (f > 0x7fffffffffffffffLL)
+	    rettv->vval.v_number = 0x7fffffffffffffffLL;
 	else
 	    rettv->vval.v_number = (varnumber_T)f;
 # else
@@ -11224,7 +11224,7 @@ f_strgetchar(typval_T *argvars, typval_T *rettv)
 		break;
 	    }
 	    --charidx;
-	    byteidx += mb_cptr2len(str + byteidx);
+	    byteidx += MB_CPTR2LEN(str + byteidx);
 	}
     }
 #else
@@ -11384,7 +11384,7 @@ f_strcharpart(typval_T *argvars, typval_T *rettv)
 	if (nchar > 0)
 	    while (nchar > 0 && nbyte < slen)
 	    {
-		nbyte += mb_cptr2len(p + nbyte);
+		nbyte += MB_CPTR2LEN(p + nbyte);
 		--nchar;
 	    }
 	else
@@ -11399,7 +11399,7 @@ f_strcharpart(typval_T *argvars, typval_T *rettv)
 		if (off < 0)
 		    len += 1;
 		else
-		    len += mb_cptr2len(p + off);
+		    len += MB_CPTR2LEN(p + off);
 		--charlen;
 	    }
 	}
