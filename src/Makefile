@@ -2031,7 +2031,6 @@ test1 \
 	test_marks \
 	test_nested_function \
 	test_search_mbyte \
-	test_tagcase \
 	test_utf8 \
 	test_wordcount \
 	test_writefile \
@@ -2073,6 +2072,7 @@ test_arglist \
 	test_farsi \
 	test_feedkeys \
 	test_file_perm \
+	test_filter_cmd \
 	test_filter_map \
 	test_fnamemodify \
 	test_glob2regpat \
@@ -2123,6 +2123,7 @@ test_arglist \
 	test_syntax \
 	test_tabline \
 	test_tabpage \
+	test_tagcase \
 	test_tagjump \
 	test_textobjects \
 	test_timers \

@@ -8391,3 +8391,119 @@ ex_drop(exarg_T *eap)
     }
 }
 #endif
+
+/*
+ * Skip over the pattern argument of ":vimgrep /pat/[g][j]".
+ * Put the start of the pattern in "*s", unless "s" is NULL.
+ * If "flags" is not NULL put the flags in it: VGR_GLOBAL, VGR_NOJUMP.
+ * If "s" is not NULL terminate the pattern with a NUL.
+ * Return a pointer to the char just past the pattern plus flags.
+ */
+    char_u *
+skip_vimgrep_pat(char_u *p, char_u **s, int *flags)
+{
+    int		c;
+
+    if (vim_isIDc(*p))
+    {
+	/* ":vimgrep pattern fname" */
+	if (s != NULL)
+	    *s = p;
+	p = skiptowhite(p);
+	if (s != NULL && *p != NUL)
+	    *p++ = NUL;
+    }
+    else
+    {
+	/* ":vimgrep /pattern/[g][j] fname" */
+	if (s != NULL)
+	    *s = p + 1;
+	c = *p;
+	p = skip_regexp(p + 1, c, TRUE, NULL);
+	if (*p != c)
+	    return NULL;
+
+	/* Truncate the pattern. */
+	if (s != NULL)
+	    *p = NUL;
+	++p;
+
+	/* Find the flags */
+	while (*p == 'g' || *p == 'j')
+	{
+	    if (flags != NULL)
+	    {
+		if (*p == 'g')
+		    *flags |= VGR_GLOBAL;
+		else
+		    *flags |= VGR_NOJUMP;
+	    }
+	    ++p;
+	}
+    }
+    return p;
+}
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * List v:oldfiles in a nice way.
+ */
+    void
+ex_oldfiles(exarg_T *eap UNUSED)
+{
+    list_T	*l = get_vim_var_list(VV_OLDFILES);
+    listitem_T	*li;
+    int		nr = 0;
+    char_u	*fname;
+
+    if (l == NULL)
+	msg((char_u *)_("No old files"));
+    else
+    {
+	msg_start();
+	msg_scroll = TRUE;
+	for (li = l->lv_first; li != NULL && !got_int; li = li->li_next)
+	{
+	    ++nr;
+	    fname = get_tv_string(&li->li_tv);
+	    if (!message_filtered(fname))
+	    {
+		msg_outnum((long)nr);
+		MSG_PUTS(": ");
+		msg_outtrans(fname);
+		msg_putchar('\n');
+		out_flush();	    /* output one line at a time */
+		ui_breakcheck();
+	    }
+	}
+
+	/* Assume "got_int" was set to truncate the listing. */
+	got_int = FALSE;
+
+# ifdef FEAT_BROWSE_CMD
+	if (cmdmod.browse)
+	{
+	    quit_more = FALSE;
+	    nr = prompt_for_number(FALSE);
+	    msg_starthere();
+	    if (nr > 0)
+	    {
+		char_u *p = list_find_str(get_vim_var_list(VV_OLDFILES),
+								    (long)nr);
+
+		if (p != NULL)
+		{
+		    p = expand_env_save(p);
+		    eap->arg = p;
+		    eap->cmdidx = CMD_edit;
+		    cmdmod.browse = FALSE;
+		    do_exedit(eap, NULL);
+		    vim_free(p);
+		}
+	    }
+	}
+# endif
+    }
+}
+#endif
+
