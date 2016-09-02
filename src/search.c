@@ -3978,6 +3978,7 @@ extend:
 	    ++curwin->w_cursor.col;
 	VIsual = start_pos;
 	VIsual_mode = 'v';
+	redraw_cmdline = TRUE;		/* show mode later */
 	redraw_curbuf_later(INVERTED);	/* update the inversion */
     }
     else
