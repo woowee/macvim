@@ -55,4 +55,6 @@ endif " has("autocmd")
 " +kaoriya: disabled, it is hard to repressed.
 "" The matchit plugin makes the % command work better, but it is not backwards
 "" compatible.
-"packadd matchit
+"if has('syntax') && has('eval')
+"  packadd matchit
+"endif

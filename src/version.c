@@ -305,12 +305,12 @@ static char *(features[]) =
 #else
 	"-jumplist",
 #endif
+	"+kaoriya",
 #ifdef FEAT_KEYMAP
 	"+keymap",
 #else
 	"-keymap",
 #endif
-	"+kaoriya",
 #ifdef FEAT_EVAL
 	"+lambda",
 #else
