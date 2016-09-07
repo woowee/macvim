@@ -1854,6 +1854,11 @@ static struct vimoption options[] =
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
+#ifdef FEAT_GUI_MACVIM
+    {"macthinstrokes", NULL,  P_BOOL|P_VI_DEF|P_RCLR,
+			    (char_u *)&p_macthinstrokes, PV_NONE,
+			    {(char_u *)FALSE, (char_u *)0L}},
+#endif
     {"macproportionalfont", "mpf", P_BOOL|P_VI_DEF|P_VIM|P_RCLR,
 #ifdef FEAT_GUI_MACVIM
 			    (char_u *)&p_mpfont, PV_NONE,
@@ -8281,6 +8286,10 @@ set_bool_option(
     else if ((int *)varp == &p_macligatures)
     {
         gui_macvim_set_ligatures(p_macligatures);
+    }
+    else if ((int*)varp == &p_macthinstrokes)
+    {
+        gui_macvim_set_thinstrokes(p_macthinstrokes);
     }
     else if ((int *)varp == &p_mpfont)
     {

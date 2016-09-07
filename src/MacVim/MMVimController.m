@@ -806,6 +806,10 @@ static BOOL isUnsafeMessage(int msgid);
         [[[windowController vimView] textView] setLigatures:YES];
     } else if (DisableLigaturesMsgID == msgid) {
         [[[windowController vimView] textView] setLigatures:NO];
+    } else if (EnableThinStrokesMsgID == msgid) {
+        [[[windowController vimView] textView] setThinStrokes:YES];
+    } else if (DisableThinStrokesMsgID == msgid) {
+        [[[windowController vimView] textView] setThinStrokes:NO];
     } else if (EnableProportionalFontMsgID == msgid) {
         [[[windowController vimView] textView] setProportionalFont:YES];
     } else if (DisableProportionalFontMsgID == msgid) {

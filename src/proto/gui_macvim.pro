@@ -212,6 +212,7 @@ void gui_macvim_update_modified_flag();
 void gui_macvim_add_to_find_pboard(char_u *pat);
 void gui_macvim_set_antialias(int antialias);
 void gui_macvim_set_ligatures(int ligatures);
+void gui_macvim_set_thinstrokes(int thinStrokes);
 void gui_macvim_set_blur(int blur);
 void gui_macvim_set_proportional_font(int proportional_font);
 

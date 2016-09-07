@@ -29,6 +29,7 @@
     float                       fontDescent;
     BOOL                        antialias;
     BOOL                        ligatures;
+    BOOL                        thinStrokes;
     NSMutableArray              *drawData;
 
     MMTextViewHelper            *helper;
@@ -78,6 +79,7 @@
 - (void)setMouseShape:(int)shape;
 - (void)setAntialias:(BOOL)state;
 - (void)setLigatures:(BOOL)state;
+- (void)setThinStrokes:(BOOL)state;
 - (void)setImControl:(BOOL)enable;
 - (void)activateIm:(BOOL)enable;
 - (void)checkImState;

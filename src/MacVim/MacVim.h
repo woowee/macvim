@@ -205,6 +205,8 @@ enum {
     SetBlurRadiusMsgID,
     EnableLigaturesMsgID,
     DisableLigaturesMsgID,
+    EnableThinStrokesMsgID,
+    DisableThinStrokesMsgID,
     LastMsgID   // NOTE: MUST BE LAST MESSAGE IN ENUM!
 };
 
