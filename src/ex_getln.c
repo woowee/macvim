@@ -4537,7 +4537,7 @@ set_expand_context(expand_T *xp)
 	xp->xp_context = EXPAND_NOTHING;
 	return;
     }
-    set_cmd_context(xp, ccline.cmdbuff, ccline.cmdlen, ccline.cmdpos);
+    set_cmd_context(xp, ccline.cmdbuff, ccline.cmdlen, ccline.cmdpos, TRUE);
 }
 
     void
@@ -4545,7 +4545,8 @@ set_cmd_context(
     expand_T	*xp,
     char_u	*str,	    /* start of command line */
     int		len,	    /* length of command line (excl. NUL) */
-    int		col)	    /* position of cursor */
+    int		col,	    /* position of cursor */
+    int		use_ccline UNUSED) /* use ccline for info */
 {
     int		old_char = NUL;
     char_u	*nextcomm;
@@ -4560,14 +4561,14 @@ set_cmd_context(
     nextcomm = str;
 
 #ifdef FEAT_EVAL
-    if (ccline.cmdfirstc == '=')
+    if (use_ccline && ccline.cmdfirstc == '=')
     {
 # ifdef FEAT_CMDL_COMPL
 	/* pass CMD_SIZE because there is no real command */
 	set_context_for_expression(xp, str, CMD_SIZE);
 # endif
     }
-    else if (ccline.input_fn)
+    else if (use_ccline && ccline.input_fn)
     {
 	xp->xp_context = ccline.xp_context;
 	xp->xp_pattern = ccline.cmdbuff;
