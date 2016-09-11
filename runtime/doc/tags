@@ -1267,6 +1267,7 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 +mzscheme	various.txt	/*+mzscheme*
 +mzscheme/dyn	various.txt	/*+mzscheme\/dyn*
 +netbeans_intg	various.txt	/*+netbeans_intg*
++num64	various.txt	/*+num64*
 +ole	various.txt	/*+ole*
 +packages	various.txt	/*+packages*
 +path_extra	various.txt	/*+path_extra*
@@ -2051,6 +2052,8 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 :cat	eval.txt	/*:cat*
 :catch	eval.txt	/*:catch*
 :cb	quickfix.txt	/*:cb*
+:cbo	quickfix.txt	/*:cbo*
+:cbottom	quickfix.txt	/*:cbottom*
 :cbuffer	quickfix.txt	/*:cbuffer*
 :cc	quickfix.txt	/*:cc*
 :ccl	quickfix.txt	/*:ccl*
@@ -2082,6 +2085,8 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 :checkpath	tagsrch.txt	/*:checkpath*
 :checkt	editing.txt	/*:checkt*
 :checktime	editing.txt	/*:checktime*
+:chi	quickfix.txt	/*:chi*
+:chistory	quickfix.txt	/*:chistory*
 :cl	quickfix.txt	/*:cl*
 :cla	quickfix.txt	/*:cla*
 :clast	quickfix.txt	/*:clast*
@@ -2406,6 +2411,8 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 :lat	undo.txt	/*:lat*
 :later	undo.txt	/*:later*
 :lb	quickfix.txt	/*:lb*
+:lbo	quickfix.txt	/*:lbo*
+:lbottom	quickfix.txt	/*:lbottom*
 :lbuffer	quickfix.txt	/*:lbuffer*
 :lc	editing.txt	/*:lc*
 :lcd	editing.txt	/*:lcd*
@@ -2450,6 +2457,8 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 :lgrepadd	quickfix.txt	/*:lgrepadd*
 :lh	helphelp.txt	/*:lh*
 :lhelpgrep	helphelp.txt	/*:lhelpgrep*
+:lhi	quickfix.txt	/*:lhi*
+:lhistory	quickfix.txt	/*:lhistory*
 :list	various.txt	/*:list*
 :ll	quickfix.txt	/*:ll*
 :lla	quickfix.txt	/*:lla*
@@ -4492,6 +4501,7 @@ Ex	intro.txt	/*Ex*
 Ex-mode	intro.txt	/*Ex-mode*
 Exuberant_ctags	tagsrch.txt	/*Exuberant_ctags*
 F	motion.txt	/*F*
+FALSE	eval.txt	/*FALSE*
 FAQ	intro.txt	/*FAQ*
 Farsi	farsi.txt	/*Farsi*
 FileAppendCmd	autocmd.txt	/*FileAppendCmd*
@@ -4706,11 +4716,14 @@ TOhtml-encoding-detect	syntax.txt	/*TOhtml-encoding-detect*
 TOhtml-performance	syntax.txt	/*TOhtml-performance*
 TOhtml-uncopyable-text	syntax.txt	/*TOhtml-uncopyable-text*
 TOhtml-wrap-text	syntax.txt	/*TOhtml-wrap-text*
+TRUE	eval.txt	/*TRUE*
 TSQL	ft_sql.txt	/*TSQL*
 TTpro-telnet	syntax.txt	/*TTpro-telnet*
 Tab	intro.txt	/*Tab*
+TabClosed	autocmd.txt	/*TabClosed*
 TabEnter	autocmd.txt	/*TabEnter*
 TabLeave	autocmd.txt	/*TabLeave*
+TabNew	autocmd.txt	/*TabNew*
 Tcl	if_tcl.txt	/*Tcl*
 TermChanged	autocmd.txt	/*TermChanged*
 TermResponse	autocmd.txt	/*TermResponse*
@@ -4757,6 +4770,7 @@ WWW	intro.txt	/*WWW*
 Win32	os_win32.txt	/*Win32*
 WinEnter	autocmd.txt	/*WinEnter*
 WinLeave	autocmd.txt	/*WinLeave*
+WinNew	autocmd.txt	/*WinNew*
 X	change.txt	/*X*
 X11	options.txt	/*X11*
 X11-icon	gui_x11.txt	/*X11-icon*
@@ -4974,6 +4988,7 @@ assert_equal()	eval.txt	/*assert_equal()*
 assert_exception()	eval.txt	/*assert_exception()*
 assert_fails()	eval.txt	/*assert_fails()*
 assert_false()	eval.txt	/*assert_false()*
+assert_inrange()	eval.txt	/*assert_inrange()*
 assert_match()	eval.txt	/*assert_match()*
 assert_notequal()	eval.txt	/*assert_notequal()*
 assert_notmatch()	eval.txt	/*assert_notmatch()*
@@ -5021,6 +5036,8 @@ b	motion.txt	/*b*
 b:	eval.txt	/*b:*
 b:changedtick	eval.txt	/*b:changedtick*
 b:changelog_name	filetype.txt	/*b:changelog_name*
+b:clojure_syntax_keywords	syntax.txt	/*b:clojure_syntax_keywords*
+b:clojure_syntax_without_core_keywords	syntax.txt	/*b:clojure_syntax_without_core_keywords*
 b:current_syntax-variable	syntax.txt	/*b:current_syntax-variable*
 b:netrw_lastfile	pi_netrw.txt	/*b:netrw_lastfile*
 b:tex_stylish	syntax.txt	/*b:tex_stylish*
@@ -5776,6 +5793,7 @@ exception-variable	eval.txt	/*exception-variable*
 exclusive	motion.txt	/*exclusive*
 exclusive-linewise	motion.txt	/*exclusive-linewise*
 executable()	eval.txt	/*executable()*
+execute()	eval.txt	/*execute()*
 execute-menus	gui.txt	/*execute-menus*
 exepath()	eval.txt	/*exepath()*
 exim	starting.txt	/*exim*
@@ -5831,6 +5849,7 @@ expr-is?	eval.txt	/*expr-is?*
 expr-isnot	eval.txt	/*expr-isnot*
 expr-isnot#	eval.txt	/*expr-isnot#*
 expr-isnot?	eval.txt	/*expr-isnot?*
+expr-lambda	eval.txt	/*expr-lambda*
 expr-nesting	eval.txt	/*expr-nesting*
 expr-number	eval.txt	/*expr-number*
 expr-option	eval.txt	/*expr-option*
@@ -6179,6 +6198,7 @@ g:clojure_fuzzy_indent_blacklist	indent.txt	/*g:clojure_fuzzy_indent_blacklist*
 g:clojure_fuzzy_indent_patterns	indent.txt	/*g:clojure_fuzzy_indent_patterns*
 g:clojure_maxlines	indent.txt	/*g:clojure_maxlines*
 g:clojure_special_indent_words	indent.txt	/*g:clojure_special_indent_words*
+g:clojure_syntax_keywords	syntax.txt	/*g:clojure_syntax_keywords*
 g:colors_name	options.txt	/*g:colors_name*
 g:decada	ft_ada.txt	/*g:decada*
 g:decada.Error_Format	ft_ada.txt	/*g:decada.Error_Format*
@@ -6405,6 +6425,7 @@ getcmdline()	eval.txt	/*getcmdline()*
 getcmdpos()	eval.txt	/*getcmdpos()*
 getcmdtype()	eval.txt	/*getcmdtype()*
 getcmdwintype()	eval.txt	/*getcmdwintype()*
+getcompletion()	eval.txt	/*getcompletion()*
 getcurpos()	eval.txt	/*getcurpos()*
 getcwd()	eval.txt	/*getcwd()*
 getfontname()	eval.txt	/*getfontname()*
@@ -6994,6 +7015,7 @@ l:	eval.txt	/*l:*
 l:var	eval.txt	/*l:var*
 lCursor	mbyte.txt	/*lCursor*
 lace.vim	syntax.txt	/*lace.vim*
+lambda	eval.txt	/*lambda*
 lang-variable	eval.txt	/*lang-variable*
 language-mapping	map.txt	/*language-mapping*
 last-pattern	pattern.txt	/*last-pattern*
@@ -8673,6 +8695,7 @@ terminfo	term.txt	/*terminfo*
 termresponse-variable	eval.txt	/*termresponse-variable*
 test-functions	usr_41.txt	/*test-functions*
 test_alloc_fail()	eval.txt	/*test_alloc_fail()*
+test_autochdir()	eval.txt	/*test_autochdir()*
 test_disable_char_avail()	eval.txt	/*test_disable_char_avail()*
 test_garbagecollect_now()	eval.txt	/*test_garbagecollect_now()*
 test_null_channel()	eval.txt	/*test_null_channel()*
@@ -8887,6 +8910,17 @@ v:statusmsg	eval.txt	/*v:statusmsg*
 v:swapchoice	eval.txt	/*v:swapchoice*
 v:swapcommand	eval.txt	/*v:swapcommand*
 v:swapname	eval.txt	/*v:swapname*
+v:t_TYPE	eval.txt	/*v:t_TYPE*
+v:t_bool	eval.txt	/*v:t_bool*
+v:t_channel	eval.txt	/*v:t_channel*
+v:t_dict	eval.txt	/*v:t_dict*
+v:t_float	eval.txt	/*v:t_float*
+v:t_func	eval.txt	/*v:t_func*
+v:t_job	eval.txt	/*v:t_job*
+v:t_list	eval.txt	/*v:t_list*
+v:t_none	eval.txt	/*v:t_none*
+v:t_number	eval.txt	/*v:t_number*
+v:t_string	eval.txt	/*v:t_string*
 v:termresponse	eval.txt	/*v:termresponse*
 v:testing	eval.txt	/*v:testing*
 v:this_session	eval.txt	/*v:this_session*
@@ -9007,6 +9041,7 @@ v_v	visual.txt	/*v_v*
 v_x	change.txt	/*v_x*
 v_y	change.txt	/*v_y*
 v_~	change.txt	/*v_~*
+vab	motion.txt	/*vab*
 val-variable	eval.txt	/*val-variable*
 valgrind	debug.txt	/*valgrind*
 values()	eval.txt	/*values()*
@@ -9054,6 +9089,7 @@ vi	intro.txt	/*vi*
 vi-differences	vi_diff.txt	/*vi-differences*
 vi:	options.txt	/*vi:*
 vi_diff.txt	vi_diff.txt	/*vi_diff.txt*
+vib	motion.txt	/*vib*
 view	starting.txt	/*view*
 view-diffs	diff.txt	/*view-diffs*
 view-file	starting.txt	/*view-file*
@@ -9109,6 +9145,7 @@ viminfo-r	options.txt	/*viminfo-r*
 viminfo-read	starting.txt	/*viminfo-read*
 viminfo-read-write	starting.txt	/*viminfo-read-write*
 viminfo-s	options.txt	/*viminfo-s*
+viminfo-timestamp	starting.txt	/*viminfo-timestamp*
 viminfo-write	starting.txt	/*viminfo-write*
 vimrc	starting.txt	/*vimrc*
 vimrc-filetype	usr_05.txt	/*vimrc-filetype*
