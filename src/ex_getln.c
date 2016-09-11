@@ -223,7 +223,7 @@ getcmdline(
     if (count < 0)
     {
 	migemo_enabled = 1;
-	count = -count;
+	count = -count - 1;
     }
 #endif
 #ifdef FEAT_EVAL
@@ -1696,6 +1696,10 @@ getcmdline(
 		    else
 			t = match_start;
 		    ++emsg_off;
+#ifdef USE_MIGEMO
+		    if (migemo_enabled)
+			search_flags += SEARCH_MIGEMO;
+#endif
 		    i = searchit(curwin, curbuf, &t,
 				 c == Ctrl_G ? FORWARD : BACKWARD,
 				 ccline.cmdbuff, count, search_flags,
@@ -1903,7 +1907,7 @@ cmdline_changed:
 		++emsg_off;    /* So it doesn't beep if bad expr */
 #ifdef USE_MIGEMO
 		if (migemo_enabled)
-		    search_options |= SEARCH_MIGEMO;
+		    search_options += SEARCH_MIGEMO;
 #endif
 #ifdef FEAT_RELTIME
 		/* Set the time limit to half a second. */

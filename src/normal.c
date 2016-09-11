@@ -6245,7 +6245,7 @@ nv_search(cmdarg_T *cap)
      * start position. */
 #ifdef USE_MIGEMO
     cap->searchbuf = getcmdline(cap->cmdchar,
-	    (cap->nchar == 'g' ? -cap->count1 : cap->count1), 0);
+	    (cap->nchar == 'g' ? -cap->count1 - 1 : cap->count1), 0);
 #else
     cap->searchbuf = getcmdline(cap->cmdchar, cap->count1, 0);
 #endif
@@ -6258,10 +6258,10 @@ nv_search(cmdarg_T *cap)
 
     (void)normal_search(cap, cap->cmdchar, cap->searchbuf,
 #ifdef USE_MIGEMO
-	    (cap->nchar == 'g' ? SEARCH_MIGEMO : 0) |
+			(cap->nchar == 'g' ? SEARCH_MIGEMO : 0) |
 #endif
-			(cap->arg || !equalpos(save_cursor, curwin->w_cursor))
-							   ? 0 : SEARCH_MARK);
+			((cap->arg || !equalpos(save_cursor, curwin->w_cursor))
+							   ? 0 : SEARCH_MARK));
 }
 
 /*
