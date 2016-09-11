@@ -590,8 +590,8 @@ last_pat_prog(regmmatch_T *regmatch)
  * When FEAT_EVAL is defined, returns the index of the first matching
  * subpattern plus one; one if there was none.
  */
-    int
-searchit(
+    static int
+searchit_original(		/* renamed from "searchit" (USE_MIGEMO) */
     win_T	*win,		/* window to search in; can be NULL for a
 				   buffer without a window! */
     buf_T	*buf,
@@ -1374,20 +1374,22 @@ check_migemo_able_string(char_u* str)
     return 1;
 }
 
+/*
+ * Search with migemo, mimic of searchit()
+ */
     static int
-searchit_migemo(win, buf, pos, dir, str, count, options, pat_use, stop_lnum,
-	tm, did)
-    win_T	*win;
-    buf_T	*buf;
-    pos_T	*pos;
-    int		dir;
-    char_u	*str;
-    long	count;
-    int		options;
-    int		pat_use;
-    linenr_T	stop_lnum;	/* stop after this line number when != 0 */
-    proftime_T*	tm;
-    int		*did;
+searchit_migemo(
+    win_T	*win,
+    buf_T	*buf,
+    pos_T	*pos,
+    int		dir,
+    char_u	*str,
+    long	count,
+    int		options,
+    int		pat_use,
+    linenr_T	stop_lnum,
+    proftime_T*	tm,
+    int		*did)
 {
     int retval = 0;
     int didval = 0;
@@ -1416,8 +1418,8 @@ searchit_migemo(win, buf, pos, dir, str, count, options, pat_use, stop_lnum,
 	    query = migemo_query(migemo_object, str);
 	    if (query && STRLEN(query) < MIGEMO_QUERY_MAXSIZE)
 	    {
-		retval = searchit(win, buf, pos, dir, query, count, options,
-			pat_use, stop_lnum, tm);
+		retval = searchit_original(win, buf, pos, dir, query, count,
+			options, pat_use, stop_lnum, tm);
 		didval = 1;
 	    }
 	    if (query)
@@ -1431,6 +1433,41 @@ searchit_migemo(win, buf, pos, dir, str, count, options, pat_use, stop_lnum,
 	*did = didval;
     return retval;
 }
+
+/*
+ * wrapper of searchit_original().
+ *
+ * This extends original one to accept SEARCH_MIGEMO for options.
+ * If this flag is set, migemo feature is enabled for the search.
+ */
+    int
+searchit(
+    win_T	*win,
+    buf_T	*buf,
+    pos_T	*pos,
+    int		dir,
+    char_u	*pat,
+    long	count,
+    int		options,
+    int		pat_use,
+    linenr_T	stop_lnum,
+    proftime_T	*tm UNUSED)
+{
+    if (options & SEARCH_MIGEMO)
+    {
+	int did = 0;
+	int ret;
+
+	options &= ~SEARCH_MIGEMO;
+	ret = searchit_migemo(win, buf, pos, dir, pat, count, options, pat_use,
+		stop_lnum, tm, &did);
+	if (did)
+	    return ret;
+    }
+    return searchit_original(win, buf, pos, dir, pat, count, options, pat_use,
+	    stop_lnum, tm);
+}
+
 #endif /* USE_MIGEMO */
 
 /*
@@ -1554,14 +1591,13 @@ do_search(
 	{
 	    if (spats[RE_SEARCH].pat == NULL)	    /* no previous pattern */
 	    {
-		pat = spats[RE_SUBST].pat;
-		if (pat == NULL)
+		searchstr = spats[RE_SUBST].pat;
+		if (searchstr == NULL)
 		{
 		    EMSG(_(e_noprevre));
 		    retval = 0;
 		    goto end_do_search;
 		}
-		searchstr = pat;
 	    }
 	    else
 	    {
@@ -1743,30 +1779,15 @@ do_search(
 	     lrFswap(searchstr,0);
 #endif
 
-#ifdef USE_MIGEMO
-	{
-	    int did_migemo = 0;
-	    if (options & SEARCH_MIGEMO)
-		c = searchit_migemo(
-			curwin, curbuf, &pos,
-			dirc == '/' ? FORWARD : BACKWARD,
-			searchstr, count, spats[0].off.end + (options &
-			    (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
-			     + SEARCH_MSG + SEARCH_START
-			     + ((pat != NULL && *pat == ';') ?
-				 0 : SEARCH_NOOF))),
-			RE_LAST, (linenr_T)0, tm, &did_migemo);
-	    if (!did_migemo)
-#endif /* USE_MIGEMO */
 	c = searchit(curwin, curbuf, &pos, dirc == '/' ? FORWARD : BACKWARD,
 		searchstr, count, spats[0].off.end + (options &
 		       (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
 			+ SEARCH_MSG + SEARCH_START
+#ifdef USE_MIGEMO
+			+ SEARCH_MIGEMO
+#endif
 			+ ((pat != NULL && *pat == ';') ? 0 : SEARCH_NOOF))),
 		RE_LAST, (linenr_T)0, tm);
-#ifdef USE_MIGEMO
-	}
-#endif /* USE_MIGEMO */
 
 	if (dircp != NULL)
 	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */
