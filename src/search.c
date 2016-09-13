@@ -581,8 +581,14 @@ last_pat_prog(regmmatch_T *regmatch)
  * When FEAT_EVAL is defined, returns the index of the first matching
  * subpattern plus one; one if there was none.
  */
+#ifndef USE_MIGEMO
+    int
+searchit
+#else
     static int
-searchit_original(		/* renamed from "searchit" (USE_MIGEMO) */
+searchit_original		/* renamed from "searchit" (USE_MIGEMO) */
+#endif
+(
     win_T	*win,		/* window to search in; can be NULL for a
 				   buffer without a window! */
     buf_T	*buf,
