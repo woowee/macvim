@@ -1281,7 +1281,7 @@ intro_message(
 	N_("type  :q<Enter>               to exit         "),
 	N_("type  :help<Enter>  or  <F1>  for on-line help"),
 #ifdef FEAT_GUI_MACVIM
-        // TODO: Don't steal the show from version7 help?
+        // TODO: Don't steal the show from version8 help?
 	N_("type  :help macvim<Enter>     for MacVim help "),
 #else
 	N_("type  :help version8<Enter>   for version info"),
