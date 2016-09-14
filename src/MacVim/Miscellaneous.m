@@ -297,3 +297,12 @@ normalizeFilenames(NSArray *filenames)
 
     return outnames;
 }
+
+
+
+
+    BOOL
+shouldUseYosemiteTabBarStyle()
+{ 
+    return floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10;
+}
