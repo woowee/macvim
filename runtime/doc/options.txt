@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 8.0.  Last change: 2016 Sep 02
+*options.txt*	For Vim version 8.0.  Last change: 2016 Sep 16
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -2653,7 +2653,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	uhex		Show unprintable characters hexadecimal as <xx>
 			instead of using ^C and ~C.
 
-	When neither "lastline" or "truncate" is included, a last line that
+	When neither "lastline" nor "truncate" is included, a last line that
 	doesn't fit is replaced with "@" lines.
 
 						*'eadirection'* *'ead'*
@@ -6284,7 +6284,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	   personal preferences to overrule or add to the distributed defaults
 	   or system-wide settings (rarely needed).
 
-	More entries are added when using |packages|.
+	More entries are added when using |packages|.  If it gets very long
+	then `:set rtp` will be truncated, use `:echo &rtp` to see the full
+	string.
 
 	Note that, unlike 'path', no wildcards like "**" are allowed.  Normal
 	wildcards are allowed, but can significantly slow down searching for
@@ -6345,7 +6347,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	NOTE: This option is set to 1 when 'compatible' is set.
 
 						*'scrolloff'* *'so'*
-'scrolloff' 'so'	number	(default 0)
+'scrolloff' 'so'	number	(default 0, set to 5 in |defaults.vim|)
 			global
 			{not in Vi}
 	Minimal number of screen lines to keep above and below the cursor.
@@ -7848,7 +7850,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 'timeout' 'to'		boolean (default on)
 			global
 						*'ttimeout'* *'nottimeout'*
-'ttimeout'		boolean (default off)
+'ttimeout'		boolean (default off, set in |defaults.vim|))
 			global
 			{not in Vi}
 	These two options together determine the behavior when part of a
@@ -7883,7 +7885,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			global
 			{not in all versions of Vi}
 						*'ttimeoutlen'* *'ttm'*
-'ttimeoutlen' 'ttm'	number	(default -1)
+'ttimeoutlen' 'ttm'	number	(default -1, set to 100 in |defaults.vim|))
 			global
 			{not in Vi}
 	The time in milliseconds that is waited for a key code or mapped key
