@@ -75,8 +75,8 @@ static DBPrefsWindowController *_sharedPrefsWindowController = nil;
 		// If the developer attached a window to this controller
 		// in Interface Builder, it gets replaced with this one.
 	NSPanel *window = [[[NSPanel alloc] initWithContentRect:NSMakeRect(0,0,1000,1000)
-												    styleMask:(NSTitledWindowMask |
-															   NSClosableWindowMask)
+												    styleMask:(NSWindowStyleMaskTitled |
+															   NSWindowStyleMaskClosable)
 													  backing:NSBackingStoreBuffered
 													    defer:YES] autorelease];
 	[window setHidesOnDeactivate:NO];
@@ -349,7 +349,7 @@ static DBPrefsWindowController *_sharedPrefsWindowController = nil;
 {
 	[viewAnimation stopAnimation];
 	
-	if ([self shiftSlowsAnimation] && [[[self window] currentEvent] modifierFlags] & NSShiftKeyMask)
+	if ([self shiftSlowsAnimation] && [[[self window] currentEvent] modifierFlags] & NSEventModifierFlagShift)
 		[viewAnimation setDuration:1.25];
 	else
 		[viewAnimation setDuration:0.25];

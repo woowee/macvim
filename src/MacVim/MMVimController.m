@@ -1332,7 +1332,7 @@ static BOOL isUnsafeMessage(int msgid);
         pt = [[windowController window] mouseLocationOutsideOfEventStream];
     }
 
-    NSEvent *event = [NSEvent mouseEventWithType:NSRightMouseDown
+    NSEvent *event = [NSEvent mouseEventWithType:NSEventTypeRightMouseDown
                            location:pt
                       modifierFlags:0
                           timestamp:0

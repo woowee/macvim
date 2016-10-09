@@ -128,13 +128,14 @@
 # define rb_gc_writebarrier_unprotect rb_gc_writebarrier_unprotect_stub
 #endif
 
-#ifdef RUBY_FRAMEWORK
+#ifdef FEAT_GUI_MACVIM
 # include <Ruby/ruby.h>
 #else
 # include <ruby.h>
 #endif
 #ifdef RUBY19_OR_LATER
-# ifdef RUBY_FRAMEWORK
+# ifdef FEAT_GUI_MACVIM
+#  undef SIZEOF_TIME_T
 #  include <Ruby/ruby/encoding.h>
 # else
 #  include <ruby/encoding.h>

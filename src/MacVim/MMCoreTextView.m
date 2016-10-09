@@ -915,7 +915,7 @@ defaultAdvanceForFont(NSFont *font)
                              numColumns:width];
             [signImg drawInRect:r
                        fromRect:NSZeroRect
-                      operation:NSCompositeSourceOver
+                      operation:NSCompositingOperationSourceOver
                        fraction:1.0];
         } else if (DrawStringDrawType == type) {
             int bg = *((int*)bytes);  bytes += sizeof(int);
@@ -1423,10 +1423,8 @@ recurseDraw(const unichar *chars, CGGlyph *glyphs, CGPoint *positions,
 
 - (void)scrollRect:(NSRect)rect lineCount:(int)count
 {
-    NSPoint destPoint = rect.origin;
-    destPoint.y -= count * cellSize.height;
-
-    NSCopyBits(0, rect, destPoint);
+    NSSize delta={0, -count * cellSize.height};
+    [self scrollRect:rect by:delta];
 }
 
 - (void)deleteLinesFromRow:(int)row lineCount:(int)count

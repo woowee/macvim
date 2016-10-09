@@ -3182,13 +3182,13 @@ static int eventModifierFlagsToVimModMask(int modifierFlags)
 {
     int modMask = 0;
 
-    if (modifierFlags & NSShiftKeyMask)
+    if (modifierFlags & NSEventModifierFlagShift)
         modMask |= MOD_MASK_SHIFT;
-    if (modifierFlags & NSControlKeyMask)
+    if (modifierFlags & NSEventModifierFlagControl)
         modMask |= MOD_MASK_CTRL;
-    if (modifierFlags & NSAlternateKeyMask)
+    if (modifierFlags & NSEventModifierFlagOption)
         modMask |= MOD_MASK_ALT;
-    if (modifierFlags & NSCommandKeyMask)
+    if (modifierFlags & NSEventModifierFlagCommand)
         modMask |= MOD_MASK_CMD;
 
     return modMask;
@@ -3198,11 +3198,11 @@ static int eventModifierFlagsToVimMouseModMask(int modifierFlags)
 {
     int modMask = 0;
 
-    if (modifierFlags & NSShiftKeyMask)
+    if (modifierFlags & NSEventModifierFlagShift)
         modMask |= MOUSE_SHIFT;
-    if (modifierFlags & NSControlKeyMask)
+    if (modifierFlags & NSEventModifierFlagControl)
         modMask |= MOUSE_CTRL;
-    if (modifierFlags & NSAlternateKeyMask)
+    if (modifierFlags & NSEventModifierFlagOption)
         modMask |= MOUSE_ALT;
 
     return modMask;
