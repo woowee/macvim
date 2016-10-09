@@ -9,6 +9,9 @@ MacVim uses the usual configure/make steps to build the binary but instead of
 install in (usually `/Applications').
 
 
+How to build and install
+========================
+
 Run `./configure` in the `src/` directory with the flags you want (call
 `./configure --help` to see a list of flags) e.g.:
 
