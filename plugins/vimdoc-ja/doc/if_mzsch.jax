@@ -1,4 +1,4 @@
-*if_mzsch.txt*  For Vim バージョン 7.4.  Last change: 2016 Jan 24
+*if_mzsch.txt*  For Vim バージョン 8.0.  Last change: 2016 Jan 24
 
 
 		  VIMリファレンスマニュアル    by Sergey Khorev
@@ -96,6 +96,9 @@ exn:vim は明示的なインポートをしなくても利用可能です。
 	:mzscheme (require (prefix vim- vimext)) ; MzScheme < 4.x 用
 	:mzscheme (require (prefix-in vim- 'vimext)) ; MzScheme 4.x 用
 	:mzscheme (vim-set-buff-line 10 "This is line #10")
+
+使っている MzScheme のバージョンを見るには: >
+	:mzscheme (display (version))
 <
 インラインスクリプトの例: >
 	function! <SID>SetFirstLine()

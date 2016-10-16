@@ -40,6 +40,13 @@ static int s_directx_load_attempted = 0;
 static int gui_mswin_get_menu_height(int fix_window);
 #endif
 
+/*
+ * For Transparent Window.
+ */
+typedef DWORD (WINAPI *FWINLAYER)(HWND hwnd, DWORD crKey, BYTE bAlpha,
+	DWORD dwFlags);
+static void w32_set_transparency(HWND hwnd, BYTE bAlpha);
+
 static int get_caption_height(void);
 static int get_caption_width_adjustment(void);
 
@@ -1010,6 +1017,57 @@ _OnMouseMoveOrRelease(
     }
 
     _OnMouseEvent(button, x, y, FALSE, keyFlags);
+}
+
+    static int
+has_caption(void)
+{
+    return GetWindowLong(s_hwnd, GWL_STYLE) & WS_CAPTION;
+}
+
+    static int
+get_caption_height(void)
+{
+    /*
+     * A window's caption includes extra 1 dot margin.  When caption is
+     * removed the margin also be removed.  So we must return -1 when
+     * caption is diabled.
+     */
+    return has_caption() ? GetSystemMetrics(SM_CYCAPTION) : -1;
+}
+
+    static int
+get_caption_width_adjustment(void)
+{
+    return has_caption() ? 0 : -2;
+}
+
+    void
+gui_mch_show_caption(int show)
+{
+    const static LONG flags_on = WS_CAPTION;
+    const static LONG flags_off = 0;
+    LONG style, newstyle;
+
+    /* Remove caption when title is null. */
+    style = newstyle = GetWindowLong(s_hwnd, GWL_STYLE);
+    if (show)
+    {
+	newstyle &= ~flags_off;
+	newstyle |= flags_on;
+    }
+    else
+    {
+	newstyle &= ~flags_on;
+	newstyle |= flags_off;
+    }
+    if (newstyle != style)
+    {
+	SetWindowLong(s_hwnd, GWL_STYLE, newstyle);
+	SetWindowPos(s_hwnd, NULL, 0, 0, 0, 0,
+		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
+	gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
+    }
 }
 
 #ifdef FEAT_MENU
@@ -3386,10 +3444,9 @@ gui_mch_newfont(void)
 	    - (GetSystemMetrics(SM_CXFRAME) +
 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2,
 	    rect.bottom - rect.top
-	    - get_caption_height()
 	    - (GetSystemMetrics(SM_CYFRAME) +
 	       GetSystemMetrics(SM_CXPADDEDBORDER)) * 2
-	    - GetSystemMetrics(SM_CYCAPTION)
+	    - get_caption_height()
 #ifdef FEAT_MENU
 	    - gui_mswin_get_menu_height(FALSE)
 #endif
@@ -4443,93 +4500,6 @@ static void dyn_imm_load(void);
 # define pImmSetConversionStatus  ImmSetConversionStatus
 #endif
 
-/* multi monitor support */
-typedef struct _MONITORINFOstruct
-{
-    DWORD cbSize;
-    RECT rcMonitor;
-    RECT rcWork;
-    DWORD dwFlags;
-} _MONITORINFO;
-
-typedef HANDLE _HMONITOR;
-typedef _HMONITOR (WINAPI *TMonitorFromWindow)(HWND, DWORD);
-typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
-
-static TMonitorFromWindow   pMonitorFromWindow = NULL;
-static TGetMonitorInfo	    pGetMonitorInfo = NULL;
-static HANDLE		    user32_lib = NULL;
-
-/*
- * For Transparent Window.
- */
-typedef DWORD (WINAPI *FWINLAYER)(HWND hwnd, DWORD crKey, BYTE bAlpha,
-	DWORD dwFlags);
-static void w32_set_transparency(HWND hwnd, BYTE bAlpha);
-
-/*
- * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
- * less fancy GUI APIs.
- */
-    static int
-is_winnt_3(void)
-{
-    return ((os_version.dwPlatformId == VER_PLATFORM_WIN32_NT
-		&& os_version.dwMajorVersion == 3)
-	    || (os_version.dwPlatformId == VER_PLATFORM_WIN32s));
-}
-
-    static int
-has_caption(void)
-{
-    return GetWindowLong(s_hwnd, GWL_STYLE) & WS_CAPTION;
-}
-
-    static int
-get_caption_height(void)
-{
-    /*
-     * A window's caption includes extra 1 dot margin.  When caption is
-     * removed the margin also be removed.  So we must return -1 when
-     * caption is diabled.
-     */
-    return has_caption() ? GetSystemMetrics(SM_CYCAPTION) : -1;
-}
-
-    static int
-get_caption_width_adjustment(void)
-{
-    return has_caption() ? 0 : -2;
-}
-
-    void
-gui_mch_show_caption(int show)
-{
-    const static LONG flags_on = WS_CAPTION;
-    const static LONG flags_off = 0;
-    LONG style, newstyle;
-
-    /* Remove caption when title is null. */
-    style = newstyle = GetWindowLong(s_hwnd, GWL_STYLE);
-    if (show)
-    {
-	newstyle &= ~flags_off;
-	newstyle |= flags_on;
-    }
-    else
-    {
-	newstyle &= ~flags_on;
-	newstyle |= flags_off;
-    }
-    if (newstyle != style)
-    {
-	SetWindowLong(s_hwnd, GWL_STYLE, newstyle);
-	SetWindowPos(s_hwnd, NULL, 0, 0, 0, 0,
-		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
-	gui_set_shellsize(FALSE, FALSE, RESIZE_BOTH);
-    }
-}
-
 #ifdef FEAT_MENU
 /*
  * Figure out how high the menu bar is at the moment.
@@ -4561,29 +4531,17 @@ gui_mswin_get_menu_height(
     }
     else
     {
-	if (is_winnt_3())	/* for NT 3.xx */
-	{
-	    if (gui.starting)
-		menu_height = GetSystemMetrics(SM_CYMENU);
-	    else
-	    {
-		RECT r1, r2;
-		int frameht = GetSystemMetrics(SM_CYFRAME);
-		int capht = get_caption_height();
-
-		/* get window rect of s_hwnd
-		 * get client rect of s_hwnd
-		 * get cap height
-		 * subtract from window rect, the sum of client height,
-		 * (if not maximized)frame thickness, and caption height.
-		 */
-		GetWindowRect(s_hwnd, &r1);
-		GetClientRect(s_hwnd, &r2);
-		menu_height = r1.bottom - r1.top - (r2.bottom - r2.top
-				 + 2 * frameht * (!IsZoomed(s_hwnd)) + capht);
-	    }
-	}
-	else			/* win95 and variants (NT 4.0, I guess) */
+	/*
+	 * In case 'lines' is set in _vimrc/_gvimrc window width doesn't
+	 * seem to have been set yet, so menu wraps in default window
+	 * width which is very narrow.  Instead just return height of a
+	 * single menu item.  Will still be wrong when the menu really
+	 * should wrap over more than one line.
+	 */
+	GetMenuItemRect(s_hwnd, s_menuBar, 0, &rc1);
+	if (gui.starting)
+	    menu_height = rc1.bottom - rc1.top + 1;
+	else
 	{
 	    GetMenuItemRect(s_hwnd, s_menuBar, num - 1, &rc2);
 	    menu_height = rc2.bottom - rc1.top + 1;
@@ -5341,42 +5299,6 @@ gui_mch_prepare(int *argc, char **argv)
 	    WSInitialized = TRUE;
 #endif
     }
-
-    /* get the OS version info */
-    os_version.dwOSVersionInfoSize = sizeof(os_version);
-    GetVersionEx(&os_version); /* this call works on Win32s, Win95 and WinNT */
-
-    /* try and load the user32.dll library and get the entry points for
-     * multi-monitor-support. */
-    if ((user32_lib = vimLoadLib("User32.dll")) != NULL)
-    {
-	pMonitorFromWindow = (TMonitorFromWindow)GetProcAddress(user32_lib,
-							 "MonitorFromWindow");
-
-	/* there are ...A and ...W version of GetMonitorInfo - looking at
-	 * winuser.h, they have exactly the same declaration. */
-	pGetMonitorInfo = (TGetMonitorInfo)GetProcAddress(user32_lib,
-							  "GetMonitorInfoA");
-    }
-
-#ifdef FEAT_MBYTE
-    /* If the OS is Windows NT, use wide functions;
-     * this enables common dialogs input unicode from IME. */
-    if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
-    {
-	pDispatchMessage = DispatchMessageW;
-	pGetMessage = GetMessageW;
-	pIsDialogMessage = IsDialogMessageW;
-	pPeekMessage = PeekMessageW;
-    }
-    else
-    {
-	pDispatchMessage = DispatchMessageA;
-	pGetMessage = GetMessageA;
-	pIsDialogMessage = IsDialogMessageA;
-	pPeekMessage = PeekMessageA;
-    }
-#endif
 }
 
 /*

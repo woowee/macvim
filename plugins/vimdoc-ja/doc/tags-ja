@@ -204,6 +204,8 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'efm'	options.jax	/*'efm'*
 'ei'	options.jax	/*'ei'*
 'ek'	options.jax	/*'ek'*
+'emo'	options.jax	/*'emo'*
+'emoji'	options.jax	/*'emoji'*
 'enc'	options.jax	/*'enc'*
 'encoding'	options.jax	/*'encoding'*
 'endofline'	options.jax	/*'endofline'*
@@ -395,6 +397,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'langmap'	options.jax	/*'langmap'*
 'langmenu'	options.jax	/*'langmenu'*
 'langnoremap'	options.jax	/*'langnoremap'*
+'langremap'	options.jax	/*'langremap'*
 'laststatus'	options.jax	/*'laststatus'*
 'lazyredraw'	options.jax	/*'lazyredraw'*
 'lbr'	options.jax	/*'lbr'*
@@ -411,6 +414,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'lnr'	options.jax	/*'lnr'*
 'loadplugins'	options.jax	/*'loadplugins'*
 'lpl'	options.jax	/*'lpl'*
+'lrm'	options.jax	/*'lrm'*
 'ls'	options.jax	/*'ls'*
 'lsp'	options.jax	/*'lsp'*
 'luadll'	options.jax	/*'luadll'*
@@ -531,6 +535,8 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'noed'	options.jax	/*'noed'*
 'noedcompatible'	options.jax	/*'noedcompatible'*
 'noek'	options.jax	/*'noek'*
+'noemo'	options.jax	/*'noemo'*
+'noemoji'	options.jax	/*'noemoji'*
 'noendofline'	options.jax	/*'noendofline'*
 'noeol'	options.jax	/*'noeol'*
 'noequalalways'	options.jax	/*'noequalalways'*
@@ -577,6 +583,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'nojoinspaces'	options.jax	/*'nojoinspaces'*
 'nojs'	options.jax	/*'nojs'*
 'nolangnoremap'	options.jax	/*'nolangnoremap'*
+'nolangremap'	options.jax	/*'nolangremap'*
 'nolazyredraw'	options.jax	/*'nolazyredraw'*
 'nolbr'	options.jax	/*'nolbr'*
 'nolinebreak'	options.jax	/*'nolinebreak'*
@@ -585,6 +592,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'nolnr'	options.jax	/*'nolnr'*
 'noloadplugins'	options.jax	/*'noloadplugins'*
 'nolpl'	options.jax	/*'nolpl'*
+'nolrm'	options.jax	/*'nolrm'*
 'nolz'	options.jax	/*'nolz'*
 'noma'	options.jax	/*'noma'*
 'nomacatsui'	options.jax	/*'nomacatsui'*
@@ -721,6 +729,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'option'	intro.jax	/*'option'*
 'osfiletype'	options.jax	/*'osfiletype'*
 'pa'	options.jax	/*'pa'*
+'packpath'	options.jax	/*'packpath'*
 'para'	options.jax	/*'para'*
 'paragraphs'	options.jax	/*'paragraphs'*
 'paste'	options.jax	/*'paste'*
@@ -741,6 +750,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'pmbcs'	options.jax	/*'pmbcs'*
 'pmbfn'	options.jax	/*'pmbfn'*
 'popt'	options.jax	/*'popt'*
+'pp'	options.jax	/*'pp'*
 'preserveindent'	options.jax	/*'preserveindent'*
 'previewheight'	options.jax	/*'previewheight'*
 'previewwindow'	options.jax	/*'previewwindow'*
@@ -795,6 +805,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'sbr'	options.jax	/*'sbr'*
 'sc'	options.jax	/*'sc'*
 'scb'	options.jax	/*'scb'*
+'scl'	options.jax	/*'scl'*
 'scr'	options.jax	/*'scr'*
 'scroll'	options.jax	/*'scroll'*
 'scrollbind'	options.jax	/*'scrollbind'*
@@ -837,6 +848,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'si'	options.jax	/*'si'*
 'sidescroll'	options.jax	/*'sidescroll'*
 'sidescrolloff'	options.jax	/*'sidescrolloff'*
+'signcolumn'	options.jax	/*'signcolumn'*
 'siso'	options.jax	/*'siso'*
 'sj'	options.jax	/*'sj'*
 'slm'	options.jax	/*'slm'*
@@ -900,6 +912,8 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 't_%1'	term.jax	/*'t_%1'*
 't_%i'	term.jax	/*'t_%i'*
 't_&8'	term.jax	/*'t_&8'*
+'t_8b'	term.jax	/*'t_8b'*
+'t_8f'	term.jax	/*'t_8f'*
 't_@7'	term.jax	/*'t_@7'*
 't_AB'	term.jax	/*'t_AB'*
 't_AF'	term.jax	/*'t_AF'*
@@ -1035,11 +1049,13 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 'term'	options.jax	/*'term'*
 'termbidi'	options.jax	/*'termbidi'*
 'termencoding'	options.jax	/*'termencoding'*
+'termguicolors'	options.jax	/*'termguicolors'*
 'terse'	options.jax	/*'terse'*
 'textauto'	options.jax	/*'textauto'*
 'textmode'	options.jax	/*'textmode'*
 'textwidth'	options.jax	/*'textwidth'*
 'tf'	options.jax	/*'tf'*
+'tgc'	options.jax	/*'tgc'*
 'tgst'	options.jax	/*'tgst'*
 'thesaurus'	options.jax	/*'thesaurus'*
 'tildeop'	options.jax	/*'tildeop'*
@@ -1217,6 +1233,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 +job	various.jax	/*+job*
 +jumplist	various.jax	/*+jumplist*
 +keymap	various.jax	/*+keymap*
++lambda	various.jax	/*+lambda*
 +langmap	various.jax	/*+langmap*
 +libcall	various.jax	/*+libcall*
 +linebreak	various.jax	/*+linebreak*
@@ -1245,7 +1262,9 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 +mzscheme	various.jax	/*+mzscheme*
 +mzscheme/dyn	various.jax	/*+mzscheme\/dyn*
 +netbeans_intg	various.jax	/*+netbeans_intg*
++num64	various.jax	/*+num64*
 +ole	various.jax	/*+ole*
++packages	various.jax	/*+packages*
 +path_extra	various.jax	/*+path_extra*
 +perl	various.jax	/*+perl*
 +perl/dyn	various.jax	/*+perl\/dyn*
@@ -1275,6 +1294,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 +tag_old_static	various.jax	/*+tag_old_static*
 +tcl	various.jax	/*+tcl*
 +tcl/dyn	various.jax	/*+tcl\/dyn*
++termguicolors	various.jax	/*+termguicolors*
 +terminfo	various.jax	/*+terminfo*
 +termresponse	various.jax	/*+termresponse*
 +textobjects	various.jax	/*+textobjects*
@@ -1316,6 +1336,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 --literal	starting.jax	/*--literal*
 --nofork	starting.jax	/*--nofork*
 --noplugin	starting.jax	/*--noplugin*
+--not-a-term	starting.jax	/*--not-a-term*
 --remote	remote.jax	/*--remote*
 --remote-expr	remote.jax	/*--remote-expr*
 --remote-send	remote.jax	/*--remote-send*
@@ -1626,6 +1647,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 05.5	usr_05.jax	/*05.5*
 05.6	usr_05.jax	/*05.6*
 05.7	usr_05.jax	/*05.7*
+05.8	usr_05.jax	/*05.8*
 06.1	usr_06.jax	/*06.1*
 06.2	usr_06.jax	/*06.2*
 06.3	usr_06.jax	/*06.3*
@@ -1973,6 +1995,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 :bmodified	windows.jax	/*:bmodified*
 :bn	windows.jax	/*:bn*
 :bnext	windows.jax	/*:bnext*
+:bo	windows.jax	/*:bo*
 :botright	windows.jax	/*:botright*
 :bp	windows.jax	/*:bp*
 :bprevious	windows.jax	/*:bprevious*
@@ -2054,6 +2077,8 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 :cl	quickfix.jax	/*:cl*
 :cla	quickfix.jax	/*:cla*
 :clast	quickfix.jax	/*:clast*
+:cle	motion.jax	/*:cle*
+:clearjumps	motion.jax	/*:clearjumps*
 :clist	quickfix.jax	/*:clist*
 :clo	windows.jax	/*:clo*
 :close	windows.jax	/*:close*
@@ -2235,6 +2260,8 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 :filetype-overview	filetype.jax	/*:filetype-overview*
 :filetype-plugin-off	filetype.jax	/*:filetype-plugin-off*
 :filetype-plugin-on	filetype.jax	/*:filetype-plugin-on*
+:filt	various.jax	/*:filt*
+:filter	various.jax	/*:filter*
 :fin	editing.jax	/*:fin*
 :fina	eval.jax	/*:fina*
 :finally	eval.jax	/*:finally*
@@ -2258,6 +2285,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 :for	eval.jax	/*:for*
 :fu	eval.jax	/*:fu*
 :func-abort	eval.jax	/*:func-abort*
+:func-closure	eval.jax	/*:func-closure*
 :func-dict	eval.jax	/*:func-dict*
 :func-range	eval.jax	/*:func-range*
 :function	eval.jax	/*:function*
@@ -3340,6 +3368,7 @@ $VIM_POSIX	vi_diff.jax	/*$VIM_POSIX*
 <line1>	map.jax	/*<line1>*
 <line2>	map.jax	/*<line2>*
 <lt>	intro.jax	/*<lt>*
+<mods>	map.jax	/*<mods>*
 <nomodeline>	autocmd.jax	/*<nomodeline>*
 <q-args>	map.jax	/*<q-args>*
 <reg>	map.jax	/*<reg>*
@@ -3535,6 +3564,8 @@ CTRL-\_CTRL-N	intro.jax	/*CTRL-\\_CTRL-N*
 CTRL-]	tagsrch.jax	/*CTRL-]*
 CTRL-^	editing.jax	/*CTRL-^*
 CTRL-{char}	intro.jax	/*CTRL-{char}*
+Channel	eval.jax	/*Channel*
+Channels	eval.jax	/*Channels*
 Chinese	mbyte.jax	/*Chinese*
 Cmd-event	autocmd.jax	/*Cmd-event*
 CmdUndefined	autocmd.jax	/*CmdUndefined*
@@ -3558,7 +3589,6 @@ D	change.jax	/*D*
 DOS	os_dos.jax	/*DOS*
 DOS-format	editing.jax	/*DOS-format*
 DOS-format-write	editing.jax	/*DOS-format-write*
-DPMI	os_msdos.jax	/*DPMI*
 Dictionaries	eval.jax	/*Dictionaries*
 Dictionary	eval.jax	/*Dictionary*
 Dictionary-function	eval.jax	/*Dictionary-function*
@@ -3753,7 +3783,6 @@ E273	if_ruby.jax	/*E273*
 E277	remote.jax	/*E277*
 E28	syntax.jax	/*E28*
 E280	if_tcl.jax	/*E280*
-E281	if_tcl.jax	/*E281*
 E282	starting.jax	/*E282*
 E283	motion.jax	/*E283*
 E284	mbyte.jax	/*E284*
@@ -3838,7 +3867,6 @@ E358	options.jax	/*E358*
 E359	term.jax	/*E359*
 E36	windows.jax	/*E36*
 E360	various.jax	/*E360*
-E362	term.jax	/*E362*
 E363	options.jax	/*E363*
 E364	eval.jax	/*E364*
 E365	print.jax	/*E365*
@@ -3933,11 +3961,6 @@ E447	editing.jax	/*E447*
 E448	various.jax	/*E448*
 E449	eval.jax	/*E449*
 E45	message.jax	/*E45*
-E450	os_msdos.jax	/*E450*
-E451	os_msdos.jax	/*E451*
-E452	os_msdos.jax	/*E452*
-E453	os_msdos.jax	/*E453*
-E454	os_msdos.jax	/*E454*
 E455	print.jax	/*E455*
 E456	print.jax	/*E456*
 E457	print.jax	/*E457*
@@ -4148,8 +4171,6 @@ E65	pattern.jax	/*E65*
 E650	netbeans.jax	/*E650*
 E651	netbeans.jax	/*E651*
 E652	netbeans.jax	/*E652*
-E653	netbeans.jax	/*E653*
-E654	netbeans.jax	/*E654*
 E655	eval.jax	/*E655*
 E656	netbeans.jax	/*E656*
 E657	netbeans.jax	/*E657*
@@ -4192,7 +4213,6 @@ E69	pattern.jax	/*E69*
 E690	eval.jax	/*E690*
 E691	eval.jax	/*E691*
 E692	eval.jax	/*E692*
-E693	eval.jax	/*E693*
 E694	eval.jax	/*E694*
 E695	eval.jax	/*E695*
 E696	eval.jax	/*E696*
@@ -4206,7 +4226,6 @@ E702	eval.jax	/*E702*
 E703	eval.jax	/*E703*
 E704	eval.jax	/*E704*
 E705	eval.jax	/*E705*
-E706	eval.jax	/*E706*
 E707	eval.jax	/*E707*
 E708	eval.jax	/*E708*
 E709	eval.jax	/*E709*
@@ -4375,7 +4394,6 @@ E859	eval.jax	/*E859*
 E86	windows.jax	/*E86*
 E860	eval.jax	/*E860*
 E862	eval.jax	/*E862*
-E863	if_pyth.jax	/*E863*
 E864	pattern.jax	/*E864*
 E865	pattern.jax	/*E865*
 E866	pattern.jax	/*E866*
@@ -4411,11 +4429,28 @@ E893	eval.jax	/*E893*
 E894	eval.jax	/*E894*
 E895	if_mzsch.jax	/*E895*
 E90	message.jax	/*E90*
+E907	eval.jax	/*E907*
+E908	eval.jax	/*E908*
 E909	eval.jax	/*E909*
 E91	options.jax	/*E91*
+E910	eval.jax	/*E910*
+E911	eval.jax	/*E911*
+E913	eval.jax	/*E913*
+E914	eval.jax	/*E914*
+E916	eval.jax	/*E916*
+E917	eval.jax	/*E917*
 E919	repeat.jax	/*E919*
 E92	message.jax	/*E92*
+E922	eval.jax	/*E922*
+E923	eval.jax	/*E923*
+E927	eval.jax	/*E927*
+E929	starting.jax	/*E929*
 E93	windows.jax	/*E93*
+E930	eval.jax	/*E930*
+E931	message.jax	/*E931*
+E932	eval.jax	/*E932*
+E933	eval.jax	/*E933*
+E935	eval.jax	/*E935*
 E94	windows.jax	/*E94*
 E95	message.jax	/*E95*
 E96	diff.jax	/*E96*
@@ -4431,6 +4466,7 @@ Ex	intro.jax	/*Ex*
 Ex-mode	intro.jax	/*Ex-mode*
 Exuberant_ctags	tagsrch.jax	/*Exuberant_ctags*
 F	motion.jax	/*F*
+FALSE	eval.jax	/*FALSE*
 FAQ	intro.jax	/*FAQ*
 Farsi	farsi.jax	/*Farsi*
 FileAppendCmd	autocmd.jax	/*FileAppendCmd*
@@ -4482,6 +4518,8 @@ InsertEnter	autocmd.jax	/*InsertEnter*
 InsertLeave	autocmd.jax	/*InsertLeave*
 J	change.jax	/*J*
 Japanese	mbyte.jax	/*Japanese*
+Job	eval.jax	/*Job*
+Jobs	eval.jax	/*Jobs*
 K	various.jax	/*K*
 KDE	gui_x11.jax	/*KDE*
 KVim	gui_x11.jax	/*KVim*
@@ -4550,6 +4588,7 @@ PHP_outdentSLComments	indent.jax	/*PHP_outdentSLComments*
 PHP_outdentphpescape	indent.jax	/*PHP_outdentphpescape*
 PHP_removeCRwhenUnix	indent.jax	/*PHP_removeCRwhenUnix*
 PHP_vintage_case_default_indent	indent.jax	/*PHP_vintage_case_default_indent*
+Partial	eval.jax	/*Partial*
 Pattern	pattern.jax	/*Pattern*
 Perl	if_perl.jax	/*Perl*
 Posix	intro.jax	/*Posix*
@@ -4625,6 +4664,7 @@ ShellCmdPost	autocmd.jax	/*ShellCmdPost*
 ShellFilterPost	autocmd.jax	/*ShellFilterPost*
 SourceCmd	autocmd.jax	/*SourceCmd*
 SourcePre	autocmd.jax	/*SourcePre*
+Special	eval.jax	/*Special*
 SpellFileMissing	autocmd.jax	/*SpellFileMissing*
 StdinReadPost	autocmd.jax	/*StdinReadPost*
 StdinReadPre	autocmd.jax	/*StdinReadPre*
@@ -4639,6 +4679,7 @@ TOhtml-encoding-detect	syntax.jax	/*TOhtml-encoding-detect*
 TOhtml-performance	syntax.jax	/*TOhtml-performance*
 TOhtml-uncopyable-text	syntax.jax	/*TOhtml-uncopyable-text*
 TOhtml-wrap-text	syntax.jax	/*TOhtml-wrap-text*
+TRUE	eval.jax	/*TRUE*
 TSQL	ft_sql.jax	/*TSQL*
 TTpro-telnet	syntax.jax	/*TTpro-telnet*
 Tab	intro.jax	/*Tab*
@@ -4845,6 +4886,7 @@ add-filetype-plugin	usr_05.jax	/*add-filetype-plugin*
 add-global-plugin	usr_05.jax	/*add-global-plugin*
 add-local-help	usr_05.jax	/*add-local-help*
 add-option-flags	options.jax	/*add-option-flags*
+add-package	usr_05.jax	/*add-package*
 add-plugin	usr_05.jax	/*add-plugin*
 aff-dic-format	spell.jax	/*aff-dic-format*
 after-directory	options.jax	/*after-directory*
@@ -4881,6 +4923,10 @@ assert_equal()	eval.jax	/*assert_equal()*
 assert_exception()	eval.jax	/*assert_exception()*
 assert_fails()	eval.jax	/*assert_fails()*
 assert_false()	eval.jax	/*assert_false()*
+assert_inrange()	eval.jax	/*assert_inrange()*
+assert_match()	eval.jax	/*assert_match()*
+assert_notequal()	eval.jax	/*assert_notequal()*
+assert_notmatch()	eval.jax	/*assert_notmatch()*
 assert_true()	eval.jax	/*assert_true()*
 at	motion.jax	/*at*
 atan()	eval.jax	/*atan()*
@@ -4963,7 +5009,9 @@ beval_bufnr-variable	eval.jax	/*beval_bufnr-variable*
 beval_col-variable	eval.jax	/*beval_col-variable*
 beval_lnum-variable	eval.jax	/*beval_lnum-variable*
 beval_text-variable	eval.jax	/*beval_text-variable*
+beval_winid-variable	eval.jax	/*beval_winid-variable*
 beval_winnr-variable	eval.jax	/*beval_winnr-variable*
+binary-number	eval.jax	/*binary-number*
 bitwise-function	usr_41.jax	/*bitwise-function*
 blockwise-examples	visual.jax	/*blockwise-examples*
 blockwise-operators	visual.jax	/*blockwise-operators*
@@ -4995,6 +5043,7 @@ buflisted()	eval.jax	/*buflisted()*
 bufloaded()	eval.jax	/*bufloaded()*
 bufname()	eval.jax	/*bufname()*
 bufnr()	eval.jax	/*bufnr()*
+bufwinid()	eval.jax	/*bufwinid()*
 bufwinnr()	eval.jax	/*bufwinnr()*
 bug-reports	intro.jax	/*bug-reports*
 bugreport.vim	intro.jax	/*bugreport.vim*
@@ -5102,6 +5151,22 @@ catch-text	eval.jax	/*catch-text*
 cc	change.jax	/*cc*
 ceil()	eval.jax	/*ceil()*
 ch.vim	syntax.jax	/*ch.vim*
+ch_close()	eval.jax	/*ch_close()*
+ch_close_in()	eval.jax	/*ch_close_in()*
+ch_evalexpr()	eval.jax	/*ch_evalexpr()*
+ch_evalraw()	eval.jax	/*ch_evalraw()*
+ch_getbufnr()	eval.jax	/*ch_getbufnr()*
+ch_getjob()	eval.jax	/*ch_getjob()*
+ch_info()	eval.jax	/*ch_info()*
+ch_log()	eval.jax	/*ch_log()*
+ch_logfile()	eval.jax	/*ch_logfile()*
+ch_open()	eval.jax	/*ch_open()*
+ch_read()	eval.jax	/*ch_read()*
+ch_readraw()	eval.jax	/*ch_readraw()*
+ch_sendexpr()	eval.jax	/*ch_sendexpr()*
+ch_sendraw()	eval.jax	/*ch_sendraw()*
+ch_setoptions()	eval.jax	/*ch_setoptions()*
+ch_status()	eval.jax	/*ch_status()*
 change-list-jumps	motion.jax	/*change-list-jumps*
 change-name	tips.jax	/*change-name*
 change-tabs	change.jax	/*change-tabs*
@@ -5115,6 +5180,7 @@ channel	channel.jax	/*channel*
 channel-callback	channel.jax	/*channel-callback*
 channel-commands	channel.jax	/*channel-commands*
 channel-demo	channel.jax	/*channel-demo*
+channel-functions	usr_41.jax	/*channel-functions*
 channel-mode	channel.jax	/*channel-mode*
 channel-open	channel.jax	/*channel-open*
 channel-raw	channel.jax	/*channel-raw*
@@ -5131,6 +5197,7 @@ charity	uganda.jax	/*charity*
 charset	mbyte.jax	/*charset*
 charset-conversion	mbyte.jax	/*charset-conversion*
 chill.vim	syntax.jax	/*chill.vim*
+chmod	eval.jax	/*chmod*
 cindent()	eval.jax	/*cindent()*
 cinkeys-format	indent.jax	/*cinkeys-format*
 cino-#	indent.jax	/*cino-#*
@@ -5182,6 +5249,7 @@ clipboard-html	options.jax	/*clipboard-html*
 clipboard-unnamed	options.jax	/*clipboard-unnamed*
 clipboard-unnamedplus	options.jax	/*clipboard-unnamedplus*
 clojure-indent	indent.jax	/*clojure-indent*
+closure	eval.jax	/*closure*
 cmdarg-variable	eval.jax	/*cmdarg-variable*
 cmdbang-variable	eval.jax	/*cmdbang-variable*
 cmdline-arguments	vi_diff.jax	/*cmdline-arguments*
@@ -5247,7 +5315,6 @@ complex-repeat	repeat.jax	/*complex-repeat*
 compress	pi_gzip.jax	/*compress*
 conceal	syntax.jax	/*conceal*
 confirm()	eval.jax	/*confirm()*
-connect()	eval.jax	/*connect()*
 connection-refused	message.jax	/*connection-refused*
 console-menus	gui.jax	/*console-menus*
 control	intro.jax	/*control*
@@ -5268,6 +5335,7 @@ count-bytes	tips.jax	/*count-bytes*
 count-items	tips.jax	/*count-items*
 count-variable	eval.jax	/*count-variable*
 count1-variable	eval.jax	/*count1-variable*
+cpo	options.jax	/*cpo*
 cpo-!	options.jax	/*cpo-!*
 cpo-#	options.jax	/*cpo-#*
 cpo-$	options.jax	/*cpo-$*
@@ -5416,6 +5484,7 @@ debugger.txt	debugger.jax	/*debugger.txt*
 dec-mouse	options.jax	/*dec-mouse*
 decada_members	ft_ada.jax	/*decada_members*
 deepcopy()	eval.jax	/*deepcopy()*
+defaults.vim	starting.jax	/*defaults.vim*
 definition-search	tagsrch.jax	/*definition-search*
 definitions	intro.jax	/*definitions*
 delete()	eval.jax	/*delete()*
@@ -5497,8 +5566,6 @@ dos-locations	os_dos.jax	/*dos-locations*
 dos-shell	os_dos.jax	/*dos-shell*
 dos-standard-mappings	os_dos.jax	/*dos-standard-mappings*
 dos-temp-files	os_dos.jax	/*dos-temp-files*
-dos16	os_msdos.jax	/*dos16*
-dos32	os_msdos.jax	/*dos32*
 dosbatch.vim	syntax.jax	/*dosbatch.vim*
 double-click	term.jax	/*double-click*
 download	intro.jax	/*download*
@@ -5591,10 +5658,12 @@ exception-variable	eval.jax	/*exception-variable*
 exclusive	motion.jax	/*exclusive*
 exclusive-linewise	motion.jax	/*exclusive-linewise*
 executable()	eval.jax	/*executable()*
+execute()	eval.jax	/*execute()*
 execute-menus	gui.jax	/*execute-menus*
 exepath()	eval.jax	/*exepath()*
 exim	starting.jax	/*exim*
 exists()	eval.jax	/*exists()*
+exiting	starting.jax	/*exiting*
 exp()	eval.jax	/*exp()*
 expand()	eval.jax	/*expand()*
 expand-env	options.jax	/*expand-env*
@@ -5645,6 +5714,7 @@ expr-is?	eval.jax	/*expr-is?*
 expr-isnot	eval.jax	/*expr-isnot*
 expr-isnot#	eval.jax	/*expr-isnot#*
 expr-isnot?	eval.jax	/*expr-isnot?*
+expr-lambda	eval.jax	/*expr-lambda*
 expr-nesting	eval.jax	/*expr-nesting*
 expr-number	eval.jax	/*expr-number*
 expr-option	eval.jax	/*expr-option*
@@ -5913,6 +5983,7 @@ ftplugin-name	usr_05.jax	/*ftplugin-name*
 ftplugin-overrule	filetype.jax	/*ftplugin-overrule*
 ftplugin-special	usr_41.jax	/*ftplugin-special*
 ftplugins	usr_05.jax	/*ftplugins*
+funcref()	eval.jax	/*funcref()*
 function()	eval.jax	/*function()*
 function-argument	eval.jax	/*function-argument*
 function-key	intro.jax	/*function-key*
@@ -6182,6 +6253,7 @@ gdb	debug.jax	/*gdb*
 ge	motion.jax	/*ge*
 get()	eval.jax	/*get()*
 get-ms-debuggers	debug.jax	/*get-ms-debuggers*
+getbufinfo()	eval.jax	/*getbufinfo()*
 getbufline()	eval.jax	/*getbufline()*
 getbufvar()	eval.jax	/*getbufvar()*
 getchar()	eval.jax	/*getchar()*
@@ -6191,6 +6263,7 @@ getcmdline()	eval.jax	/*getcmdline()*
 getcmdpos()	eval.jax	/*getcmdpos()*
 getcmdtype()	eval.jax	/*getcmdtype()*
 getcmdwintype()	eval.jax	/*getcmdwintype()*
+getcompletion()	eval.jax	/*getcompletion()*
 getcurpos()	eval.jax	/*getcurpos()*
 getcwd()	eval.jax	/*getcwd()*
 getfontname()	eval.jax	/*getfontname()*
@@ -6213,8 +6286,10 @@ getscript-data	pi_getscript.jax	/*getscript-data*
 getscript-history	pi_getscript.jax	/*getscript-history*
 getscript-plugins	pi_getscript.jax	/*getscript-plugins*
 getscript-start	pi_getscript.jax	/*getscript-start*
+gettabinfo()	eval.jax	/*gettabinfo()*
 gettabvar()	eval.jax	/*gettabvar()*
 gettabwinvar()	eval.jax	/*gettabwinvar()*
+getwininfo()	eval.jax	/*getwininfo()*
 getwinposx()	eval.jax	/*getwinposx()*
 getwinposy()	eval.jax	/*getwinposy()*
 getwinvar()	eval.jax	/*getwinvar()*
@@ -6673,6 +6748,7 @@ iquote	motion.jax	/*iquote*
 is	motion.jax	/*is*
 isdirectory()	eval.jax	/*isdirectory()*
 islocked()	eval.jax	/*islocked()*
+isnan()	eval.jax	/*isnan()*
 it	motion.jax	/*it*
 italic	syntax.jax	/*italic*
 items()	eval.jax	/*items()*
@@ -6686,9 +6762,18 @@ java.vim	syntax.jax	/*java.vim*
 javascript-cinoptions	indent.jax	/*javascript-cinoptions*
 javascript-indenting	indent.jax	/*javascript-indenting*
 job-control	channel.jax	/*job-control*
+job-functions	usr_41.jax	/*job-functions*
+job_getchannel()	eval.jax	/*job_getchannel()*
+job_info()	eval.jax	/*job_info()*
+job_setoptions()	eval.jax	/*job_setoptions()*
+job_start()	eval.jax	/*job_start()*
+job_status()	eval.jax	/*job_status()*
+job_stop()	eval.jax	/*job_stop()*
 join()	eval.jax	/*join()*
+js_decode()	eval.jax	/*js_decode()*
+js_encode()	eval.jax	/*js_encode()*
 jsbterm-mouse	options.jax	/*jsbterm-mouse*
-jsondecode()	eval.jax	/*jsondecode()*
+json_decode()	eval.jax	/*json_decode()*
 jsonencode()	eval.jax	/*jsonencode()*
 jtags	tagsrch.jax	/*jtags*
 jump-motions	motion.jax	/*jump-motions*
@@ -6725,6 +6810,7 @@ l:	eval.jax	/*l:*
 l:var	eval.jax	/*l:var*
 lCursor	mbyte.jax	/*lCursor*
 lace.vim	syntax.jax	/*lace.vim*
+lambda	eval.jax	/*lambda*
 lang-variable	eval.jax	/*lang-variable*
 language-mapping	map.jax	/*language-mapping*
 last-pattern	pattern.jax	/*last-pattern*
@@ -6901,6 +6987,7 @@ matchit-install	usr_05.jax	/*matchit-install*
 matchlist()	eval.jax	/*matchlist()*
 matchparen	pi_paren.jax	/*matchparen*
 matchstr()	eval.jax	/*matchstr()*
+matchstrpos()	eval.jax	/*matchstrpos()*
 max()	eval.jax	/*max()*
 mbyte-IME	mbyte.jax	/*mbyte-IME*
 mbyte-XIM	mbyte.jax	/*mbyte-XIM*
@@ -6928,7 +7015,6 @@ message.txt	message.jax	/*message.txt*
 messages	message.jax	/*messages*
 meta	intro.jax	/*meta*
 min()	eval.jax	/*min()*
-minimal-features	os_msdos.jax	/*minimal-features*
 missing-options	vi_diff.jax	/*missing-options*
 mkdir()	eval.jax	/*mkdir()*
 mlang.txt	mlang.jax	/*mlang.txt*
@@ -6954,21 +7040,11 @@ mouse-using	term.jax	/*mouse-using*
 mouse_col-variable	eval.jax	/*mouse_col-variable*
 mouse_lnum-variable	eval.jax	/*mouse_lnum-variable*
 mouse_win-variable	eval.jax	/*mouse_win-variable*
+mouse_winid-variable	eval.jax	/*mouse_winid-variable*
 movement	intro.jax	/*movement*
 ms-dos	os_msdos.jax	/*ms-dos*
 msdos	os_msdos.jax	/*msdos*
-msdos-arrows	os_msdos.jax	/*msdos-arrows*
-msdos-clipboard-limits	os_msdos.jax	/*msdos-clipboard-limits*
-msdos-compiling	os_msdos.jax	/*msdos-compiling*
-msdos-copy-paste	os_msdos.jax	/*msdos-copy-paste*
-msdos-fname-extensions	os_msdos.jax	/*msdos-fname-extensions*
-msdos-limitations	os_msdos.jax	/*msdos-limitations*
-msdos-linked-files	os_msdos.jax	/*msdos-linked-files*
-msdos-longfname	os_msdos.jax	/*msdos-longfname*
 msdos-mode	gui_w32.jax	/*msdos-mode*
-msdos-problems	os_msdos.jax	/*msdos-problems*
-msdos-termcap	os_msdos.jax	/*msdos-termcap*
-msdos-versions	os_msdos.jax	/*msdos-versions*
 msql.vim	syntax.jax	/*msql.vim*
 mswin.vim	gui_w32.jax	/*mswin.vim*
 multi-byte	mbyte.jax	/*multi-byte*
@@ -7248,9 +7324,11 @@ netterm-mouse	options.jax	/*netterm-mouse*
 network	pi_netrw.jax	/*network*
 new-filetype	filetype.jax	/*new-filetype*
 new-filetype-scripts	filetype.jax	/*new-filetype-scripts*
+new-style-testing	eval.jax	/*new-style-testing*
 news	intro.jax	/*news*
 nextnonblank()	eval.jax	/*nextnonblank()*
 no-eval-feature	eval.jax	/*no-eval-feature*
+no-type-checking	eval.jax	/*no-type-checking*
 no_buffers_menu	gui.jax	/*no_buffers_menu*
 non-greedy	pattern.jax	/*non-greedy*
 non-zero-arg	eval.jax	/*non-zero-arg*
@@ -7277,6 +7355,7 @@ ocaml.vim	syntax.jax	/*ocaml.vim*
 octal	eval.jax	/*octal*
 octal-nrformats	options.jax	/*octal-nrformats*
 octal-number	eval.jax	/*octal-number*
+old-style-testing	eval.jax	/*old-style-testing*
 oldfiles-variable	eval.jax	/*oldfiles-variable*
 ole-activation	if_ole.jax	/*ole-activation*
 ole-eval	if_ole.jax	/*ole-eval*
@@ -7320,7 +7399,9 @@ os_win32.txt	os_win32.jax	/*os_win32.txt*
 other-features	vi_diff.jax	/*other-features*
 p	change.jax	/*p*
 pack-add	repeat.jax	/*pack-add*
+package-create	repeat.jax	/*package-create*
 packages	repeat.jax	/*packages*
+packload-two-steps	repeat.jax	/*packload-two-steps*
 page-down	intro.jax	/*page-down*
 page-up	intro.jax	/*page-up*
 page_down	intro.jax	/*page_down*
@@ -7422,10 +7503,12 @@ print-options	print.jax	/*print-options*
 print.txt	print.jax	/*print.txt*
 printf()	eval.jax	/*printf()*
 printf-%	eval.jax	/*printf-%*
+printf-B	eval.jax	/*printf-B*
 printf-E	eval.jax	/*printf-E*
 printf-G	eval.jax	/*printf-G*
 printf-S	eval.jax	/*printf-S*
 printf-X	eval.jax	/*printf-X*
+printf-b	eval.jax	/*printf-b*
 printf-c	eval.jax	/*printf-c*
 printf-d	eval.jax	/*printf-d*
 printf-e	eval.jax	/*printf-e*
@@ -7575,6 +7658,7 @@ registers	change.jax	/*registers*
 regular-expression	pattern.jax	/*regular-expression*
 reload	editing.jax	/*reload*
 reltime()	eval.jax	/*reltime()*
+reltimefloat()	eval.jax	/*reltimefloat()*
 reltimestr()	eval.jax	/*reltimestr()*
 remote.txt	remote.jax	/*remote.txt*
 remote_expr()	eval.jax	/*remote_expr()*
@@ -7705,8 +7789,6 @@ sed.vim	syntax.jax	/*sed.vim*
 self	eval.jax	/*self*
 send-money	sponsor.jax	/*send-money*
 send-to-menu	gui_w32.jax	/*send-to-menu*
-sendexpr()	eval.jax	/*sendexpr()*
-sendraw()	eval.jax	/*sendraw()*
 sendto	gui_w32.jax	/*sendto*
 sentence	motion.jax	/*sentence*
 server-functions	usr_41.jax	/*server-functions*
@@ -7719,6 +7801,7 @@ set-spc-auto	spell.jax	/*set-spc-auto*
 setbufvar()	eval.jax	/*setbufvar()*
 setcharsearch()	eval.jax	/*setcharsearch()*
 setcmdpos()	eval.jax	/*setcmdpos()*
+setfperm()	eval.jax	/*setfperm()*
 setline()	eval.jax	/*setline()*
 setloclist()	eval.jax	/*setloclist()*
 setmatches()	eval.jax	/*setmatches()*
@@ -7759,6 +7842,7 @@ sin()	eval.jax	/*sin()*
 single-repeat	repeat.jax	/*single-repeat*
 sinh()	eval.jax	/*sinh()*
 skeleton	autocmd.jax	/*skeleton*
+skip_defaults_vim	starting.jax	/*skip_defaults_vim*
 slice	eval.jax	/*slice*
 slow-fast-terminal	term.jax	/*slow-fast-terminal*
 slow-start	starting.jax	/*slow-start*
@@ -7929,15 +8013,16 @@ startup-terminal	term.jax	/*startup-terminal*
 static-tag	tagsrch.jax	/*static-tag*
 status-line	windows.jax	/*status-line*
 statusmsg-variable	eval.jax	/*statusmsg-variable*
-sticky-type-checking	eval.jax	/*sticky-type-checking*
 str2float()	eval.jax	/*str2float()*
 str2nr()	eval.jax	/*str2nr()*
 strcasestr()	eval.jax	/*strcasestr()*
+strcharpart()	eval.jax	/*strcharpart()*
 strchars()	eval.jax	/*strchars()*
 strchr()	eval.jax	/*strchr()*
 strcspn()	eval.jax	/*strcspn()*
 strdisplaywidth()	eval.jax	/*strdisplaywidth()*
 strftime()	eval.jax	/*strftime()*
+strgetchar()	eval.jax	/*strgetchar()*
 stridx()	eval.jax	/*stridx()*
 string	eval.jax	/*string*
 string()	eval.jax	/*string()*
@@ -7966,6 +8051,7 @@ sub-replace-special	change.jax	/*sub-replace-special*
 sublist	eval.jax	/*sublist*
 submatch()	eval.jax	/*submatch()*
 subscribe-maillist	intro.jax	/*subscribe-maillist*
+subscript	eval.jax	/*subscript*
 substitute()	eval.jax	/*substitute()*
 suffixes	cmdline.jax	/*suffixes*
 suspend	starting.jax	/*suspend*
@@ -8014,6 +8100,8 @@ t_#4	term.jax	/*t_#4*
 t_%1	term.jax	/*t_%1*
 t_%i	term.jax	/*t_%i*
 t_&8	term.jax	/*t_&8*
+t_8b	term.jax	/*t_8b*
+t_8f	term.jax	/*t_8f*
 t_@7	term.jax	/*t_@7*
 t_AB	term.jax	/*t_AB*
 t_AF	term.jax	/*t_AF*
@@ -8069,9 +8157,11 @@ t_ZH	term.jax	/*t_ZH*
 t_ZR	term.jax	/*t_ZR*
 t_al	term.jax	/*t_al*
 t_bc	term.jax	/*t_bc*
+t_bool-variable	eval.jax	/*t_bool-variable*
 t_cd	term.jax	/*t_cd*
 t_cdl	version4.jax	/*t_cdl*
 t_ce	term.jax	/*t_ce*
+t_channel-variable	eval.jax	/*t_channel-variable*
 t_ci	version4.jax	/*t_ci*
 t_cil	version4.jax	/*t_cil*
 t_cl	term.jax	/*t_cl*
@@ -8083,6 +8173,7 @@ t_cv	version4.jax	/*t_cv*
 t_cvv	version4.jax	/*t_cvv*
 t_da	term.jax	/*t_da*
 t_db	term.jax	/*t_db*
+t_dict-variable	eval.jax	/*t_dict-variable*
 t_dl	term.jax	/*t_dl*
 t_ed	version4.jax	/*t_ed*
 t_el	version4.jax	/*t_el*
@@ -8096,9 +8187,12 @@ t_f6	version4.jax	/*t_f6*
 t_f7	version4.jax	/*t_f7*
 t_f8	version4.jax	/*t_f8*
 t_f9	version4.jax	/*t_f9*
+t_float-variable	eval.jax	/*t_float-variable*
 t_fs	term.jax	/*t_fs*
+t_func-variable	eval.jax	/*t_func-variable*
 t_help	version4.jax	/*t_help*
 t_il	version4.jax	/*t_il*
+t_job-variable	eval.jax	/*t_job-variable*
 t_k1	term.jax	/*t_k1*
 t_k2	term.jax	/*t_k2*
 t_k3	term.jax	/*t_k3*
@@ -8123,12 +8217,15 @@ t_kr	term.jax	/*t_kr*
 t_ks	term.jax	/*t_ks*
 t_ku	term.jax	/*t_ku*
 t_le	term.jax	/*t_le*
+t_list-variable	eval.jax	/*t_list-variable*
 t_mb	term.jax	/*t_mb*
 t_md	term.jax	/*t_md*
 t_me	term.jax	/*t_me*
 t_mr	term.jax	/*t_mr*
 t_ms	term.jax	/*t_ms*
 t_nd	term.jax	/*t_nd*
+t_none-variable	eval.jax	/*t_none-variable*
+t_number-variable	eval.jax	/*t_number-variable*
 t_op	term.jax	/*t_op*
 t_se	term.jax	/*t_se*
 t_sf1	version4.jax	/*t_sf1*
@@ -8148,6 +8245,7 @@ t_sku	version4.jax	/*t_sku*
 t_so	term.jax	/*t_so*
 t_sr	term.jax	/*t_sr*
 t_star7	term.jax	/*t_star7*
+t_string-variable	eval.jax	/*t_string-variable*
 t_tb	version4.jax	/*t_tb*
 t_te	term.jax	/*t_te*
 t_ti	term.jax	/*t_ti*
@@ -8278,6 +8376,19 @@ terminal-options	term.jax	/*terminal-options*
 terminfo	term.jax	/*terminfo*
 termresponse-variable	eval.jax	/*termresponse-variable*
 test-functions	usr_41.jax	/*test-functions*
+test_alloc_fail()	eval.jax	/*test_alloc_fail()*
+test_autochdir()	eval.jax	/*test_autochdir()*
+test_disable_char_avail()	eval.jax	/*test_disable_char_avail()*
+test_garbagecollect_now()	eval.jax	/*test_garbagecollect_now()*
+test_null_channel()	eval.jax	/*test_null_channel()*
+test_null_dict()	eval.jax	/*test_null_dict()*
+test_null_job()	eval.jax	/*test_null_job()*
+test_null_list()	eval.jax	/*test_null_list()*
+test_null_partial()	eval.jax	/*test_null_partial()*
+test_null_string()	eval.jax	/*test_null_string()*
+test_settime()	eval.jax	/*test_settime()*
+testing	eval.jax	/*testing*
+testing-variable	eval.jax	/*testing-variable*
 tex-cchar	syntax.jax	/*tex-cchar*
 tex-cole	syntax.jax	/*tex-cole*
 tex-conceal	syntax.jax	/*tex-conceal*
@@ -8306,6 +8417,14 @@ throw-from-catch	eval.jax	/*throw-from-catch*
 throw-variables	eval.jax	/*throw-variables*
 throwpoint-variable	eval.jax	/*throwpoint-variable*
 time-functions	usr_41.jax	/*time-functions*
+timer	eval.jax	/*timer*
+timer-functions	usr_41.jax	/*timer-functions*
+timer_info()	eval.jax	/*timer_info()*
+timer_pause()	eval.jax	/*timer_pause()*
+timer_start()	eval.jax	/*timer_start()*
+timer_stop()	eval.jax	/*timer_stop()*
+timer_stopall()	eval.jax	/*timer_stopall()*
+timers	eval.jax	/*timers*
 timestamp	editing.jax	/*timestamp*
 timestamps	editing.jax	/*timestamps*
 tips	tips.jax	/*tips*
@@ -8346,6 +8465,7 @@ undo-tree	undo.jax	/*undo-tree*
 undo-two-ways	undo.jax	/*undo-two-ways*
 undo.txt	undo.jax	/*undo.txt*
 undo_ftplugin	usr_41.jax	/*undo_ftplugin*
+undo_indent	usr_41.jax	/*undo_indent*
 undofile()	eval.jax	/*undofile()*
 undotree()	eval.jax	/*undotree()*
 unicode	mbyte.jax	/*unicode*
@@ -8412,6 +8532,7 @@ v:beval_bufnr	eval.jax	/*v:beval_bufnr*
 v:beval_col	eval.jax	/*v:beval_col*
 v:beval_lnum	eval.jax	/*v:beval_lnum*
 v:beval_text	eval.jax	/*v:beval_text*
+v:beval_winid	eval.jax	/*v:beval_winid*
 v:beval_winnr	eval.jax	/*v:beval_winnr*
 v:char	eval.jax	/*v:char*
 v:charconvert_from	eval.jax	/*v:charconvert_from*
@@ -8446,6 +8567,7 @@ v:lnum	eval.jax	/*v:lnum*
 v:mouse_col	eval.jax	/*v:mouse_col*
 v:mouse_lnum	eval.jax	/*v:mouse_lnum*
 v:mouse_win	eval.jax	/*v:mouse_win*
+v:mouse_winid	eval.jax	/*v:mouse_winid*
 v:none	eval.jax	/*v:none*
 v:null	eval.jax	/*v:null*
 v:oldfiles	eval.jax	/*v:oldfiles*
@@ -8466,13 +8588,26 @@ v:statusmsg	eval.jax	/*v:statusmsg*
 v:swapchoice	eval.jax	/*v:swapchoice*
 v:swapcommand	eval.jax	/*v:swapcommand*
 v:swapname	eval.jax	/*v:swapname*
+v:t_TYPE	eval.jax	/*v:t_TYPE*
+v:t_bool	eval.jax	/*v:t_bool*
+v:t_channel	eval.jax	/*v:t_channel*
+v:t_dict	eval.jax	/*v:t_dict*
+v:t_float	eval.jax	/*v:t_float*
+v:t_func	eval.jax	/*v:t_func*
+v:t_job	eval.jax	/*v:t_job*
+v:t_list	eval.jax	/*v:t_list*
+v:t_none	eval.jax	/*v:t_none*
+v:t_number	eval.jax	/*v:t_number*
+v:t_string	eval.jax	/*v:t_string*
 v:termresponse	eval.jax	/*v:termresponse*
+v:testing	eval.jax	/*v:testing*
 v:this_session	eval.jax	/*v:this_session*
 v:throwpoint	eval.jax	/*v:throwpoint*
 v:true	eval.jax	/*v:true*
 v:val	eval.jax	/*v:val*
 v:var	eval.jax	/*v:var*
 v:version	eval.jax	/*v:version*
+v:vim_did_enter	eval.jax	/*v:vim_did_enter*
 v:warningmsg	eval.jax	/*v:warningmsg*
 v:windowid	eval.jax	/*v:windowid*
 v_!	change.jax	/*v_!*
@@ -8584,6 +8719,7 @@ v_v	visual.jax	/*v_v*
 v_x	change.jax	/*v_x*
 v_y	change.jax	/*v_y*
 v_~	change.jax	/*v_~*
+vab	motion.jax	/*vab*
 val-variable	eval.jax	/*val-variable*
 valgrind	debug.jax	/*valgrind*
 values()	eval.jax	/*values()*
@@ -8603,6 +8739,7 @@ vi	intro.jax	/*vi*
 vi-differences	vi_diff.jax	/*vi-differences*
 vi:	options.jax	/*vi:*
 vi_diff.txt	vi_diff.jax	/*vi_diff.txt*
+vib	motion.jax	/*vib*
 view	starting.jax	/*view*
 view-diffs	diff.jax	/*view-diffs*
 view-file	starting.jax	/*view-file*
@@ -8620,6 +8757,7 @@ vim-script-intro	usr_41.jax	/*vim-script-intro*
 vim-variable	eval.jax	/*vim-variable*
 vim.vim	syntax.jax	/*vim.vim*
 vim:	options.jax	/*vim:*
+vim_did_enter-variable	eval.jax	/*vim_did_enter-variable*
 vim_starting	eval.jax	/*vim_starting*
 vimball	pi_vimball.jax	/*vimball*
 vimball-contents	pi_vimball.jax	/*vimball-contents*
@@ -8653,6 +8791,7 @@ viminfo-r	options.jax	/*viminfo-r*
 viminfo-read	starting.jax	/*viminfo-read*
 viminfo-read-write	starting.jax	/*viminfo-read-write*
 viminfo-s	options.jax	/*viminfo-s*
+viminfo-timestamp	starting.jax	/*viminfo-timestamp*
 viminfo-write	starting.jax	/*viminfo-write*
 vimrc	starting.jax	/*vimrc*
 vimrc-filetype	usr_05.jax	/*vimrc-filetype*
@@ -8722,9 +8861,15 @@ win32-term	os_win32.jax	/*win32-term*
 win32-vimrun	gui_w32.jax	/*win32-vimrun*
 win32-win3.1	os_win32.jax	/*win32-win3.1*
 win32s	os_win32.jax	/*win32s*
+win_findbuf()	eval.jax	/*win_findbuf()*
+win_getid()	eval.jax	/*win_getid()*
+win_gotoid()	eval.jax	/*win_gotoid()*
+win_id2tabwin()	eval.jax	/*win_id2tabwin()*
+win_id2win()	eval.jax	/*win_id2win()*
 winbufnr()	eval.jax	/*winbufnr()*
 wincol()	eval.jax	/*wincol()*
 window	windows.jax	/*window*
+window-ID	windows.jax	/*window-ID*
 window-contents	intro.jax	/*window-contents*
 window-exit	editing.jax	/*window-exit*
 window-functions	usr_41.jax	/*window-functions*
@@ -8735,6 +8880,7 @@ window-size	term.jax	/*window-size*
 window-size-functions	usr_41.jax	/*window-size-functions*
 window-tag	windows.jax	/*window-tag*
 window-variable	eval.jax	/*window-variable*
+windowid	windows.jax	/*windowid*
 windowid-variable	eval.jax	/*windowid-variable*
 windows	windows.jax	/*windows*
 windows-3.1	os_win32.jax	/*windows-3.1*
@@ -8744,6 +8890,7 @@ windows-starting	windows.jax	/*windows-starting*
 windows.txt	windows.jax	/*windows.txt*
 windows95	os_win32.jax	/*windows95*
 winheight()	eval.jax	/*winheight()*
+winid	windows.jax	/*winid*
 winline()	eval.jax	/*winline()*
 winnr()	eval.jax	/*winnr()*
 winrestcmd()	eval.jax	/*winrestcmd()*
@@ -8814,6 +8961,7 @@ xterm-save-screen	tips.jax	/*xterm-save-screen*
 xterm-screens	tips.jax	/*xterm-screens*
 xterm-scroll-region	term.jax	/*xterm-scroll-region*
 xterm-shifted-keys	term.jax	/*xterm-shifted-keys*
+xterm-true-color	term.jax	/*xterm-true-color*
 y	change.jax	/*y*
 yaml.vim	syntax.jax	/*yaml.vim*
 yank	change.jax	/*yank*
