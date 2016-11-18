@@ -243,9 +243,9 @@ static void	ex_popup(exarg_T *eap);
 # define ex_helpfind		ex_ni
 #endif
 #ifndef FEAT_CSCOPE
-# define do_cscope		ex_ni
-# define do_scscope		ex_ni
-# define do_cstag		ex_ni
+# define ex_cscope		ex_ni
+# define ex_scscope		ex_ni
+# define ex_cstag		ex_ni
 #endif
 #ifndef FEAT_SYN_HL
 # define ex_syntax		ex_ni
@@ -1388,8 +1388,6 @@ do_cmdline(
 		    break;
 		case ET_INTERRUPT:
 		    break;
-		default:
-		    p = vim_strsave((char_u *)_(e_internal));
 	    }
 
 	    saved_sourcing_name = sourcing_name;
@@ -5634,15 +5632,16 @@ find_nextcmd(char_u *p)
 #endif
 
 /*
- * Check if *p is a separator between Ex commands.
- * Return NULL if it isn't, (p + 1) if it is.
+ * Check if *p is a separator between Ex commands, skipping over white space.
+ * Return NULL if it isn't, the following character if it is.
  */
     char_u *
 check_nextcmd(char_u *p)
 {
-    p = skipwhite(p);
-    if (*p == '|' || *p == '\n')
-	return (p + 1);
+    char_u *s = skipwhite(p);
+
+    if (*s == '|' || *s == '\n')
+	return (s + 1);
     else
 	return NULL;
 }
@@ -7239,7 +7238,7 @@ ex_quit(exarg_T *eap)
 	 * :h|wincmd w|1q     - don't quit
 	 * :h|wincmd w|q      - quit
 	 */
-	if (only_one_window() && (firstwin == lastwin || eap->addr_count == 0))
+	if (only_one_window() && (ONE_WINDOW || eap->addr_count == 0))
 #endif
 	    getout(0);
 #ifdef FEAT_WINDOWS
@@ -7488,9 +7487,9 @@ tabpage_close(int forceit)
 {
     /* First close all the windows but the current one.  If that worked then
      * close the last window in this tab, that will close it. */
-    if (lastwin != firstwin)
+    if (!ONE_WINDOW)
 	close_others(TRUE, forceit);
-    if (lastwin == firstwin)
+    if (ONE_WINDOW)
 	ex_win_close(forceit, curwin, NULL);
 # ifdef FEAT_GUI
     need_mouse_correct = TRUE;
@@ -7574,38 +7573,32 @@ ex_all(exarg_T *eap)
     static void
 ex_hide(exarg_T *eap)
 {
-    if (*eap->arg != NUL && check_nextcmd(eap->arg) == NULL)
-	eap->errmsg = e_invarg;
-    else
-    {
-	/* ":hide" or ":hide | cmd": hide current window */
-	eap->nextcmd = check_nextcmd(eap->arg);
+    /* ":hide" or ":hide | cmd": hide current window */
 #ifdef FEAT_WINDOWS
-	if (!eap->skip)
-	{
+    if (!eap->skip)
+    {
 # ifdef FEAT_GUI
-	    need_mouse_correct = TRUE;
+	need_mouse_correct = TRUE;
 # endif
-	    if (eap->addr_count == 0)
-		win_close(curwin, FALSE);	/* don't free buffer */
-	    else
-	    {
-		int	winnr = 0;
-		win_T	*win;
+	if (eap->addr_count == 0)
+	    win_close(curwin, FALSE);	/* don't free buffer */
+	else
+	{
+	    int	winnr = 0;
+	    win_T	*win;
 
-		FOR_ALL_WINDOWS(win)
-		{
-		    winnr++;
-		    if (winnr == eap->line2)
-			break;
-		}
-		if (win == NULL)
-		    win = lastwin;
-		win_close(win, FALSE);
+	    FOR_ALL_WINDOWS(win)
+	    {
+		winnr++;
+		if (winnr == eap->line2)
+		    break;
 	    }
+	    if (win == NULL)
+		win = lastwin;
+	    win_close(win, FALSE);
 	}
-#endif
     }
+#endif
 }
 
 /*
@@ -10429,7 +10422,7 @@ ex_tag_cmd(exarg_T *eap, char_u *name)
 #ifdef FEAT_CSCOPE
 		  if (p_cst && *eap->arg != NUL)
 		  {
-		      do_cstag(eap);
+		      ex_cstag(eap);
 		      return;
 		  }
 #endif

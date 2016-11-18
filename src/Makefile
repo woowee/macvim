@@ -681,13 +681,17 @@ SANITIZER_LIBS = $(SANITIZER_CFLAGS)
 #LEAK_CFLAGS = -DEXITFREE
 #LEAK_LIBS = -lccmalloc
 
+# Uncomment this line to have Vim call abort() when an internal error is
+# detected.  Useful when using a tool to find errors.
+#ABORT_CLFAGS = -DABORT_ON_INTERNAL_ERROR
+
 #####################################################
 ###  Specific systems, check if yours is listed!  ### {{{
 #####################################################
 
 ### Uncomment things here only if the values chosen by configure are wrong.
-### It's better to adjust configure.in and "make autoconf", if you can!
-### Then send the required changes to configure.in to the bugs list.
+### It's better to adjust configure.ac and "make autoconf", if you can!
+### Then send the required changes to configure.ac to the bugs list.
 
 ### (1) BSD/OS 2.0.1, 2.1 or 3.0 using shared libraries
 ###
@@ -1409,7 +1413,7 @@ SHELL = /bin/sh
 PRE_DEFS = -Iproto $(DEFS) $(GUI_DEFS) $(GUI_IPATH) $(CPPFLAGS) $(EXTRA_IPATHS)
 POST_DEFS = $(X_CFLAGS) $(MZSCHEME_CFLAGS) $(EXTRA_DEFS)
 
-ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(PROFILE_CFLAGS) $(SANITIZER_CFLAGS) $(LEAK_CFLAGS) $(POST_DEFS)
+ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(PROFILE_CFLAGS) $(SANITIZER_CFLAGS) $(LEAK_CFLAGS) $(ABORT_CLFAGS) $(POST_DEFS)
 
 # Exclude $CFLAGS for osdef.sh, for Mac 10.4 some flags don't work together
 # with "-E".
@@ -1828,7 +1832,7 @@ reconfig: scratch clean
 # - DO NOT RUN autoconf MANUALLY!  It will overwrite ./configure instead of
 #   producing auto/configure.
 # - autoconf is not run automatically, because a patch usually changes both
-#   configure.in and auto/configure but can't update the timestamps.  People
+#   configure.ac and auto/configure but can't update the timestamps.  People
 #   who do not have (the correct version of) autoconf would run into trouble.
 #
 # Two tricks are required to make autoconf put its output in the "auto" dir:
@@ -2025,7 +2029,6 @@ run_message_test: $(MESSAGE_TEST_TARGET)
 test1 \
 	test_autocmd_option \
 	test_autoformat_join \
-	test_breakindent \
 	test_changelist \
 	test_close_count \
 	test_comparators \
@@ -2060,6 +2063,7 @@ test_arglist \
 	test_autochdir \
 	test_autocmd \
 	test_backspace_opt \
+	test_breakindent \
 	test_bufwintabinfo \
 	test_cdo \
 	test_channel \
@@ -2093,6 +2097,7 @@ test_arglist \
 	test_gui \
 	test_hardcopy \
 	test_help_tagjump \
+	test_hide \
 	test_history \
 	test_hlsearch \
 	test_increment \

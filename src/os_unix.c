@@ -238,6 +238,10 @@ static volatile int deadly_signal = 0;	    /* The signal we caught */
 /* volatile because it is used in signal handler deathtrap(). */
 static volatile int in_mch_delay = FALSE;    /* sleeping in mch_delay() */
 
+#if defined(FEAT_JOB_CHANNEL) && !defined(USE_SYSTEM)
+static int dont_check_job_ended = 0;
+#endif
+
 static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
 
 #ifdef USE_XSMP
@@ -261,7 +265,7 @@ static xsmp_config_T xsmp;
  * that describe the signals. That is nearly what we want here.  But
  * autoconf does only check for sys_siglist (without the underscore), I
  * do not want to change everything today.... jw.
- * This is why AC_DECL_SYS_SIGLIST is commented out in configure.in
+ * This is why AC_DECL_SYS_SIGLIST is commented out in configure.ac.
  */
 #endif
 
@@ -501,7 +505,7 @@ mch_inchar(
 	/* no character available */
 #if !(defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H))
 	/* estimate the elapsed time */
-	elapsed += wait_time;
+	elapsed_time += wait_time;
 #endif
 
 	if (do_resize	    /* interrupted by SIGWINCH signal */
@@ -2644,7 +2648,7 @@ fname_case(
     DIR		*dirp;
     struct dirent *dp;
 
-    if (lstat((char *)name, &st) >= 0)
+    if (mch_lstat((char *)name, &st) >= 0)
     {
 	/* Open the directory where the file is located. */
 	slash = vim_strrchr(name, '/');
@@ -2677,7 +2681,7 @@ fname_case(
 		    vim_strncpy(newname, name, MAXPATHL);
 		    vim_strncpy(newname + (tail - name), (char_u *)dp->d_name,
 						    MAXPATHL - (tail - name));
-		    if (lstat((char *)newname, &st2) >= 0
+		    if (mch_lstat((char *)newname, &st2) >= 0
 			    && st.st_ino == st2.st_ino
 			    && st.st_dev == st2.st_dev)
 		    {
@@ -3040,7 +3044,7 @@ mch_isrealdir(char_u *name)
 
     if (*name == NUL)	    /* Some stat()s don't flag "" as an error. */
 	return FALSE;
-    if (lstat((char *)name, &statb))
+    if (mch_lstat((char *)name, &statb))
 	return FALSE;
 #ifdef _POSIX_SOURCE
     return (S_ISDIR(statb.st_mode) ? TRUE : FALSE);
@@ -4098,6 +4102,7 @@ mch_call_shell(
     int		tmode = cur_tmode;
 #ifdef USE_SYSTEM	/* use system() to start the shell: simple but slow */
     char_u	*newcmd;	/* only needed for unix */
+    int		x;
 
     out_flush();
 
@@ -4484,7 +4489,9 @@ mch_call_shell(
 	    catch_signals(SIG_IGN, SIG_ERR);
 	    catch_int_signal();
 	    UNBLOCK_SIGNALS(&curset);
-
+# ifdef FEAT_JOB_CHANNEL
+	    ++dont_check_job_ended;
+# endif
 	    /*
 	     * For the GUI we redirect stdin, stdout and stderr to our window.
 	     * This is also used to pipe stdin/stdout to/from the external
@@ -5029,6 +5036,10 @@ finished:
 		wait4pid(wpid, NULL);
 	    }
 
+# ifdef FEAT_JOB_CHANNEL
+	    --dont_check_job_ended;
+# endif
+
 	    /*
 	     * Set to raw mode right now, otherwise a CTRL-C after
 	     * catch_signals() will kill Vim.
@@ -5343,7 +5354,7 @@ mch_job_status(job_T *job)
     return "run";
 
 return_dead:
-    if (job->jv_status != JOB_ENDED)
+    if (job->jv_status < JOB_ENDED)
     {
 	ch_log(job->jv_channel, "Job ended");
 	job->jv_status = JOB_ENDED;
@@ -5362,6 +5373,14 @@ mch_detect_ended_job(job_T *job_list)
     pid_t	wait_pid = 0;
     job_T	*job;
 
+# ifndef USE_SYSTEM
+    /* Do not do this when waiting for a shell command to finish, we would get
+     * the exit value here (and discard it), the exit value obtained there
+     * would then be wrong.  */
+    if (dont_check_job_ended > 0)
+	return NULL;
+# endif
+
 # ifdef __NeXT__
     wait_pid = wait4(-1, &status, WNOHANG, (struct rusage *)0);
 # else
@@ -5379,7 +5398,7 @@ mch_detect_ended_job(job_T *job_list)
 		job->jv_exitval = WEXITSTATUS(status);
 	    else if (WIFSIGNALED(status))
 		job->jv_exitval = -1;
-	    if (job->jv_status != JOB_ENDED)
+	    if (job->jv_status < JOB_ENDED)
 	    {
 		ch_log(job->jv_channel, "Job ended");
 		job->jv_status = JOB_ENDED;
@@ -5390,6 +5409,10 @@ mch_detect_ended_job(job_T *job_list)
     return NULL;
 }
 
+/*
+ * Send a (deadly) signal to "job".
+ * Return FAIL if "how" is not a valid name.
+ */
     int
 mch_stop_job(job_T *job, char_u *how)
 {
