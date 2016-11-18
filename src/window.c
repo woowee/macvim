@@ -234,7 +234,7 @@ newwindow:
 /* cursor to previous window with wrap around */
     case 'W':
 		CHECK_CMDWIN
-		if (firstwin == lastwin && Prenum != 1)	/* just one window */
+		if (ONE_WINDOW && Prenum != 1)	/* just one window */
 		    beep_flush();
 		else
 		{
@@ -791,7 +791,7 @@ win_split_ins(
 	oldwin = curwin;
 
     /* add a status line when p_ls == 1 and splitting the first window */
-    if (lastwin == firstwin && p_ls == 1 && oldwin->w_status_height == 0)
+    if (ONE_WINDOW && p_ls == 1 && oldwin->w_status_height == 0)
     {
 	if (oldwin->w_height <= p_wmh && new_wp == NULL)
 	{
@@ -1497,7 +1497,7 @@ win_exchange(long Prenum)
     win_T	*wp2;
     int		temp;
 
-    if (lastwin == firstwin)	    /* just one window */
+    if (ONE_WINDOW)	    /* just one window */
     {
 	beep_flush();
 	return;
@@ -1598,7 +1598,7 @@ win_rotate(int upwards, int count)
     frame_T	*frp;
     int		n;
 
-    if (firstwin == lastwin)		/* nothing to do */
+    if (ONE_WINDOW)		/* nothing to do */
     {
 	beep_flush();
 	return;
@@ -1679,7 +1679,7 @@ win_totop(int size, int flags)
     int		dir;
     int		height = curwin->w_height;
 
-    if (lastwin == firstwin)
+    if (ONE_WINDOW)
     {
 	beep_flush();
 	return;
@@ -2128,7 +2128,7 @@ close_windows(
 
     ++RedrawingDisabled;
 
-    for (wp = firstwin; wp != NULL && lastwin != firstwin; )
+    for (wp = firstwin; wp != NULL && !ONE_WINDOW; )
     {
 	if (wp->w_buffer == buf && (!keep_curwin || wp != curwin)
 #ifdef FEAT_AUTOCMD
@@ -2211,7 +2211,7 @@ one_window(void)
     }
     return TRUE;
 #else
-    return firstwin == lastwin;
+    return ONE_WINDOW;
 #endif
 }
 
@@ -2225,7 +2225,7 @@ close_last_window_tabpage(
     int		free_buf,
     tabpage_T   *prev_curtab)
 {
-    if (firstwin == lastwin)
+    if (ONE_WINDOW)
     {
 #ifdef FEAT_AUTOCMD
 	buf_T	*old_curbuf = curbuf;
@@ -2543,7 +2543,7 @@ win_close_othertab(win_T *win, int free_buf, tabpage_T *tp)
 		;
 	    if (ptp == NULL)
 	    {
-		EMSG2(_(e_intern2), "win_close_othertab()");
+		internal_error("win_close_othertab()");
 		return;
 	    }
 	    ptp->tp_next = tp->tp_next;
@@ -2630,7 +2630,7 @@ winframe_remove(
     /*
      * If there is only one window there is nothing to remove.
      */
-    if (tp == NULL ? firstwin == lastwin : tp->tp_firstwin == tp->tp_lastwin)
+    if (tp == NULL ? ONE_WINDOW : tp->tp_firstwin == tp->tp_lastwin)
 	return NULL;
 
     /*
@@ -2785,7 +2785,7 @@ win_altframe(
     frame_T	*frp;
     int		b;
 
-    if (tp == NULL ? firstwin == lastwin : tp->tp_firstwin == tp->tp_lastwin)
+    if (tp == NULL ? ONE_WINDOW : tp->tp_firstwin == tp->tp_lastwin)
 	/* Last window in this tab page, will go to next tab page. */
 	return alt_tabpage()->tp_curwin->w_frame;
 
@@ -3378,7 +3378,7 @@ close_others(
 	}
     }
 
-    if (message && lastwin != firstwin)
+    if (message && !ONE_WINDOW)
 	EMSG(_("E445: Other window contains changes"));
 }
 
@@ -5984,7 +5984,7 @@ last_status(
 {
     /* Don't make a difference between horizontal or vertical split. */
     last_status_rec(topframe, (p_ls == 2
-			  || (p_ls == 1 && (morewin || lastwin != firstwin))));
+			  || (p_ls == 1 && (morewin || !ONE_WINDOW))));
 }
 
     static void
@@ -7146,7 +7146,10 @@ win_getid(typval_T *argvars)
 		    break;
 	    if (tp == NULL)
 		return -1;
-	    wp = tp->tp_firstwin;
+	    if (tp == curtab)
+		wp = firstwin;
+	    else
+		wp = tp->tp_firstwin;
 	}
 	for ( ; wp != NULL; wp = wp->w_next)
 	    if (--winnr == 0)
