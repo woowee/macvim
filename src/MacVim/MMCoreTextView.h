@@ -39,6 +39,10 @@
     CGPoint                     *positions;
     NSMutableArray              *fontCache;
 
+    BOOL                        cgLayerEnabled;
+    CGLayerRef                  cgLayer;
+    CGContextRef                cgLayerContext;
+
     // These are used in MMCoreTextView+ToolTip.m
     id trackingRectOwner_;              // (not retained)
     void *trackingRectUserData_;
@@ -86,6 +90,7 @@
 - (BOOL)convertPoint:(NSPoint)point toRow:(int *)row column:(int *)column;
 - (NSRect)rectForRow:(int)row column:(int)column numRows:(int)nr
           numColumns:(int)nc;
+- (void)setCGLayerEnabled:(BOOL)enabled;
 
 //
 // NSTextView methods

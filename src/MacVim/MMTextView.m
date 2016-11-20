@@ -517,6 +517,11 @@
     // ONLY in Core Text!
 }
 
+- (void)setCGLayerEnabled:(BOOL)enabled
+{
+    // ONLY in Core Text!
+}
+
 - (void)setProportionalFont:(BOOL)proportionalFont
 {
     MMTextStorage *ts = (MMTextStorage *)[self textStorage];
