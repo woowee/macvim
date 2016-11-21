@@ -1,4 +1,14 @@
 scriptencoding utf-8
+
+" Python3
+if has('python3') && !filereadable(&pythonthreedll)
+  " https://www.python.org/downloads/mac-osx/
+  if filereadable("/Library/Frameworks/Python.framework/Versions/3.5/Python")
+    let $PYTHONHOME="/Library/Frameworks/Python.framework/Versions/3.5"
+    set pythonthreedll=/Library/Frameworks/Python.framework/Versions/3.5/Python
+  endif
+endif
+
 " vim:set ts=8 sts=2 sw=2 tw=0: (この行に関しては:help modelineを参照)
 "
 " An example for a Japanese version vimrc file.
@@ -263,4 +273,3 @@ set migemo
 set printmbfont=r:HiraMinProN-W3,b:HiraMinProN-W6
 set printencoding=utf-8
 set printmbcharset=UniJIS
-

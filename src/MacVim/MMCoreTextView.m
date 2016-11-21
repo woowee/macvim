@@ -612,7 +612,11 @@ defaultAdvanceForFont(NSFont *font)
                 cgLayerSize.width,
                 cgLayerSize.height);
 
-        CGContextDrawLayerInRect([context graphicsPort], drawRect, l);
+        CGContextRef cgContext = [context graphicsPort];
+        CGContextSaveGState(cgContext);
+        CGContextSetBlendMode(cgContext, kCGBlendModeCopy);
+        CGContextDrawLayerInRect(cgContext, drawRect, l);
+        CGContextRestoreGState(cgContext);
     }
 }
 
@@ -1498,6 +1502,7 @@ recurseDraw(const unichar *chars, CGGlyph *glyphs, CGPoint *positions,
         // draw self on top of self, offset so as to "scroll" lines vertically
         CGContextSaveGState(context);
         CGContextClipToRect(context, clipRect);
+        CGContextSetBlendMode(context, kCGBlendModeCopy);
         CGContextDrawLayerAtPoint(
                 context, CGPointMake(0, -yOffset), [self getCGLayer]);
         CGContextRestoreGState(context);
