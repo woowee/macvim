@@ -2040,7 +2040,8 @@ searchc(cmdarg_T *cap, int t_cmd)
 		}
 		else
 		{
-		    if (vim_memcmp(p + col, lastc_bytes, lastc_bytelen) == 0 && stop)
+		    if (memcmp(p + col, lastc_bytes, lastc_bytelen) == 0
+								       && stop)
 			break;
 		}
 		stop = TRUE;
