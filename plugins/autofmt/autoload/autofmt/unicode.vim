@@ -1,6 +1,6 @@
 " Maintainer:   Yukihiro Nakadaira <yukihiro.nakadaira@gmail.com>
 " License:      This file is placed in the public domain.
-" Last Change:  2014-08-28
+" Last Change:  2016-11-24
 
 if &encoding != "utf-8" && !has("iconv")
   " Use echomsg because echoerr is not displayed in formatexpr context.
@@ -95,7 +95,7 @@ endfunction
 
 function s:lib.uax14_pair_table(before, after)
   " these are not handled in the pair tables
-  let not_in_table = '\vAI|BK|CB|CR|LF|NL|SA|SG|SP|XX'
+  let not_in_table = '\vAI|BK|CB|CJ|CR|LF|NL|SA|SG|SP|XX'
   if a:before =~ not_in_table || a:after =~ not_in_table
     return self.PROHIBITED_BRK
   else
@@ -996,7 +996,7 @@ call extend(s:tmp, [[0x1F810,0x1F847,'AL'],[0x1F850,0x1F859,'AL'],[0x1F860,0x1F8
 call extend(s:tmp, [[0x1F890,0x1F8AD,'AL'],[0x20000,0x2FFFD,'ID'],[0x30000,0x3FFFD,'ID']])
 call extend(s:tmp, [[0xE0001,0xE0001,'CM'],[0xE0020,0xE007F,'CM'],[0xE0100,0xE01EF,'CM']])
 call extend(s:tmp, [[0xF0000,0xFFFFD,'XX'],[0x100000,0x10FFFD,'XX']])
-let s:linebreak_table = s:tmp
+let s:lib.linebreak_table = s:tmp
 unlet s:tmp
 
 let s:tmp = []
