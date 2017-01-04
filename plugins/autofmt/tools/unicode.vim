@@ -57,9 +57,17 @@ function! s:main()
   else
     edit LineBreak.txt
   endif
+  let header = getline(1, 2)
   let linebreak = s:parse_prop(getline(1, '$'))
 
   enew
+
+  if header[0] =~# '^# LineBreak-.*\.txt'
+    $put ='\"' . header[0][1:]
+  endif
+  if header[1] =~# '^# Date: '
+    $put ='\"' . header[1][1:]
+  endif
 
   " MEMO: line length is optimized for Vim's reading buffer size.
   $put ='let s:tmp = []'
@@ -74,7 +82,7 @@ function! s:main()
     endfor
     $put =printf('call extend(s:tmp, [%s])', s)
   endfor
-  $put ='let s:linebreak_table = s:tmp'
+  $put ='let s:lib.linebreak_table = s:tmp'
   $put ='unlet s:tmp'
   $put =''
 
@@ -96,7 +104,7 @@ function! s:main()
     let s = join(map(row, "'''' . v:val . ''''"), ',')
     $put =printf('call add(s:tmp, [%s])', s)
   endfor
-  $put ='let s:linebreak_bmp = s:tmp'
+  $put ='let s:lib.linebreak_bmp = s:tmp'
   $put ='unlet s:tmp'
   $put =''
 
