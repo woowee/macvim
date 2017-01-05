@@ -2034,7 +2034,7 @@ if test "$enable_rubyinterp" = "yes" -o "$enable_rubyinterp" = "dynamic"; then
             dnl On Mac OS X it is safer to just use the -framework flag
             RUBY_LIBS="-framework Ruby"
             dnl Don't include the -I flag when -framework is set
-            RUBY_CFLAGS="-DRUBY_VERSION=$rubyversion -DRUBY_FRAMEWORK"
+            RUBY_CFLAGS="$RUBY_CFLAGS -DRUBY_VERSION=$rubyversion -DRUBY_FRAMEWORK"
             librubyarg=
 	fi
 
@@ -2138,7 +2138,7 @@ if test "$enable_ruby19interp" = "dynamic"; then
             dnl On Mac OS X it is safer to just use the -framework flag
             RUBY19_LIBS="-framework Ruby"
             dnl Don't include the -I flag when -framework is set
-            RUBY19_CFLAGS="-DRUBY19_VERSION=$ruby19version -DRUBY19_FRAMEWORK"
+            RUBY19_CFLAGS="$RUBY19_CFLAGS -DRUBY19_VERSION=$ruby19version -DRUBY19_FRAMEWORK"
             libruby19arg=
 	fi
 
