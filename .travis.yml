@@ -53,7 +53,7 @@ script:
   - rm -f result; $VIMCMD -g -f -c "redir>result" -c "py3 import sys; print(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
   - rm -f result; $VIMCMD -g -f -c "redir>result" -c "ruby puts(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
   - rm -f result; $VIMCMD -g -f -c "redir>result" -c "set rubydll=/usr/lib/libruby.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
-  - rm -f result; $VIMCMD -g -f -c "redir>result" -c "set rubydll=/usr/local/lib/libruby.2.3.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
+  - rm -f result; $VIMCMD -g -f -c "redir>result" -c "set rubydll=/usr/local/lib/libruby.2.4.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
   - make test
   - make -C src/testdir clean
   - make -C src testgui
