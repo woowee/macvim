@@ -242,13 +242,37 @@ static void list_one_var(dictitem_T *v, char_u *prefix, int *first);
 static void list_one_var_a(char_u *prefix, char_u *name, int type, char_u *string, int *first);
 static char_u *find_option_end(char_u **arg, int *opt_flags);
 
-#ifdef EBCDIC
-static int compare_func_name(const void *s1, const void *s2);
-static void sortFunctions();
-#endif
-
 /* for VIM_VERSION_ defines */
 #include "version.h"
+
+
+#if defined(EBCDIC) || defined(PROTO)
+/*
+ * Compare struct fst by function name.
+ */
+    static int
+compare_func_name(const void *s1, const void *s2)
+{
+    struct fst *p1 = (struct fst *)s1;
+    struct fst *p2 = (struct fst *)s2;
+
+    return STRCMP(p1->f_name, p2->f_name);
+}
+
+/*
+ * Sort the function table by function name.
+ * The sorting of the table above is ASCII dependant.
+ * On machines using EBCDIC we have to sort it.
+ */
+    static void
+sortFunctions(void)
+{
+    int		funcCnt = (int)(sizeof(functions) / sizeof(struct fst)) - 1;
+
+    qsort(functions, (size_t)funcCnt, sizeof(struct fst), compare_func_name);
+}
+#endif
+
 
 /*
  * Initialize the global and v: variables.
@@ -9232,6 +9256,8 @@ fill_assert_error(
     {
 	if (atype == ASSERT_MATCH || atype == ASSERT_NOTMATCH)
 	    ga_concat(gap, (char_u *)"Pattern ");
+	else if (atype == ASSERT_NOTEQUAL)
+	    ga_concat(gap, (char_u *)"Expected not equal to ");
 	else
 	    ga_concat(gap, (char_u *)"Expected ");
 	if (exp_str == NULL)
@@ -9241,16 +9267,17 @@ fill_assert_error(
 	}
 	else
 	    ga_concat_esc(gap, exp_str);
-	if (atype == ASSERT_MATCH)
-	    ga_concat(gap, (char_u *)" does not match ");
-	else if (atype == ASSERT_NOTMATCH)
-	    ga_concat(gap, (char_u *)" does match ");
-	else if (atype == ASSERT_NOTEQUAL)
-	    ga_concat(gap, (char_u *)" differs from ");
-	else
-	    ga_concat(gap, (char_u *)" but got ");
-	ga_concat_esc(gap, tv2string(got_tv, &tofree, numbuf, 0));
-	vim_free(tofree);
+	if (atype != ASSERT_NOTEQUAL)
+	{
+	    if (atype == ASSERT_MATCH)
+		ga_concat(gap, (char_u *)" does not match ");
+	    else if (atype == ASSERT_NOTMATCH)
+		ga_concat(gap, (char_u *)" does match ");
+	    else
+		ga_concat(gap, (char_u *)" but got ");
+	    ga_concat_esc(gap, tv2string(got_tv, &tofree, numbuf, 0));
+	    vim_free(tofree);
+	}
     }
 }
 
