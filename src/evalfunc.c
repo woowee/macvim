@@ -11890,6 +11890,7 @@ get_cmd_output_as_rettv(
 	    if (buf == NULL)
 	    {
 		EMSGN(_(e_nobufnr), argvars[1].vval.v_number);
+		fclose(fd);
 		goto errret;
 	    }
 
