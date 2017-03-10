@@ -660,7 +660,7 @@ do_exmode(
 	need_wait_return = FALSE;
 	ex_pressedreturn = FALSE;
 	ex_no_reprint = FALSE;
-	changedtick = *curbuf->b_changedtick;
+	changedtick = CHANGEDTICK(curbuf);
 	prev_msg_row = msg_row;
 	prev_line = curwin->w_cursor.lnum;
 	if (improved)
@@ -673,7 +673,7 @@ do_exmode(
 	lines_left = Rows - 1;
 
 	if ((prev_line != curwin->w_cursor.lnum
-		   || changedtick != *curbuf->b_changedtick) && !ex_no_reprint)
+		   || changedtick != CHANGEDTICK(curbuf)) && !ex_no_reprint)
 	{
 	    if (curbuf->b_ml.ml_flags & ML_EMPTY)
 		EMSG(_(e_emptybuf));
@@ -9812,6 +9812,7 @@ ex_redraw(exarg_T *eap)
 
     RedrawingDisabled = 0;
     p_lz = FALSE;
+    validate_cursor();
     update_topline();
     update_screen(eap->forceit ? CLEAR : VIsual_active ? INVERTED : 0);
 #ifdef FEAT_TITLE

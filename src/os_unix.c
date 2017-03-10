@@ -467,6 +467,12 @@ mch_inchar(
 	if ((wait_time < 0 || wait_time > 100L) && channel_any_readahead())
 	    wait_time = 10L;
 #endif
+#ifdef FEAT_BEVAL
+	if (p_beval && wait_time > 100L)
+	    /* The 'balloonexpr' may indirectly invoke a callback while waiting
+	     * for a character, need to check often. */
+	    wait_time = 100L;
+#endif
 
 	/*
 	 * We want to be interrupted by the winch signal
@@ -3097,7 +3103,7 @@ mch_can_exe(char_u *name, char_u **path, int use_path)
 	{
 	    if (path != NULL)
 	    {
-		if (name[0] == '.')
+		if (name[0] != '/')
 		    *path = FullName_save(name, TRUE);
 		else
 		    *path = vim_strsave(name);
@@ -3136,7 +3142,7 @@ mch_can_exe(char_u *name, char_u **path, int use_path)
 	{
 	    if (path != NULL)
 	    {
-		if (buf[0] == '.')
+		if (buf[0] != '/')
 		    *path = FullName_save(buf, TRUE);
 		else
 		    *path = vim_strsave(buf);

@@ -3425,10 +3425,13 @@ win_line(
 #else
 	    --ptr;
 #endif
+	    /* If the character fits on the screen, don't need to skip it.
+	     * Except for a TAB. */
+	    if ((
 #ifdef FEAT_MBYTE
-           /* character fits on the screen, don't need to skip it */
-           if ((*mb_ptr2cells)(ptr) >= c && col == 0)
+			(*mb_ptr2cells)(ptr) >= c ||
 #endif
+		       *ptr == TAB) && col == 0)
 	       n_skip = v - vcol;
 	}
 
@@ -4185,6 +4188,10 @@ win_line(
 	}
 	else
 	{
+#ifdef FEAT_LINEBREAK
+	    int c0;
+#endif
+
 	    if (p_extra_free != NULL)
 	    {
 		vim_free(p_extra_free);
@@ -4194,6 +4201,9 @@ win_line(
 	     * Get a character from the line itself.
 	     */
 	    c = *ptr;
+#ifdef FEAT_LINEBREAK
+	    c0 = *ptr;
+#endif
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
 	    {
@@ -4210,7 +4220,12 @@ win_line(
 			/* Overlong encoded ASCII or ASCII with composing char
 			 * is displayed normally, except a NUL. */
 			if (mb_c < 0x80)
+			{
 			    c = mb_c;
+# ifdef FEAT_LINEBREAK
+			    c0 = mb_c;
+# endif
+			}
 			mb_utf8 = TRUE;
 
 			/* At start of the line we can have a composing char.
@@ -4534,7 +4549,8 @@ win_line(
 		/*
 		 * Found last space before word: check for line break.
 		 */
-		if (wp->w_p_lbr && vim_isbreak(c) && !vim_isbreak(*ptr))
+		if (wp->w_p_lbr && c0 == c
+				      && vim_isbreak(c) && !vim_isbreak(*ptr))
 		{
 # ifdef FEAT_MBYTE
 		    int mb_off = has_mbyte ? (*mb_head_off)(line, ptr - 1) : 0;
@@ -10523,7 +10539,12 @@ fillchar_vsep(int *attr)
     int
 redrawing(void)
 {
-    return (!RedrawingDisabled
+#ifdef FEAT_EVAL
+    if (disable_redraw_for_testing)
+	return 0;
+    else
+#endif
+	return (!RedrawingDisabled
 		       && !(p_lz && char_avail() && !KeyTyped && !do_redraw));
 }
 
