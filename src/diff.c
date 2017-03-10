@@ -977,7 +977,12 @@ ex_diffpatch(exarg_T *eap)
     {
 	/* Build the patch command and execute it.  Ignore errors.  Switch to
 	 * cooked mode to allow the user to respond to prompts. */
-	vim_snprintf((char *)buf, buflen, "patch -o %s %s < \"%s\"",
+	vim_snprintf((char *)buf, buflen,
+#ifdef UNIX
+		"patch -o %s %s < '%s'",
+#else
+		"patch -o %s %s < \"%s\"",
+#endif
 		tmp_new, tmp_orig,
 # ifdef UNIX
 		fullname != NULL ? fullname :
@@ -2616,7 +2621,6 @@ diff_get_corresponding_line(buf_T *buf1, linenr_T lnum1)
     return lnum;
 }
 
-#if defined(FEAT_FOLDING) || defined(PROTO)
 /*
  * For line "lnum" in the current window find the equivalent lnum in window
  * "wp", compensating for inserted/deleted lines.
@@ -2656,6 +2660,5 @@ diff_lnum_win(linenr_T lnum, win_T *wp)
 	n = dp->df_lnum[i] + dp->df_count[i];
     return n;
 }
-#endif
 
 #endif	/* FEAT_DIFF */

@@ -186,7 +186,7 @@ static int  ins_compl_pum_key(int c);
 static int  ins_compl_key2count(int c);
 static int  ins_compl_use_match(int c);
 static int  ins_complete(int c, int enable_pum);
-static void show_pum(int save_w_wrow);
+static void show_pum(int prev_w_wrow, int prev_w_leftcol);
 static unsigned  quote_meta(char_u *dest, char_u *str, int len);
 #endif /* FEAT_INS_EXPAND */
 
@@ -541,8 +541,8 @@ edit(
 
     /*
      * Handle restarting Insert mode.
-     * Don't do this for "CTRL-O ." (repeat an insert): we get here with
-     * restart_edit non-zero, and something in the stuff buffer.
+     * Don't do this for "CTRL-O ." (repeat an insert): In that case we get
+     * here with something in the stuff buffer.
      */
     if (restart_edit != 0 && stuff_empty())
     {
@@ -1038,8 +1038,10 @@ doESCkey:
 	    if (!p_im)
 		goto normalchar;	/* insert CTRL-Z as normal char */
 	    do_cmdline_cmd((char_u *)"stop");
-	    c = Ctrl_O;
-	    /*FALLTHROUGH*/
+#ifdef CURSOR_SHAPE
+	    ui_cursor_shape();		/* may need to update cursor shape */
+#endif
+	    continue;
 
 	case Ctrl_O:	/* execute one command */
 #ifdef FEAT_COMPL_FUNC
@@ -1460,10 +1462,14 @@ doESCkey:
 
 docomplete:
 	    compl_busy = TRUE;
+#ifdef FEAT_FOLDING
 	    disable_fold_update++;  /* don't redraw folds here */
+#endif
 	    if (ins_complete(c, TRUE) == FAIL)
 		compl_cont_status = 0;
+#ifdef FEAT_FOLDING
 	    disable_fold_update--;
+#endif
 	    compl_busy = FALSE;
 	    break;
 #endif /* FEAT_INS_EXPAND */
@@ -1677,7 +1683,7 @@ ins_redraw(
 #ifdef FEAT_AUTOCMD
     /* Trigger TextChangedI if b_changedtick differs. */
     if (ready && has_textchangedI()
-	    && last_changedtick != *curbuf->b_changedtick
+	    && last_changedtick != CHANGEDTICK(curbuf)
 # ifdef FEAT_INS_EXPAND
 	    && !pum_visible()
 # endif
@@ -1686,7 +1692,7 @@ ins_redraw(
 	if (last_changedtick_buf == curbuf)
 	    apply_autocmds(EVENT_TEXTCHANGEDI, NULL, NULL, FALSE, curbuf);
 	last_changedtick_buf = curbuf;
-	last_changedtick = *curbuf->b_changedtick;
+	last_changedtick = CHANGEDTICK(curbuf);
     }
 #endif
 
@@ -2265,7 +2271,10 @@ has_compl_option(int dict_opt)
 	    vim_beep(BO_COMPL);
 	    setcursor();
 	    out_flush();
-	    ui_delay(2000L, FALSE);
+#ifdef FEAT_EVAL
+	    if (!get_vim_var_nr(VV_TESTING))
+#endif
+		ui_delay(2000L, FALSE);
 	}
 	return FALSE;
     }
@@ -2825,6 +2834,7 @@ completeopt_was_set(void)
 set_completion(colnr_T startcol, list_T *list)
 {
     int save_w_wrow = curwin->w_wrow;
+    int save_w_leftcol = curwin->w_leftcol;
 
     /* If already doing completions stop it. */
     if (ctrl_x_mode != 0)
@@ -2865,7 +2875,7 @@ set_completion(colnr_T startcol, list_T *list)
 
     /* Lazily show the popup menu, unless we got interrupted. */
     if (!compl_interrupted)
-	show_pum(save_w_wrow);
+	show_pum(save_w_wrow, save_w_leftcol);
     out_flush();
 }
 
@@ -5108,6 +5118,7 @@ ins_complete(int c, int enable_pum)
     colnr_T	curs_col;	    /* cursor column */
     int		n;
     int		save_w_wrow;
+    int		save_w_leftcol;
     int		insert_match;
     int		save_did_ai = did_ai;
 
@@ -5551,6 +5562,7 @@ ins_complete(int c, int enable_pum)
      * Find next match (and following matches).
      */
     save_w_wrow = curwin->w_wrow;
+    save_w_leftcol = curwin->w_leftcol;
     n = ins_compl_next(TRUE, ins_compl_key2count(c), insert_match, FALSE);
 
     /* may undisplay the popup menu */
@@ -5703,9 +5715,8 @@ ins_complete(int c, int enable_pum)
 
     /* Show the popup menu, unless we got interrupted. */
     if (enable_pum && !compl_interrupted)
-    {
-	show_pum(save_w_wrow);
-    }
+	show_pum(save_w_wrow, save_w_leftcol);
+
     compl_was_interrupted = compl_interrupted;
     compl_interrupted = FALSE;
 
@@ -5713,21 +5724,22 @@ ins_complete(int c, int enable_pum)
 }
 
     static void
-show_pum(int save_w_wrow)
+show_pum(int prev_w_wrow, int prev_w_leftcol)
 {
-  /* RedrawingDisabled may be set when invoked through complete(). */
-  int n = RedrawingDisabled;
+    /* RedrawingDisabled may be set when invoked through complete(). */
+    int n = RedrawingDisabled;
 
-  RedrawingDisabled = 0;
+    RedrawingDisabled = 0;
 
-  /* If the cursor moved we need to remove the pum first. */
-  setcursor();
-  if (save_w_wrow != curwin->w_wrow)
-      ins_compl_del_pum();
+    /* If the cursor moved or the display scrolled we need to remove the pum
+     * first. */
+    setcursor();
+    if (prev_w_wrow != curwin->w_wrow || prev_w_leftcol != curwin->w_leftcol)
+	ins_compl_del_pum();
 
-  ins_compl_show_pum();
-  setcursor();
-  RedrawingDisabled = n;
+    ins_compl_show_pum();
+    setcursor();
+    RedrawingDisabled = n;
 }
 
 /*

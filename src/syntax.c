@@ -516,13 +516,13 @@ syntax_start(win_T *wp, linenr_T lnum)
      */
     if (syn_block != wp->w_s
 	    || syn_buf != wp->w_buffer
-	    || changedtick != *syn_buf->b_changedtick)
+	    || changedtick != CHANGEDTICK(syn_buf))
     {
 	invalidate_current_state();
 	syn_buf = wp->w_buffer;
 	syn_block = wp->w_s;
     }
-    changedtick = *syn_buf->b_changedtick;
+    changedtick = CHANGEDTICK(syn_buf);
     syn_win = wp;
 
     /*
@@ -1183,10 +1183,11 @@ syn_stack_free_block(synblock_T *block)
     void
 syn_stack_free_all(synblock_T *block)
 {
+#ifdef FEAT_FOLDING
     win_T	*wp;
+#endif
 
     syn_stack_free_block(block);
-
 
 #ifdef FEAT_FOLDING
     /* When using "syntax" fold method, must update all folds. */
