@@ -46,6 +46,9 @@ script:
   - GETTEXT=$(find /usr/local/Cellar/gettext -name bin)
   - PATH=$PATH:$GETTEXT make -C src/po MSGFMT=$GETTEXT/msgfmt
   - make -j$NPROC
+  - BINPATH=src/MacVim/build/Release/MacVim.app/Contents/MacOS
+  - cp -a src/MacVim/mvim $BINPATH
+  - (cd $BINPATH; for f in vimdiff view gvim gvimdiff gview mvimdiff mview; do ln -s mvim $f; done)
   - rm -f result; $VIMCMD -g -f -c "redir>result" -c "set luadll=/usr/local/lib/liblua.5.1.dylib" -c "lua print(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
   - rm -f result; $VIMCMD -g -f -c "redir>result" -c "set luadll=/usr/local/lib/liblua.5.2.dylib" -c "lua print(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
   - rm -f result; $VIMCMD -g -f -c "redir>result" -c "perl VIM::Msg(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
@@ -55,7 +58,7 @@ script:
   - rm -f result; $VIMCMD -g -f -c "redir>result" -c "set rubydll=/usr/lib/libruby.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
   - rm -f result; $VIMCMD -g -f -c "redir>result" -c "set rubydll=/usr/local/lib/libruby.2.4.dylib" -c "ruby puts(\"Test\")" -c "redir END" -c q; cat result; echo; grep -q -w Test result
   - make test
-  - make -C src/testdir clean
-  - make -C src testgui
+  #- make -C src/testdir clean
+  #- make -C src testgui
 
 # vim:set sts=2 sw=2 tw=0 et:
