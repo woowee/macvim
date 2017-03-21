@@ -3020,12 +3020,21 @@ dnl ---------------------------------------------------------------------------
 dnl end of GUI-checking
 dnl ---------------------------------------------------------------------------
 
-AC_MSG_CHECKING([for /proc/self/exe])
+AC_MSG_CHECKING([for /proc link to executable])
 if test -L "/proc/self/exe"; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_PROC_SELF_EXE)
+  dnl Linux
+  AC_MSG_RESULT([/proc/self/exe])
+  AC_DEFINE(PROC_EXE_LINK, "/proc/self/exe")
+elif test -L "/proc/self/path/a.out"; then
+  dnl Solaris
+  AC_MSG_RESULT([/proc/self/path/a.out])
+  AC_DEFINE(PROC_EXE_LINK, "/proc/self/path/a.out")
+elif test -L "/proc/curproc/file"; then
+  dnl FreeBSD
+  AC_MSG_RESULT([/proc/curproc/file])
+  AC_DEFINE(PROC_EXE_LINK, "/proc/curproc/file")
 else
-    AC_MSG_RESULT(no)
+  AC_MSG_RESULT(no)
 fi
 
 dnl Check for Cygwin, which needs an extra source file if not using X11
@@ -3609,7 +3618,7 @@ dnl Can only be used for functions that do not require any include.
 AC_CHECK_FUNCS(fchdir fchown fsync getcwd getpseudotty \
 	getpwent getpwnam getpwuid getrlimit gettimeofday getwd lstat \
 	memset mkdtemp nanosleep opendir putenv qsort readlink select setenv \
-	setpgid setsid sigaltstack sigstack sigset sigsetjmp sigaction \
+	getpgid setpgid setsid sigaltstack sigstack sigset sigsetjmp sigaction \
 	sigprocmask sigvec strcasecmp strerror strftime stricmp strncasecmp \
 	strnicmp strpbrk strtol tgetent towlower towupper iswupper \
 	usleep utime utimes)

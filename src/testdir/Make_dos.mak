@@ -44,6 +44,7 @@ $(DOSTMP_INFILES): $(*B).in
 # This moves test99.in to test99.in.bak temporarily.
 $(TEST_OUTFILES): $(DOSTMP)\$(*B).in
 	-@if exist test.out DEL test.out
+	-@if exist $(DOSTMP)\$(*B).out DEL $(DOSTMP)\$(*B).out
 	move $(*B).in $(*B).in.bak > nul
 	copy $(DOSTMP)\$(*B).in $(*B).in > nul
 	copy $(*B).ok test.ok > nul
@@ -126,7 +127,7 @@ test_gui.res: test_gui.vim
 
 test_gui_init.res: test_gui_init.vim
 	@echo "$(VIMPROG)" > vimcmd
-	$(VIMPROG) -u NONE -U gui_init.vim $(NO_PLUGINS) -S runtest.vim $*.vim
+	$(VIMPROG) -u gui_preinit.vim -U gui_init.vim $(NO_PLUGINS) -S runtest.vim $*.vim
 	@del vimcmd
 
 opt_test.vim: ../option.c gen_opt_test.vim

@@ -776,6 +776,118 @@ static char *(features[]) =
 static int included_patches[] =
 {   /* Add new patch number below this line */
 /**/
+    498,
+/**/
+    497,
+/**/
+    496,
+/**/
+    495,
+/**/
+    494,
+/**/
+    493,
+/**/
+    492,
+/**/
+    491,
+/**/
+    490,
+/**/
+    489,
+/**/
+    488,
+/**/
+    487,
+/**/
+    486,
+/**/
+    485,
+/**/
+    484,
+/**/
+    483,
+/**/
+    482,
+/**/
+    481,
+/**/
+    480,
+/**/
+    479,
+/**/
+    478,
+/**/
+    477,
+/**/
+    476,
+/**/
+    475,
+/**/
+    474,
+/**/
+    473,
+/**/
+    472,
+/**/
+    471,
+/**/
+    470,
+/**/
+    469,
+/**/
+    468,
+/**/
+    467,
+/**/
+    466,
+/**/
+    465,
+/**/
+    464,
+/**/
+    463,
+/**/
+    462,
+/**/
+    461,
+/**/
+    460,
+/**/
+    459,
+/**/
+    458,
+/**/
+    457,
+/**/
+    456,
+/**/
+    455,
+/**/
+    454,
+/**/
+    453,
+/**/
+    452,
+/**/
+    451,
+/**/
+    450,
+/**/
+    449,
+/**/
+    448,
+/**/
+    447,
+/**/
+    446,
+/**/
+    445,
+/**/
+    444,
+/**/
+    443,
+/**/
     442,
 /**/
     441,
@@ -2090,7 +2202,7 @@ static void do_intro_line(int row, char_u *mesg, int add_version, int attr);
     void
 maybe_intro_message(void)
 {
-    if (bufempty()
+    if (BUFEMPTY()
 	    && curbuf->b_fname == NULL
 #ifdef FEAT_WINDOWS
 	    && firstwin->w_next == NULL
@@ -2286,7 +2398,7 @@ do_intro_line(
 #endif
 		clen += byte2cells(p[l]);
 	}
-	screen_puts_len(p, l, row, col, *p == '<' ? hl_attr(HLF_8) : attr);
+	screen_puts_len(p, l, row, col, *p == '<' ? HL_ATTR(HLF_8) : attr);
 	col += clen;
     }
 
