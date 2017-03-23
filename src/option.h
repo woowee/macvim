@@ -649,6 +649,7 @@ EXTERN int	p_macatsui;	/* 'macatsui' */
 #ifdef FEAT_GUI_MACVIM
 EXTERN int	p_macligatures;	/* 'macligatures' */
 EXTERN int	p_macthinstrokes;	/* 'macthinstrokes' */
+EXTERN long	p_columnspace;	/* 'columnspace' */
 #endif
 EXTERN int	p_magic;	/* 'magic' */
 #ifdef FEAT_MBYTE
