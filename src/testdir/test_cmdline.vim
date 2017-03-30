@@ -71,6 +71,14 @@ func Test_highlight_completion()
   call assert_equal('"hi default', getreg(':'))
   call feedkeys(":hi c\<S-Tab>\<Home>\"\<CR>", 'xt')
   call assert_equal('"hi clear', getreg(':'))
+
+  " A cleared group does not show up in completions.
+  hi Anders ctermfg=green
+  call assert_equal(['Aardig', 'Anders'], getcompletion('A', 'highlight'))
+  hi clear Aardig
+  call assert_equal(['Anders'], getcompletion('A', 'highlight'))
+  hi clear Anders
+  call assert_equal([], getcompletion('A', 'highlight'))
 endfunc
 
 func Test_expr_completion()
@@ -338,6 +346,15 @@ func Test_cmdline_complete_wildoptions()
   let b = join(sort(split(@:)),' ')
   call assert_equal(a, b)
   bw!
+endfunc
+
+func Test_cmdline_complete_user_cmd()
+  command! -complete=color -nargs=1 Foo :
+  call feedkeys(":Foo \<Tab>\<Home>\"\<cr>", 'tx')
+  call assert_equal('"Foo blue', @:)
+  call feedkeys(":Foo b\<Tab>\<Home>\"\<cr>", 'tx')
+  call assert_equal('"Foo blue', @:)
+  delcommand Foo
 endfunc
 
 " using a leading backslash here
