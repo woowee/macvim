@@ -308,10 +308,13 @@ CONVERTED = \
 	vimtutor-ru.UTF-8.1 \
 	xxd-ru.UTF-8.1
 
+JATAGS = ../../plugins/vimdoc-ja/doc/tags
+JADOCS = ../../plugins/vimdoc-ja/doc/*.jax
+
 .SUFFIXES:
 .SUFFIXES: .c .o .txt .html
 
-all: tags vim.man evim.man vimdiff.man vimtutor.man xxd.man $(CONVERTED)
+all: tags vim.man evim.man vimdiff.man vimtutor.man xxd.man $(CONVERTED) $(JATAGS)
 
 # Use Vim to generate the tags file.  Can only be used when Vim has been
 # compiled and installed.  Supports multiple languages.
@@ -322,6 +325,10 @@ vimtags: $(DOCS)
 tags: doctags $(DOCS)
 	./doctags $(DOCS) | LANG=C LC_ALL=C sort >tags
 	uniq -d -2 tags
+
+$(JATAGS): doctags $(JADOCS)
+	./doctags $(JADOCS) | LANG=C LC_ALL=C sort >$@
+	uniq -d -2 $@
 
 doctags: doctags.c
 	$(CC) doctags.c -o doctags
