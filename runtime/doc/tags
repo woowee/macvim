@@ -141,6 +141,7 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 'cole'	options.txt	/*'cole'*
 'colorcolumn'	options.txt	/*'colorcolumn'*
 'columns'	options.txt	/*'columns'*
+'columnspace'	options.txt	/*'columnspace'*
 'com'	options.txt	/*'com'*
 'comments'	options.txt	/*'comments'*
 'commentstring'	options.txt	/*'commentstring'*
@@ -168,6 +169,7 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 'cscopetag'	options.txt	/*'cscopetag'*
 'cscopetagorder'	options.txt	/*'cscopetagorder'*
 'cscopeverbose'	options.txt	/*'cscopeverbose'*
+'csp'	options.txt	/*'csp'*
 'cspc'	options.txt	/*'cspc'*
 'csprg'	options.txt	/*'csprg'*
 'csqf'	options.txt	/*'csqf'*
@@ -791,7 +793,9 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 'pvh'	options.txt	/*'pvh'*
 'pvw'	options.txt	/*'pvw'*
 'pythondll'	options.txt	/*'pythondll'*
+'pythonhome'	options.txt	/*'pythonhome'*
 'pythonthreedll'	options.txt	/*'pythonthreedll'*
+'pythonthreehome'	options.txt	/*'pythonthreehome'*
 'pyx'	options.txt	/*'pyx'*
 'pyxversion'	options.txt	/*'pyxversion'*
 'qe'	options.txt	/*'qe'*
@@ -3308,6 +3312,9 @@ $VIM_POSIX	vi_diff.txt	/*$VIM_POSIX*
 <D-Right>	gui_mac.txt	/*<D-Right>*
 <D-Up>	gui_mac.txt	/*<D-Up>*
 <D-`>	gui_mac.txt	/*<D-`>*
+<D-c>	os_mac.txt	/*<D-c>*
+<D-v>	os_mac.txt	/*<D-v>*
+<D-x>	os_mac.txt	/*<D-x>*
 <Del>	change.txt	/*<Del>*
 <Down>	motion.txt	/*<Down>*
 <Drop>	change.txt	/*<Drop>*
@@ -4565,6 +4572,7 @@ E94	windows.txt	/*E94*
 E940	eval.txt	/*E940*
 E941	eval.txt	/*E941*
 E942	eval.txt	/*E942*
+E943	message.txt	/*E943*
 E95	message.txt	/*E95*
 E96	diff.txt	/*E96*
 E97	diff.txt	/*E97*
@@ -6197,7 +6205,6 @@ ft-rst-syntax	syntax.txt	/*ft-rst-syntax*
 ft-ruby-omni	insert.txt	/*ft-ruby-omni*
 ft-ruby-syntax	syntax.txt	/*ft-ruby-syntax*
 ft-rust	filetype.txt	/*ft-rust*
-ft-rust	ft_rust.txt	/*ft-rust*
 ft-scheme-syntax	syntax.txt	/*ft-scheme-syntax*
 ft-sdl-syntax	syntax.txt	/*ft-sdl-syntax*
 ft-sed-syntax	syntax.txt	/*ft-sed-syntax*
@@ -6684,7 +6691,7 @@ gui.txt	gui.txt	/*gui.txt*
 gui_mac.txt	gui_mac.txt	/*gui_mac.txt*
 gui_w32.txt	gui_w32.txt	/*gui_w32.txt*
 gui_x11.txt	gui_x11.txt	/*gui_x11.txt*
-guifontwide_gtk	options.txt	/*guifontwide_gtk*
+guifontwide_gtk2	options.txt	/*guifontwide_gtk2*
 guifontwide_macvim	options.txt	/*guifontwide_macvim*
 guifontwide_win_mbyte	options.txt	/*guifontwide_win_mbyte*
 guioptions_a	options.txt	/*guioptions_a*
@@ -7240,6 +7247,7 @@ mac-compile	os_mac.txt	/*mac-compile*
 mac-faq	os_mac.txt	/*mac-faq*
 mac-filename	os_mac.txt	/*mac-filename*
 mac-lack	os_mac.txt	/*mac-lack*
+mac-standard-mappings	os_mac.txt	/*mac-standard-mappings*
 mac-vimfile	os_mac.txt	/*mac-vimfile*
 macintosh	os_mac.txt	/*macintosh*
 macro	map.txt	/*macro*
@@ -7784,6 +7792,8 @@ nice	todo.txt	/*nice*
 no-eval-feature	eval.txt	/*no-eval-feature*
 no-type-checking	eval.txt	/*no-type-checking*
 no_buffers_menu	gui.txt	/*no_buffers_menu*
+no_mail_maps	filetype.txt	/*no_mail_maps*
+no_plugin_maps	filetype.txt	/*no_plugin_maps*
 non-greedy	pattern.txt	/*non-greedy*
 non-zero-arg	eval.txt	/*non-zero-arg*
 none-variable	eval.txt	/*none-variable*
@@ -9299,7 +9309,8 @@ vim:	options.txt	/*vim:*
 vim_announce	intro.txt	/*vim_announce*
 vim_dev	intro.txt	/*vim_dev*
 vim_did_enter-variable	eval.txt	/*vim_did_enter-variable*
-vim_mac	gui_mac.txt	/*vim_mac*
+vim_mac	intro.txt	/*vim_mac*
+vim_mac_group	gui_mac.txt	/*vim_mac_group*
 vim_starting	eval.txt	/*vim_starting*
 vim_use	intro.txt	/*vim_use*
 vimball	pi_vimball.txt	/*vimball*
