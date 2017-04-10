@@ -9565,6 +9565,7 @@ apply_autocmds_group(
     proftime_T	wait_time;
 #endif
     int		did_save_redobuff = FALSE;
+    save_redo_T	save_redo;
 
     /*
      * Quickly return if there are no autocommands for this event or
@@ -9770,7 +9771,7 @@ apply_autocmds_group(
 	if (!ins_compl_active())
 #endif
 	{
-	    saveRedobuff();
+	    saveRedobuff(&save_redo);
 	    did_save_redobuff = TRUE;
 	}
 	did_filetype = keep_filetype;
@@ -9873,7 +9874,7 @@ apply_autocmds_group(
     {
 	restore_search_patterns();
 	if (did_save_redobuff)
-	    restoreRedobuff();
+	    restoreRedobuff(&save_redo);
 	did_filetype = FALSE;
 	while (au_pending_free_buf != NULL)
 	{
