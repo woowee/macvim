@@ -537,6 +537,7 @@
 				1DE608B80C58807F0055263D /* Copy Vim Runtime Files */,
 				1D1C31F00EFFBFD6003FE9A5 /* Make Document Icons */,
 				528DA6671426D456003380F1 /* Copy Scripts */,
+				52283AB71EBA200C00A6F6B9 /* Copy mvim scripts */,
 				528DA28A1426C479003380F1 /* Copy KaoriYa Runtime Files */,
 				52F1931D1877EC5E007C4A82 /* Copy gettext Files */,
 			);
@@ -672,6 +673,21 @@
 			shellScript = "# Clear deployment target, else the python script always thinks we're building on Tiger\nunset MACOSX_DEPLOYMENT_TARGET\n\n# Generate the icons (redirect stderr to ignore warnings)\ncd \"$PROJECT_DIR\"/icons/\nmake OUTDIR=\"$TARGET_BUILD_DIR\"/$UNLOCALIZED_RESOURCES_FOLDER_PATH 2> /dev/null\n";
 			showEnvVarsInLog = 0;
 		};
+		52283AB71EBA200C00A6F6B9 /* Copy mvim scripts */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy mvim scripts";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "BINPATH=$BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH/bin\nmkdir -p $BINPATH\ncp -a $SRCROOT/mvim $BINPATH/mvim\nchmod 755 $BINPATH/mvim\n(cd $BINPATH; for f in vim vimdiff view gvim gvimdiff gview mvimdiff mview; do ln -s mvim $f; done)";
+			showEnvVarsInLog = 0;
+		};
 		52F1931D1877EC5E007C4A82 /* Copy gettext Files */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -685,6 +701,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "DSTDIR=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/vim/runtime/lang/ja_JP.UTF-8/LC_MESSAGES\"\nmkdir -p \"$DSTDIR\"\ncp \"$PROJECT_DIR/../po/ja.mo\" \"$DSTDIR/vim.mo\"";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
