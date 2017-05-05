@@ -1255,7 +1255,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>20170418</string>
+	<string>20170504</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
