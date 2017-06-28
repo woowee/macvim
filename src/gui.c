@@ -2898,6 +2898,10 @@ gui_insert_lines(int row, int count)
     }
 }
 
+/*
+ * Returns OK if a character was found to be available within the given time,
+ * or FAIL otherwise.
+ */
     static int
 gui_wait_for_chars_or_timer(long wtime)
 {
@@ -2918,16 +2922,16 @@ gui_wait_for_chars_or_timer(long wtime)
 	if (typebuf.tb_change_cnt != tb_change_cnt)
 	{
 	    /* timer may have used feedkeys() */
-	    return FALSE;
+	    return FAIL;
 	}
 	if (due_time <= 0 || (wtime > 0 && due_time > remaining))
 	    due_time = remaining;
 	if (gui_mch_wait_for_chars(due_time))
-	    return TRUE;
+	    return OK;
 	if (wtime > 0)
 	    remaining -= due_time;
     }
-    return FALSE;
+    return FAIL;
 #else
     return gui_mch_wait_for_chars(wtime);
 #endif
@@ -2945,6 +2949,7 @@ gui_wait_for_chars_or_timer(long wtime)
 gui_wait_for_chars(long wtime)
 {
     int	    retval;
+    int	    tb_change_cnt = typebuf.tb_change_cnt;
 
 #ifdef FEAT_MENU
     /*
@@ -3002,7 +3007,7 @@ gui_wait_for_chars(long wtime)
     }
 #endif
 
-    if (retval == FAIL)
+    if (retval == FAIL && typebuf.tb_change_cnt == tb_change_cnt)
     {
 	/* Blocking wait. */
 	before_blocking();
@@ -5436,7 +5441,7 @@ gui_do_findrepl(
 	    searchflags += SEARCH_START;
 	i = msg_scroll;
 	(void)do_search(NULL, down ? '/' : '?', ga.ga_data, 1L,
-							   searchflags, NULL);
+						      searchflags, NULL, NULL);
 	msg_scroll = i;	    /* don't let an error message set msg_scroll */
     }
 
