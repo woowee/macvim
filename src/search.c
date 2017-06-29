@@ -1406,6 +1406,7 @@ searchit_migemo(
     int		pat_use,
     linenr_T	stop_lnum,
     proftime_T*	tm,
+    int		*timed_out,
     int		*did)
 {
     int retval = 0;
@@ -1436,7 +1437,7 @@ searchit_migemo(
 	    if (query && STRLEN(query) < MIGEMO_QUERY_MAXSIZE)
 	    {
 		retval = searchit_original(win, buf, pos, dir, query, count,
-			options, pat_use, stop_lnum, tm);
+			options, pat_use, stop_lnum, tm, timed_out);
 		didval = 1;
 	    }
 	    if (query)
@@ -1468,7 +1469,8 @@ searchit(
     int		options,
     int		pat_use,
     linenr_T	stop_lnum,
-    proftime_T	*tm UNUSED)
+    proftime_T	*tm UNUSED,
+    int		*timed_out UNUSED)
 {
     if (options & SEARCH_MIGEMO)
     {
@@ -1477,12 +1479,12 @@ searchit(
 
 	options &= ~SEARCH_MIGEMO;
 	ret = searchit_migemo(win, buf, pos, dir, pat, count, options, pat_use,
-		stop_lnum, tm, &did);
+		stop_lnum, tm, timed_out, &did);
 	if (did)
 	    return ret;
     }
     return searchit_original(win, buf, pos, dir, pat, count, options, pat_use,
-	    stop_lnum, tm);
+	    stop_lnum, tm, timed_out);
 }
 
 #endif /* USE_MIGEMO */
