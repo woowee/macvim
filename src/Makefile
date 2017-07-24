@@ -2244,6 +2244,7 @@ test_arglist \
 	test_perl \
 	test_plus_arg_edit \
 	test_popup \
+	test_preview \
 	test_profile \
 	test_put \
 	test_python2 \
