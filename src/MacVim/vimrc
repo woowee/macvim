@@ -262,9 +262,9 @@ if kaoriya#switch#enabled('disable-vimdoc-ja')
 endif
 
 " vimproc: 同梱のvimprocを無効化する
-if kaoriya#switch#enabled('disable-vimproc')
-  let &rtp = join(filter(split(&rtp, ','), 'v:val !~ "[/\\\\]plugins[/\\\\]vimproc$"'), ',')
-endif
+"if kaoriya#switch#enabled('disable-vimproc')
+"  let &rtp = join(filter(split(&rtp, ','), 'v:val !~ "[/\\\\]plugins[/\\\\]vimproc$"'), ',')
+"endif
 
 " go-extra: 同梱の vim-go-extra を無効化する
 if kaoriya#switch#enabled('disable-go-extra')
