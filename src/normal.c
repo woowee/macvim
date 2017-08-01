@@ -9066,14 +9066,6 @@ nv_esc(cmdarg_T *cap)
     static void
 nv_edit(cmdarg_T *cap)
 {
-#ifdef FEAT_TERMINAL
-    if (term_in_terminal_mode())
-    {
-	term_leave_terminal_mode();
-	return;
-    }
-#endif
-
     /* <Insert> is equal to "i" */
     if (cap->cmdchar == K_INS || cap->cmdchar == K_KINS)
 	cap->cmdchar = 'i';
@@ -9092,6 +9084,14 @@ nv_edit(cmdarg_T *cap)
 	clearopbeep(cap->oap);
 #endif
     }
+#ifdef FEAT_TERMINAL
+    else if (term_in_terminal_mode())
+    {
+	clearop(cap->oap);
+	term_leave_terminal_mode();
+	return;
+    }
+#endif
     else if (!curbuf->b_p_ma && !p_im)
     {
 	/* Only give this error when 'insertmode' is off. */
