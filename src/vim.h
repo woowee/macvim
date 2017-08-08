@@ -829,7 +829,8 @@ extern int (*dyn_libintl_putenv)(const char *envstring);
 #define EXPAND_USER_ADDR_TYPE	44
 #define EXPAND_PACKADD		45
 #define EXPAND_MESSAGES		46
-#define EXPAND_MACACTION	46
+#define EXPAND_MAPCLEAR		47
+#define EXPAND_MACACTION	48
 
 /* Values for exmode_active (0 is no exmode) */
 #define EXMODE_NORMAL		1
@@ -2166,6 +2167,11 @@ typedef enum {
 # define number_width(x) 7
 #endif
 
+/* This must come after including proto.h */
+#if !(defined(FEAT_MBYTE) && defined(WIN3264))
+# define mch_open(n, m, p)	open((n), (m), (p))
+# define mch_fopen(n, p)	fopen((n), (p))
+#endif
 
 #include "globals.h"	    /* global variables and messages */
 

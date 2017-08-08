@@ -2165,6 +2165,7 @@ test_arglist \
 	test_crypt \
 	test_cscope \
 	test_cursor_func \
+	test_curswant \
 	test_delete \
 	test_diffmode \
 	test_digraph \
@@ -2183,6 +2184,7 @@ test_arglist \
 	test_farsi \
 	test_feedkeys \
 	test_file_perm \
+	test_file_size \
 	test_fileformat \
 	test_filetype \
 	test_filter_cmd \
@@ -2195,6 +2197,7 @@ test_arglist \
 	test_functions \
 	test_ga \
 	test_getcwd \
+	test_getvar \
 	test_gf \
 	test_glob2regpat \
 	test_global \
@@ -2206,6 +2209,7 @@ test_arglist \
 	test_help \
 	test_help_tagjump \
 	test_hide \
+	test_highlight \
 	test_history \
 	test_hlsearch \
 	test_increment \
@@ -2217,6 +2221,8 @@ test_arglist \
 	test_lambda \
 	test_langmap \
 	test_largefile \
+	test_let \
+	test_lineending \
 	test_lispwords \
 	test_listlbr \
 	test_listlbr_utf8 \
@@ -2261,6 +2267,7 @@ test_arglist \
 	test_reltime \
 	test_retab \
 	test_ruby \
+	test_scrollbind \
 	test_search \
 	test_searchpos \
 	test_set \
