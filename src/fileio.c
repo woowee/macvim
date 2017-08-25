@@ -1623,7 +1623,8 @@ retry:
 		 * Decrypt the read bytes.  This is done before checking for
 		 * EOF because the crypt layer may be buffering.
 		 */
-		if (cryptkey != NULL && size > 0)
+		if (cryptkey != NULL && curbuf->b_cryptstate != NULL
+								   && size > 0)
 		{
 		    if (crypt_works_inplace(curbuf->b_cryptstate))
 		    {
