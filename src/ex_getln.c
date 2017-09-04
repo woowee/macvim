@@ -3385,6 +3385,10 @@ cursorcmd(void)
     }
 
     windgoto(msg_row, msg_col);
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+    if (p_imst == IM_ON_THE_SPOT)
+	redrawcmd_preedit();
+#endif
 #ifdef MCH_CURSOR_SHAPE
     mch_update_cursor();
 #endif
