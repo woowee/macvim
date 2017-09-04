@@ -597,6 +597,8 @@ EXTERN int	p_ic;		/* 'ignorecase' */
 EXTERN char_u	*p_imak;	/* 'imactivatekey' */
 EXTERN char_u	*p_imaf;	/* 'imactivatefunc' */
 EXTERN char_u	*p_imsf;	/* 'imstatusfunc' */
+#endif
+#if (defined(FEAT_XIM) && defined(FEAT_GUI_GTK)) || defined(FEAT_GUI_MACVIM)
 EXTERN long	p_imst;		/* 'imstyle' */
 # define IM_ON_THE_SPOT		0L
 # define IM_OVER_THE_SPOT	1L

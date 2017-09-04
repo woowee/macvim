@@ -5198,7 +5198,9 @@ win_line(
 	 * preedit_changed and commit.  Thus Vim can't set "im_is_active", use
 	 * im_is_preediting() here. */
 	if (p_imst == IM_ON_THE_SPOT
+# ifndef FEAT_GUI_MACVIM
 		&& xic != NULL
+# endif
 		&& lnum == wp->w_cursor.lnum
 		&& (State & INSERT)
 		&& !p_imdisable

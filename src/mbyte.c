@@ -4809,9 +4809,12 @@ static unsigned long im_commit_handler_id  = 0;
 # ifndef FEAT_GUI_MACVIM
 static unsigned int  im_activatekey_keyval = GDK_VoidSymbol;
 static unsigned int  im_activatekey_state  = 0;
-# endif
 
-# ifndef FEAT_GUI_MACVIM
+static GtkWidget *preedit_window = NULL;
+static GtkWidget *preedit_label = NULL;
+
+static void im_preedit_window_set_position(void);
+
     void
 im_set_active(int active)
 {
@@ -4911,44 +4914,6 @@ im_add_to_input(char_u *str, int len)
 # endif
 }
 
-    static void
-im_delete_preedit(void)
-{
-    char_u bskey[]  = {CSI, 'k', 'b'};
-    char_u delkey[] = {CSI, 'k', 'D'};
-
-    if (State & NORMAL)
-    {
-	im_preedit_cursor = 0;
-	return;
-    }
-    for (; im_preedit_cursor > 0; --im_preedit_cursor)
-	add_to_input_buf(bskey, (int)sizeof(bskey));
-
-    for (; im_preedit_trailing > 0; --im_preedit_trailing)
-	add_to_input_buf(delkey, (int)sizeof(delkey));
-}
-
-/*
- * Move the cursor left by "num_move_back" characters.
- * Note that ins_left() checks im_is_preediting() to avoid breaking undo for
- * these K_LEFT keys.
- */
-    static void
-im_correct_cursor(int num_move_back)
-{
-    char_u backkey[] = {CSI, 'k', 'l'};
-
-    if (State & NORMAL)
-	return;
-#  ifdef FEAT_RIGHTLEFT
-    if ((State & CMDLINE) == 0 && curwin != NULL && curwin->w_p_rl)
-	backkey[2] = 'r';
-#  endif
-    for (; num_move_back > 0; --num_move_back)
-	add_to_input_buf(backkey, (int)sizeof(backkey));
-}
-
 # ifndef FEAT_GUI_MACVIM
      static void
 im_preedit_window_set_position(void)
@@ -5038,6 +5003,7 @@ im_show_preedit()
     if (p_mh) /* blank out the pointer if necessary */
 	gui_mch_mousehide(TRUE);
 }
+# endif
 
     static void
 im_preedit_window_open()
@@ -5049,11 +5015,13 @@ im_preedit_window_open()
     GdkColor color;
     gint w, h;
 
+# ifndef FEAT_GUI_MACVIM
     if (p_imst == IM_OVER_THE_SPOT)
     {
 	im_preedit_window_close();
 	return;
     }
+# endif
 
     if (State & NORMAL)
     {
@@ -5362,6 +5330,7 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 
     g_return_if_fail(preedit_string != NULL); /* just in case */
 
+# ifndef FEAT_GUI_MACVIM
     if (p_imst == IM_OVER_THE_SPOT)
     {
 	if (preedit_string[0] == NUL)
@@ -5375,20 +5344,8 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 	    im_show_preedit();
 	}
     }
-
-    im_delete_preedit();
-
-    /*
-     * Compute the end of the preediting area: "preedit_end_col".
-     * According to the documentation of gtk_im_context_get_preedit_string(),
-     * the cursor_pos output argument returns the offset in bytes.  This is
-     * unfortunately not true -- real life shows the offset is in characters,
-     * and the GTK+ source code agrees with me.  Will file a bug later.
-     */
-    if (preedit_start_col != MAXCOL)
-	preedit_end_col = preedit_start_col;
-    str = (char_u *)preedit_string;
-    for (p = str, i = 0; *p != NUL; p += utf_byte2len(*p), ++i)
+    else
+# endif
     {
 	/* If preedit_start_col is MAXCOL set it to the current cursor position. */
 	if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')

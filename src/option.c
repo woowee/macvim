@@ -1683,9 +1683,13 @@ static struct vimoption options[] =
 #endif
 			    SCRIPTID_INIT},
     {"imstyle",	    "imst", P_NUM|P_VI_DEF|P_SECURE,
-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+#if (defined(FEAT_XIM) && defined(FEAT_GUI_GTK)) || defined(FEAT_GUI_MACVIM)
 			    (char_u *)&p_imst, PV_NONE,
+# if defined(FEAT_GUI_MACVIM)
+			    {(char_u *)IM_ON_THE_SPOT, (char_u *)0L}
+# else
 			    {(char_u *)IM_OVER_THE_SPOT, (char_u *)0L}
+# endif
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
@@ -9253,7 +9257,7 @@ set_num_option(
 #endif
     }
 
-#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+#if (defined(FEAT_XIM) && defined(FEAT_GUI_GTK)) || defined(FEAT_GUI_MACVIM)
     /* 'imstyle' */
     else if (pp == &p_imst)
     {
