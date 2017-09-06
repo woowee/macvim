@@ -4980,7 +4980,11 @@ im_preedit_window_open()
 	return;
     }
 
-    if (State & NORMAL)
+    if (State & NORMAL
+#ifdef FEAT_TERMINAL
+	    && !term_use_loop()
+#endif
+       )
     {
 	preedit_window = gtk_window_new(GTK_WINDOW_POPUP);
 	preedit_label = gtk_label_new("");
