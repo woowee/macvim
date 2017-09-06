@@ -165,7 +165,9 @@ func Test_terminal_scrape_123()
 
   call term_wait(buf)
   let g:buf = buf
-  call WaitFor('len(term_scrape(g:buf, 1)) > 0')
+  " On MS-Windows we first get a startup message of two lines, wait for the
+  " "cls" to happen, after that we have one line with three characters.
+  call WaitFor('len(term_scrape(g:buf, 1)) == 3')
   call Check_123(buf)
 
   " Must still work after the job ended.
@@ -461,7 +463,12 @@ func Test_terminal_noblock()
   if has('mac')
     " The shell or something else has a problem dealing with more than 1000
     " characters at the same time.
-    let len = 1000
+    if has('gui_running')
+      " PIPE_BUF is 512
+      let len = 512 - 5 - 1
+    else
+      let len = 1000
+    endif
   else
     let len = 5000
   endif
@@ -590,12 +597,15 @@ func Test_terminal_wrong_options()
 endfunc
 
 func Test_terminal_redir_file()
-  let cmd = Get_cat_123_cmd()
-  let buf = term_start(cmd, {'out_io': 'file', 'out_name': 'Xfile'})
-  call term_wait(buf)
-  call WaitFor('len(readfile("Xfile")) > 0')
-  call assert_match('123', readfile('Xfile')[0])
-  call delete('Xfile')
+  " TODO: this should work on MS-Window
+  if has('unix')
+    let cmd = Get_cat_123_cmd()
+    let buf = term_start(cmd, {'out_io': 'file', 'out_name': 'Xfile'})
+    call term_wait(buf)
+    call WaitFor('len(readfile("Xfile")) > 0')
+    call assert_match('123', readfile('Xfile')[0])
+    call delete('Xfile')
+  endif
 
   if has('unix')
     let buf = term_start('xyzabc', {'err_io': 'file', 'err_name': 'Xfile'})
@@ -609,6 +619,8 @@ func Test_terminal_redir_file()
     call term_wait(buf)
     call WaitFor('term_getline(' . buf . ', 1) == "one line"')
     call assert_equal('one line', term_getline(buf, 1))
+    let g:job = term_getjob(buf)
+    call WaitFor('job_status(g:job) == "dead"')
     bwipe
     call delete('Xfile')
   endif
