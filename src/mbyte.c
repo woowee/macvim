@@ -5006,14 +5006,10 @@ im_show_preedit()
 # endif
 
     static void
-im_preedit_window_open()
+im_delete_preedit(void)
 {
-    char *preedit_string;
-    char buf[8];
-    PangoAttrList *attr_list;
-    PangoLayout *layout;
-    GdkColor color;
-    gint w, h;
+    char_u bskey[]  = {CSI, 'k', 'b'};
+    char_u delkey[] = {CSI, 'k', 'D'};
 
 # ifndef FEAT_GUI_MACVIM
     if (p_imst == IM_OVER_THE_SPOT)
@@ -5029,64 +5025,37 @@ im_preedit_window_open()
 #endif
        )
     {
-	preedit_window = gtk_window_new(GTK_WINDOW_POPUP);
-	preedit_label = gtk_label_new("");
-	gtk_container_add(GTK_CONTAINER(preedit_window), preedit_label);
+	im_preedit_cursor = 0;
+	return;
     }
+    for (; im_preedit_cursor > 0; --im_preedit_cursor)
+	add_to_input_buf(bskey, (int)sizeof(bskey));
 
-    gtk_widget_modify_font(preedit_label, gui.norm_font);
-
-    vim_snprintf(buf, sizeof(buf), "#%06X", gui.norm_pixel);
-    gdk_color_parse(buf, &color);
-    gtk_widget_modify_fg(preedit_label, GTK_STATE_NORMAL, &color);
-
-    vim_snprintf(buf, sizeof(buf), "#%06X", gui.back_pixel);
-    gdk_color_parse(buf, &color);
-    gtk_widget_modify_bg(preedit_window, GTK_STATE_NORMAL, &color);
-
-    gtk_im_context_get_preedit_string(xic, &preedit_string, &attr_list, NULL);
-
-    if (preedit_string[0] != NUL)
-    {
-	gtk_label_set_text(GTK_LABEL(preedit_label), preedit_string);
-	gtk_label_set_attributes(GTK_LABEL(preedit_label), attr_list);
-
-	layout = gtk_label_get_layout(GTK_LABEL(preedit_label));
-	pango_layout_get_pixel_size(layout, &w, &h);
-	h = MAX(h, gui.char_height);
-	gtk_window_resize(GTK_WINDOW(preedit_window), w, h);
-
-	gtk_widget_show_all(preedit_window);
-
-	im_preedit_window_set_position();
-    }
-
-    g_free(preedit_string);
-    pango_attr_list_unref(attr_list);
+    for (; im_preedit_trailing > 0; --im_preedit_trailing)
+	add_to_input_buf(delkey, (int)sizeof(delkey));
 }
 
+/*
+ * Move the cursor left by "num_move_back" characters.
+ * Note that ins_left() checks im_is_preediting() to avoid breaking undo for
+ * these K_LEFT keys.
+ */
     static void
-im_preedit_window_close()
+im_correct_cursor(int num_move_back)
 {
-    if (preedit_window != NULL)
-	gtk_widget_hide(preedit_window);
+    char_u backkey[] = {CSI, 'k', 'l'};
+
+    if (State & NORMAL)
+	return;
+#  ifdef FEAT_RIGHTLEFT
+    if ((State & CMDLINE) == 0 && curwin != NULL && curwin->w_p_rl)
+	backkey[2] = 'r';
+#  endif
+    for (; num_move_back > 0; --num_move_back)
+	add_to_input_buf(backkey, (int)sizeof(backkey));
 }
 
-    static void
-im_show_preedit()
-{
-    im_preedit_window_open();
-
-    if (p_mh) /* blank out the pointer if necessary */
-	gui_mch_mousehide(TRUE);
-}
-
-    static void
-im_delete_preedit(void)
-{
-    im_preedit_window_close();
-}
-
+# ifndef FEAT_GUI_MACVIM
 static int xim_expected_char = NUL;
 static int xim_ignored_char = FALSE;
 # endif
@@ -5124,6 +5093,10 @@ im_commit_cb(GtkIMContext *context UNUSED,
 {
     int		slen = (int)STRLEN(str);
     int		add_to_input = TRUE;
+    int		clen;
+    int		len = slen;
+    int		commit_with_preedit = TRUE;
+    char_u	*im_str;
 
 #ifdef XIM_DEBUG
     xim_log("im_commit_cb(): %s\n", str);
@@ -5318,7 +5291,14 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 {
 # ifndef FEAT_GUI_MACVIM
     char    *preedit_string = NULL;
+    int	    cursor_index    = 0;
+# endif
+    int	    num_move_back   = 0;
+    char_u  *str;
+    char_u  *p;
+    int	    i;
 
+# ifndef FEAT_GUI_MACVIM
     if (p_imst == IM_ON_THE_SPOT)
 	gtk_im_context_get_preedit_string(context,
 					  &preedit_string, NULL,
@@ -5327,6 +5307,7 @@ im_preedit_changed_macvim(char *preedit_string, int start_index, int cursor_inde
 	gtk_im_context_get_preedit_string(context,
 					  &preedit_string, NULL,
 					  NULL);
+# endif
 
 #ifdef XIM_DEBUG
     xim_log("im_preedit_changed_cb(): %s\n", preedit_string);
