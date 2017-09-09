@@ -53,8 +53,8 @@
 #define DRAW_UNDERC               0x08    /* draw undercurl text */
 #define DRAW_ITALIC               0x10    /* draw italic text */
 #define DRAW_CURSOR               0x20
-#define DRAW_WIDE                 0x40    /* draw wide text */
-#define DRAW_TUNDERL              0x100   /* draw thick underline text */
+#define DRAW_WIDE                 0x80    /* draw wide text */
+#define DRAW_TUNDERL              0x200   /* draw thick underline text */
 
 
 static NSString *MMWideCharacterAttributeName = @"MMWideChar";
