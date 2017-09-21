@@ -1194,10 +1194,8 @@ luaV_window_index(lua_State *L)
 	lua_pushinteger(L, w->w_cursor.lnum);
     else if (strncmp(s, "col", 3) == 0)
 	lua_pushinteger(L, w->w_cursor.col + 1);
-#ifdef FEAT_WINDOWS
     else if (strncmp(s, "width", 5) == 0)
 	lua_pushinteger(L, W_WIDTH(w));
-#endif
     else if (strncmp(s, "height", 6) == 0)
 	lua_pushinteger(L, w->w_height);
     /* methods */
@@ -1237,7 +1235,6 @@ luaV_window_newindex (lua_State *L)
 	w->w_cursor.col = v - 1;
 	update_screen(VALID);
     }
-#ifdef FEAT_WINDOWS
     else if (strncmp(s, "width", 5) == 0)
     {
 	win_T *win = curwin;
@@ -1248,7 +1245,6 @@ luaV_window_newindex (lua_State *L)
 	win_setwidth(v);
 	curwin = win;
     }
-#endif
     else if (strncmp(s, "height", 6) == 0)
     {
 	win_T *win = curwin;
