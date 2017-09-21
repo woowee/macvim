@@ -6887,10 +6887,8 @@ static char *(highlight_init_both[]) = {
     CENT("StatusLineNC term=reverse cterm=reverse",
 	 "StatusLineNC term=reverse cterm=reverse gui=reverse"),
     "default link EndOfBuffer NonText",
-#ifdef FEAT_WINDOWS
     CENT("VertSplit term=reverse cterm=reverse",
 	 "VertSplit term=reverse cterm=reverse gui=reverse"),
-#endif
 #ifdef FEAT_CLIPBOARD
     CENT("VisualNOS term=underline,bold cterm=underline,bold",
 	 "VisualNOS term=underline,bold cterm=underline,bold gui=underline,bold"),
@@ -6903,12 +6901,10 @@ static char *(highlight_init_both[]) = {
     CENT("PmenuSbar ctermbg=Grey",
 	 "PmenuSbar ctermbg=Grey guibg=Grey"),
 #endif
-#ifdef FEAT_WINDOWS
     CENT("TabLineSel term=bold cterm=bold",
 	 "TabLineSel term=bold cterm=bold gui=bold"),
     CENT("TabLineFill term=reverse cterm=reverse",
 	 "TabLineFill term=reverse cterm=reverse gui=reverse"),
-#endif
 #ifdef FEAT_GUI
     "Cursor guibg=fg guifg=bg",
     "lCursor guibg=fg guifg=bg", /* should be different, but what? */
@@ -6979,10 +6975,8 @@ static char *(highlight_init_light[]) = {
     CENT("DiffDelete term=bold ctermfg=Blue ctermbg=LightCyan",
 	 "DiffDelete term=bold ctermfg=Blue ctermbg=LightCyan gui=bold guifg=Blue guibg=LightCyan"),
 #endif
-#ifdef FEAT_WINDOWS
     CENT("TabLine term=underline cterm=underline ctermfg=black ctermbg=LightGrey",
 	 "TabLine term=underline cterm=underline ctermfg=black ctermbg=LightGrey gui=underline guibg=LightGrey"),
-#endif
 #ifdef FEAT_SYN_HL
     CENT("CursorColumn term=reverse ctermbg=LightGrey",
 	 "CursorColumn term=reverse ctermbg=LightGrey guibg=Grey90"),
@@ -7007,6 +7001,12 @@ static char *(highlight_init_light[]) = {
 	 "StatusLineTerm term=reverse,bold cterm=bold ctermfg=White ctermbg=DarkGreen gui=bold guifg=bg guibg=DarkGreen"),
     CENT("StatusLineTermNC term=reverse ctermfg=White ctermbg=DarkGreen",
 	 "StatusLineTermNC term=reverse ctermfg=White ctermbg=DarkGreen guifg=bg guibg=DarkGreen"),
+#endif
+#ifdef FEAT_MENU
+    CENT("ToolbarLine term=underline ctermbg=LightGrey",
+	 "ToolbarLine term=underline ctermbg=LightGrey guibg=LightGrey"),
+    CENT("ToolbarButton cterm=bold ctermfg=White ctermbg=DarkGrey",
+	 "ToolbarButton cterm=bold ctermfg=White ctermbg=DarkGrey gui=bold guifg=White guibg=DarkGrey"),
 #endif
     NULL
 };
@@ -7073,10 +7073,8 @@ static char *(highlight_init_dark[]) = {
     CENT("DiffDelete term=bold ctermfg=Blue ctermbg=DarkCyan",
 	 "DiffDelete term=bold ctermfg=Blue ctermbg=DarkCyan gui=bold guifg=Blue guibg=DarkCyan"),
 #endif
-#ifdef FEAT_WINDOWS
     CENT("TabLine term=underline cterm=underline ctermfg=white ctermbg=DarkGrey",
 	 "TabLine term=underline cterm=underline ctermfg=white ctermbg=DarkGrey gui=underline guibg=DarkGrey"),
-#endif
 #ifdef FEAT_SYN_HL
     CENT("CursorColumn term=reverse ctermbg=DarkGrey",
 	 "CursorColumn term=reverse ctermbg=DarkGrey guibg=Grey40"),
@@ -7101,6 +7099,12 @@ static char *(highlight_init_dark[]) = {
 	 "StatusLineTerm term=reverse,bold cterm=bold ctermfg=Black ctermbg=LightGreen gui=bold guifg=bg guibg=LightGreen"),
     CENT("StatusLineTermNC term=reverse ctermfg=Black ctermbg=LightGreen",
 	 "StatusLineTermNC term=reverse ctermfg=Black ctermbg=LightGreen guifg=bg guibg=LightGreen"),
+#endif
+#ifdef FEAT_MENU
+    CENT("ToolbarLine term=underline ctermbg=DarkGrey",
+	 "ToolbarLine term=underline ctermbg=DarkGrey guibg=DarkGrey"),
+    CENT("ToolbarButton cterm=bold ctermfg=Black ctermbg=LightGrey",
+	 "ToolbarButton cterm=bold ctermfg=Black ctermbg=LightGrey gui=bold guifg=Black guibg=LightGrey"),
 #endif
     NULL
 };
@@ -9533,6 +9537,20 @@ syn_name2id(char_u *name)
     return i + 1;
 }
 
+/*
+ * Lookup a highlight group name and return its attributes.
+ * Return zero if not found.
+ */
+    int
+syn_name2attr(char_u *name)
+{
+    int id = syn_name2id(name);
+
+    if (id != 0)
+	return syn_id2attr(syn_get_final_id(id));
+    return 0;
+}
+
 #if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Return TRUE if highlight group "name" exists.
@@ -9709,7 +9727,7 @@ syn_id2attr(int hl_id)
     return attr;
 }
 
-#ifdef FEAT_GUI
+#if defined(FEAT_GUI) || defined(FEAT_TERMGUICOLORS) || defined(PROTO)
 /*
  * Get the GUI colors and attributes for a group ID.
  * NOTE: the colors will be INVALCOLOR when not set, the color otherwise.
@@ -9725,6 +9743,19 @@ syn_id2colors(int hl_id, guicolor_T *fgp, guicolor_T *bgp)
     *fgp = sgp->sg_gui_fg;
     *bgp = sgp->sg_gui_bg;
     return sgp->sg_gui;
+}
+#endif
+
+#if defined(FEAT_TERMINAL) || defined(PROT)
+    void
+syn_id2cterm_bg(int hl_id, int *fgp, int *bgp)
+{
+    struct hl_group	*sgp;
+
+    hl_id = syn_get_final_id(hl_id);
+    sgp = &HL_TABLE()[hl_id - 1];	    /* index is ID minus one */
+    *fgp = sgp->sg_cterm_fg - 1;
+    *bgp = sgp->sg_cterm_bg - 1;
 }
 #endif
 
