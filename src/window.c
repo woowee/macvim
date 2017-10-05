@@ -2724,7 +2724,7 @@ winframe_remove(
     if (frp2 == frp_close->fr_next)
     {
 	int row = win->w_winrow;
-	int col = W_WINCOL(win);
+	int col = win->w_wincol;
 
 	frame_comp_pos(frp2, &row, &col);
     }
@@ -4775,13 +4775,14 @@ win_remove(
     if (wp->w_prev != NULL)
 	wp->w_prev->w_next = wp->w_next;
     else if (tp == NULL)
-	firstwin = wp->w_next;
+	firstwin = curtab->tp_firstwin = wp->w_next;
     else
 	tp->tp_firstwin = wp->w_next;
+
     if (wp->w_next != NULL)
 	wp->w_next->w_prev = wp->w_prev;
     else if (tp == NULL)
-	lastwin = wp->w_prev;
+	lastwin = curtab->tp_lastwin = wp->w_prev;
     else
 	tp->tp_lastwin = wp->w_prev;
 }
@@ -5777,13 +5778,13 @@ scroll_to_fraction(win_T *wp, int prev_height)
 	     */
 	    wp->w_wrow = line_size;
 	    if (wp->w_wrow >= wp->w_height
-				       && (W_WIDTH(wp) - win_col_off(wp)) > 0)
+				       && (wp->w_width - win_col_off(wp)) > 0)
 	    {
-		wp->w_skipcol += W_WIDTH(wp) - win_col_off(wp);
+		wp->w_skipcol += wp->w_width - win_col_off(wp);
 		--wp->w_wrow;
 		while (wp->w_wrow >= wp->w_height)
 		{
-		    wp->w_skipcol += W_WIDTH(wp) - win_col_off(wp)
+		    wp->w_skipcol += wp->w_width - win_col_off(wp)
 							   + win_col_off2(wp);
 		    --wp->w_wrow;
 		}
@@ -6597,11 +6598,11 @@ restore_snapshot_rec(frame_T *sn, frame_T *fr)
  */
     int
 switch_win(
-    win_T	**save_curwin UNUSED,
-    tabpage_T	**save_curtab UNUSED,
-    win_T	*win UNUSED,
-    tabpage_T	*tp UNUSED,
-    int		no_display UNUSED)
+    win_T	**save_curwin,
+    tabpage_T	**save_curtab,
+    win_T	*win,
+    tabpage_T	*tp,
+    int		no_display)
 {
 # ifdef FEAT_AUTOCMD
     block_autocmds();
