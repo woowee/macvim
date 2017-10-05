@@ -1480,7 +1480,6 @@ Msg(text, hl=NULL)
 
     PREINIT:
     int		attr;
-    int		id;
 
     PPCODE:
     if (text != NULL)
