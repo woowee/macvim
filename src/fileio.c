@@ -8022,6 +8022,8 @@ static struct event_name
     {"BufWritePost",	EVENT_BUFWRITEPOST},
     {"BufWritePre",	EVENT_BUFWRITEPRE},
     {"BufWriteCmd",	EVENT_BUFWRITECMD},
+    {"CmdlineEnter",	EVENT_CMDLINEENTER},
+    {"CmdlineLeave",	EVENT_CMDLINELEAVE},
     {"CmdwinEnter",	EVENT_CMDWINENTER},
     {"CmdwinLeave",	EVENT_CMDWINLEAVE},
     {"CmdUndefined",	EVENT_CMDUNDEFINED},

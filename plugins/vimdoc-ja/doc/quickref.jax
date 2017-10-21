@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim バージョン 8.0.  Last change: 2016 Aug 21
+*quickref.txt*  For Vim バージョン 8.0.  Last change: 2016 Dec 16
 
 
 		  VIMリファレンスマニュアル    by Bram Moolenaar
@@ -799,6 +799,7 @@
 'macatsui'		    Mac GUI: ATSUI テキスト描画を使う
 'magic'			    検索パターン内の特殊文字を変更する
 'makeef'	  'mef'     |:make|用のエラーファイル
+'makeencoding'	  'menc'    外部 make/grep コマンドのエンコーディング
 'makeprg'	  'mp'      |:make|で使う外部プログラム
 'matchpairs'	  'mps'     |%|で探す文字ペア
 'matchtime'	  'mat'     'showmatch' で対応カッコを表示する時間。0.1秒単位
@@ -852,6 +853,7 @@
 'prompt'	  'prompt'  Ex モードでプロンプトを有効にする
 'pythondll'		    Python 2 動的ライブラリの名前
 'pythonthreedll'	    Python 3 動的ライブラリの名前
+'pyxversion'	  'pyx'	    pyx* コマンドに使用される Python のバージョン
 'quoteescape'	  'qe'	    文字列中に使われるエスケープ文字
 'readonly'	  'ro'      バッファの書き込みを制限する
 'redrawtime'	  'rdt'     'hlsearch' と |:match| のハイライトのタイムアウト
@@ -864,7 +866,7 @@
 'revins'	  'ri'      挿入モードで入力方向が逆になる
 'rightleft'	  'rl'      "右から左" 指向のウィンドウ
 'rightleftcmd'	  'rlc'     "右から左" に入力するコマンド
-'rubydll'		    name of the Ruby dynamic library
+'rubydll'		    Ruby 動的ライブラリの名前
 'ruler'		  'ru'      ステータスラインにカーソルが位置する場所を表示する
 'rulerformat'	  'ruf'     'ruler' 用のフォーマット
 'runtimepath'	  'rtp'     ランタイムファイル用のディレクトリのリスト
@@ -924,7 +926,7 @@
 'tabline'	  'tal'     コンソールのタブページラインのカスタムフォーマット
 'tabpagemax'	  'tpm'     タブページの最大数。|-p|と "tab all" に使われる
 'tabstop'	  'ts'      <Tab>の表示幅
-'tagbsearch'	  'tbs'     タグファイル内の検索にバイナリサーチを使う
+'tagbsearch'	  'tbs'     タグファイル内の検索に二分探索を使う
 'tagcase'	  'tc'      タグファイル内検索で大文字小文字の扱いを指定する
 'taglength'	  'tl'      タグ名はこの文字数までしか意味を持たない
 'tagrelative'	  'tr'      タグファイル内のファイル名が相対的になる
@@ -1082,6 +1084,8 @@
 |c_<Up>|	<Up>/<Down>	   現在のコマンドで始まるコマンドラインの履歴
 				   を呼び出す
 |c_<S-Up>|	<S-Up>/<S-Down>	   コマンドラインの履歴を呼び出す
+|c_CTRL-G|	CTRL-G		   'incsearch' が有効時、次のマッチへ
+|c_CTRL-T|	CTRL-T		   'incsearch' が有効時、前のマッチへ
 |:history|	:his[tory]	   コマンドライン履歴を表示
 
 文脈依存の補完機能

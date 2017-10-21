@@ -41,18 +41,18 @@ function! GetPrologIndent()
     endif
     " Check for clause head on previous line
     if pline =~ ':-\s*\(%.*\)\?$'
-	let ind = ind + shiftwidth()
+	let ind = ind + &sw
     " Check for end of clause on previous line
     elseif pline =~ '\.\s*\(%.*\)\?$'
-	let ind = ind - shiftwidth()
+	let ind = ind - &sw
     endif
     " Check for opening conditional on previous line
     if pline =~ '^\s*\([(;]\|->\)'
-	let ind = ind + shiftwidth()
+	let ind = ind + &sw
     endif
     " Check for closing an unclosed paren, or middle ; or ->
     if line =~ '^\s*\([);]\|->\)'
-	let ind = ind - shiftwidth()
+	let ind = ind - &sw
     endif
     return ind
 endfunction

@@ -1320,6 +1320,8 @@ enum auto_event
     EVENT_BUFWRITEPOST,		/* after writing a buffer */
     EVENT_BUFWRITEPRE,		/* before writing a buffer */
     EVENT_BUFWRITECMD,		/* write buffer using command */
+    EVENT_CMDLINEENTER,		/* after entering the command line */
+    EVENT_CMDLINELEAVE,		/* before leaving the command line */
     EVENT_CMDWINENTER,		/* after entering the cmdline window */
     EVENT_CMDWINLEAVE,		/* before leaving the cmdline window */
     EVENT_COLORSCHEME,		/* after loading a colorscheme */
@@ -2023,11 +2025,12 @@ typedef int sock_T;
 #define VV_TYPE_NONE	78
 #define VV_TYPE_JOB	79
 #define VV_TYPE_CHANNEL	80
-#define VV_TERMRGBRESP	81
-#define VV_TERMU7RESP	82
-#define VV_TERMSTYLERESP 83
-#define VV_TERMBLINKRESP 84
-#define VV_LEN		85	/* number of v: vars */
+#define VV_TERMRFGRESP	81
+#define VV_TERMRBGRESP	82
+#define VV_TERMU7RESP	83
+#define VV_TERMSTYLERESP 84
+#define VV_TERMBLINKRESP 85
+#define VV_LEN		86	/* number of v: vars */
 
 /* used for v_number in VAR_SPECIAL */
 #define VVAL_FALSE	0L

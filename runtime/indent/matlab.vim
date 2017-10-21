@@ -44,9 +44,9 @@ function GetMatlabIndent(lnum)
     " See if this line does not follow the line right after an openblock
     if getline(plnum) =~ '^\s*\(for\|if\|else\|elseif\|case\|while\|switch\|try\|otherwise\|catch\)\>'
     " See if the user has already dedented
-    elseif indent(v:lnum) > curind - shiftwidth()
+    elseif indent(v:lnum) > curind - &sw
       " If not, recommend one dedent
-	let curind = curind - shiftwidth()
+	let curind = curind - &sw
     else
       " Otherwise, trust the user
       return -1
@@ -56,9 +56,9 @@ function GetMatlabIndent(lnum)
   " If the previous line opened a block
   elseif getline(plnum) =~ '^\s*\(for\|if\|else\|elseif\|case\|while\|switch\|try\|otherwise\|catch\)\>'
     " See if the user has already indented
-    if indent(v:lnum) < curind + shiftwidth()
+    if indent(v:lnum) < curind + &sw
       "If not, recommend indent
-      let curind = curind + shiftwidth()
+      let curind = curind + &sw
     else
       " Otherwise, trust the user
       return -1

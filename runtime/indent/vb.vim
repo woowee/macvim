@@ -49,26 +49,26 @@ fun! VbGetIndent(lnum)
 
     " Add
     if previous_line =~? '^\s*\<\(begin\|\%(\%(private\|public\|friend\)\s\+\)\=\%(function\|sub\|property\)\|select\|case\|default\|if\|else\|elseif\|do\|for\|while\|enum\|with\)\>'
-	let ind = ind + shiftwidth()
+	let ind = ind + &sw
     endif
 
     " Subtract
     if this_line =~? '^\s*\<end\>\s\+\<select\>'
 	if previous_line !~? '^\s*\<select\>'
-	    let ind = ind - 2 * shiftwidth()
+	    let ind = ind - 2 * &sw
 	else
 	    " this case is for an empty 'select' -- 'end select'
 	    " (w/o any case statements) like:
 	    "
 	    " select case readwrite
 	    " end select
-	    let ind = ind - shiftwidth()
+	    let ind = ind - &sw
 	endif
     elseif this_line =~? '^\s*\<\(end\|else\|elseif\|until\|loop\|next\|wend\)\>'
-	let ind = ind - shiftwidth()
+	let ind = ind - &sw
     elseif this_line =~? '^\s*\<\(case\|default\)\>'
 	if previous_line !~? '^\s*\<select\>'
-	    let ind = ind - shiftwidth()
+	    let ind = ind - &sw
 	endif
     endif
 

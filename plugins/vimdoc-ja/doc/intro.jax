@@ -1,4 +1,4 @@
-*intro.txt*     For Vim バージョン 8.0.  Last change: 2015 Jan 20
+*intro.txt*     For Vim バージョン 8.0.  Last change: 2016 Sep 24
 
 
 		  VIMリファレンスマニュアル    by Bram Moolenaar
@@ -103,19 +103,17 @@ Vim について討論している Usenet News グループ		*news* *usenet*
 
 						*mail-list* *maillist*
 Vim のメーリングリストがいくつかあります:
-<vim@vim.org>
+<vim@vim.org>					*vim-use* *vim_use*
 	現行バージョンの Vim の使い方に関する議論: 使いやすいマップ、質問、回
 	答、特定のバージョンはどこで手に入るかなど。このメーリングリストにはた
 	くさんの人が参加していて、(初心者の) 質問にも答えてくれます。遠慮せず
 	どんどん質問してください。
-<vim-dev@vim.org>				*vim-dev* *vimdev*
+<vim-dev@vim.org>				*vim-dev* *vim_dev* *vimdev*
 	Vim の開発に関する議論: 新しい機能、移植、パッチ、ベータ版など。
-<vim-announce@vim.org>				*vim-announce*
+<vim-announce@vim.org>				*vim-announce* *vim_announce*
 	Vim の新バージョンに関するアナウンス: ベータ版や他システムへの移植につ
 	いてもアナウンスがあります。このメーリングリストは購読専用です。
-<vim-multibyte@vim.org>				*vim-multibyte*
-	Vim のマルチバイト機能の使用、改良に関する議論。
-<vim-mac@vim.org>				*vim-mac*
+<vim-mac@vim.org>				*vim-mac* *vim_mac*
 	Vim のマッキントッシュバージョンの使用、改良に関する議論。
 
 最新の情報は http://www.vim.org/maillist.php を参照。
@@ -139,11 +137,14 @@ http://www.vim.org/maillist.php
 
 バグレポート:				*bugs* *bug-reports* *bugreport.vim*
 
-バグレポートは Vim 開発陣 <vim-dev@vim.org> に送ってください。
-これはメーリングリストです。最初にメンバーになる必要があります。たくさんの人が
-そのメッセージを見ます。それが不都合な場合は (例えばセキュリティ関係)、
-<bugs@vim.org> に送ってください。そのメッセージは Vim のメンテナー (Bram) だけ
-に送信されます。
+バグを報告するには2つの方法があり、どちらも使えます:
+1. バグレポートは Vim 開発陣 <vim-dev@vim.org> に送ってください。
+   これはメーリングリストです。最初にメンバーになる必要があります。たくさんの
+   人がそのメッセージを見ます。それが不都合な場合は (例えばセキュリティ関係)、
+   <bugs@vim.org> に送ってください。そのメッセージは Vim のメンテナー (Bram)
+   だけに送信されます。
+2. GitHub に issue を立ててください: https://github.com/vim/vim/issues
+   文章は vim-dev メーリングリストにも転送されます。
 
 メッセージは簡潔にお願いします。メールに回答する時間は、Vim を改良する時間から
 消費されています! 常に再現可能な例をつけてください。できれば、どこの設定が (あ
@@ -180,8 +181,8 @@ Vim の strftime() 関数は strftime() システムコールを直接使いま�
 は time() システムコールを、getftime() は stat() システムコールで返される時間
 をそれぞれ使用します。システムライブラリが 2000 年対応なら、Vim もそうです。
 
-ユーザーは外部コマンドを使用する Vim スクリプトを作るかもしれません。このこと
-が Y2K 問題を招くかもしれませんが、Vim 自身の問題ではありません。
+ユーザーは外部コマンドを使用する Vim script を作るかもしれません。このことが
+Y2K 問題を招くかもしれませんが、Vim 自身の問題ではありません。
 
 ==============================================================================
 3. クレジット				*credits* *author* *Bram* *Moolenaar*
@@ -220,7 +221,7 @@ Vim エディタは Stevie をベースにしており、下記の方々のソ�
 	Bill Foster		Athena GUIへの移植
 	Google			週に一日 Vim の仕事をさせてくれる
 	Loic Grenie		xvim (マルチウィンドウバージョンのアイデア)
-	Sven Guckes		Vimのプロモーター、 以前のWWWページ管理者
+	Sven Guckes		Vimのプロモーター、以前のWWWページ管理者
 	Darren Hiebert		Exuberant ctags
 	Jason Hildebrand	GTK+ 2 への移植
 	Bruce Hunsaker		VMSへの移植版の改良

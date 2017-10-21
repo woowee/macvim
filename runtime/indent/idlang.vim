@@ -1,6 +1,6 @@
 " IDL (Interactive Data Language) indent file.
 " Language: IDL (ft=idlang)
-" Last change:	2017 Jun 13
+" Last change:	2012 May 18
 " Maintainer: Aleksandar Jelenak <ajelenak AT yahoo.com>
 
 " Only load this indent file when no other was loaded.
@@ -34,25 +34,25 @@ function GetIdlangIndent(lnum)
    " Indenting of continued lines.
    if getline(pnum) =~ '\$\s*\(;.*\)\=$'
       if getline(pnum2) !~ '\$\s*\(;.*\)\=$'
-	 let curind = curind+shiftwidth()
+	 let curind = curind+&sw
       endif
    else
       if getline(pnum2) =~ '\$\s*\(;.*\)\=$'
-	 let curind = curind-shiftwidth()
+	 let curind = curind-&sw
       endif
    endif
 
    " Indenting blocks of statements.
    if getline(v:lnum) =~? '^\s*\(endif\|endelse\|endwhile\|endfor\|endrep\)\>'
       if getline(pnum) =~? 'begin\>'
-      elseif indent(v:lnum) > curind-shiftwidth()
-	 let curind = curind-shiftwidth()
+      elseif indent(v:lnum) > curind-&sw
+	 let curind = curind-&sw
       else
 	 return -1
       endif
    elseif getline(pnum) =~? 'begin\>'
-      if indent(v:lnum) < curind+shiftwidth()
-	 let curind = curind+shiftwidth()
+      if indent(v:lnum) < curind+&sw
+	 let curind = curind+&sw
       else
 	 return -1
       endif
