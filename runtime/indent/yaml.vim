@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:         YAML
 " Maintainer:       Nikolai Pavlov <zyx.vim@gmail.com>
-" Last Change:	    2017 Jun 13
+" Last Change:	    2015 Nov 01
 
 " Only load this indent file when no other was loaded.
 if exists('b:did_indent')
@@ -22,6 +22,14 @@ let b:undo_indent = 'setlocal indentexpr< indentkeys< smartindent<'
 " Only define the function once.
 if exists('*GetYAMLIndent')
     finish
+endif
+
+if exists('*shiftwidth')
+    let s:shiftwidth = function('shiftwidth')
+else
+    function s:shiftwidth()
+        return &shiftwidth
+    endfunction
 endif
 
 function s:FindPrevLessIndentedLine(lnum, ...)
@@ -111,7 +119,7 @@ function GetYAMLIndent(lnum)
         "
         " - |-
         "     Block scalar without indentation indicator
-        return previndent+shiftwidth()
+        return previndent+s:shiftwidth()
     elseif prevline =~# '\v[:-]\ [|>]%(\d+[+\-]?|[+\-]?\d+)%(\#.*|\s*)$'
         " - |+2
         "   block scalar with indentation indicator
@@ -147,7 +155,7 @@ function GetYAMLIndent(lnum)
                 \                             '\v)%(\s+|\s*%(\#.*)?$))*'
         " Mapping with: value
         "     that is multiline scalar
-        return previndent+shiftwidth()
+        return previndent+s:shiftwidth()
     endif
     return previndent
 endfunction

@@ -1,13 +1,13 @@
-*usr_41.txt*	For Vim バージョン 8.0.  Last change: 2016 Sep 01
+*usr_41.txt*	For Vim バージョン 8.0.  Last change: 2017 Mar 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
-			      Vim スクリプト書法
+			      Vim script 書法
 
 
-Vim スクリプト言語は vimrc ファイルや構文ファイルなど、さまざまな目的に使われ
-ます。この章では Vim スクリプトの書き方を説明します。説明することがたくさんあ
-るので大きな章になってます。
+Vim script 言語は vimrc ファイルや構文ファイルなど、さまざまな目的に使われま
+す。この章では Vim script の書き方を説明します。説明することがたくさんあるので
+大きな章になってます。
 
 |41.1|	はじめに
 |41.2|	変数
@@ -24,7 +24,7 @@ Vim スクリプト言語は vimrc ファイルや構文ファイルなど、さ
 |41.13|	コンパイラプラグインを書く
 |41.14|	プラグインを書く (高速ロード版)
 |41.15|	ライブラリスクリプトを書く
-|41.16|	Vim スクリプトを配布する
+|41.16|	Vim script を配布する
 
 次章: |usr_42.txt|  新しいメニューを追加する
 前章: |usr_40.txt|  新しいコマンドを作る
@@ -33,11 +33,11 @@ Vim スクリプト言語は vimrc ファイルや構文ファイルなど、さ
 ==============================================================================
 *41.1*	はじめに				*vim-script-intro* *script*
 
-誰もが最初に触れる Vim スクリプトは vimrc ファイルです。Vim が起動するときに読
+誰もが最初に触れる Vim script は vimrc ファイルです。Vim が起動するときに読
 み込まれ、書かれているコマンドが実行されます。それにより好きなように設定を変更
 できます。vimrc の中ではすべてのコロンコマンドが使えます (":" で始まるコマンド
 のこと。Ex コマンドやコマンドラインコマンドと呼ばれることもある)。
-シンタックスファイルも Vim スクリプトです。シンタックスファイルは、ファイルタ
+シンタックスファイルも Vim script です。シンタックスファイルは、ファイルタ
 イプ別にオプションを設定するファイルの一種です。複雑なマクロ定義を別ファイルに
 分けて保存しておくこともできます。このように、いろいろな使用方法が考えられま
 す。
@@ -52,7 +52,7 @@ Vim スクリプト言語は vimrc ファイルや構文ファイルなど、さ
 <
 	Note:
 	実際には ":" を書く必要はありません。":" が必要なのはコマンドラインで
-	入力するときだけです。Vim スクリプトファイルを書くときは省略できます。
+	入力するときだけです。Vim script ファイルを書くときは省略できます。
 	このヘルプでは、コロンコマンドであることを強調し、ノーマルモードと区別
 	するためにコロンを表記しています。
 	Note:
@@ -505,7 +505,7 @@ vimrc ファイルで便利に使える例を示しましょう。'term' オプ�
 	:let optname = "path"
 	:let optval = eval('&' . optname)
 
-文字 "&" と "path" を連結しているので eval() の引数は "&path" になります。返り
+文字 "&" と "path" を連結しているので eval() の引数は "&path" になります。戻り
 値は 'path' オプションの値です。
 次のようにすることもできます: >
 	:exe 'let optval = &' . optname
@@ -562,20 +562,20 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 	shellescape()		シェルコマンドで使えるように文字列をエスケープ
 	fnameescape()		Vim コマンド用にファイル名をエスケープ
 	tr()			ある文字の集合から別の文字の集合へ置換する
-	strtrans()		文字列を印刷可能な状態とする
+	strtrans()		文字列を印字可能な状態とする
 	tolower()		文字列を小文字にする
 	toupper()		文字列を大文字にする
 	match()			文字列の中でパターンにマッチした位置
 	matchend()		文字列の中でパターンにマッチした末尾の位置
 	matchstr()		文字列の中でパターンにマッチした文字列
-	matchstrpos()		マッチした文字列と位置
+	matchstrpos()		文字列の中でパターンにマッチした文字列と位置
 	matchlist()		matchstr()と同様だが、部分マッチも返す
 	stridx()		文字列の中で部分文字列が見つかった最初の位置
 	strridx()		文字列の中で部分文字列が見つかった最後の位置
 	strlen()		文字列のバイト単位での長さ
 	strchars()		文字列の文字単位での長さ
 	strwidth()		表示された文字列のサイズ
-	strdisplaywidth()	表示された文字列のサイズ、タブに関係する
+	strdisplaywidth()	表示された文字列のサイズ、タブを扱う
 	substitute()		パターンにマッチする文字列を置換
 	submatch()		":s" と substitute() の中で部分マッチを得る
 	strpart()		文字列の一部分を得る(バイト数指定)
@@ -642,7 +642,7 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 	round()			丸め
 	ceil()			切り上げ
 	floor()			切り下げ
-	trunc()			少数切り捨て
+	trunc()			小数点以下切り捨て
 	fmod()			除法の余り
 	exp()			指数
 	log()			自然対数 (eを底とする対数)
@@ -659,7 +659,7 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 	sinh()			双曲線正弦 (ハイパボリックサイン)
 	cosh()			双曲線余弦 (ハイパボリックコサイン)
 	tanh()			双曲線正接 (ハイパボリックタンジェント)
-	isnan()			数値でない
+	isnan()			数値でないかどうかのチェック
 
 その他の計算:						*bitwise-function*
 	and()			ビットごとの論理積
@@ -671,6 +671,7 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 変数:							*var-functions*
 	type()			変数の型
 	islocked()		変数がロックされているか判定する
+	funcref()		関数参照へのFuncrefを取得する
 	function()		関数名からFuncrefを取得する
 	getbufvar()		指定バッファの変数値を得る
 	setbufvar()		指定バッファに変数を設定する
@@ -680,7 +681,7 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 	setwinvar()		指定ウィンドウに変数を設定する
 	settabvar()		指定タブページに変数を設定する
 	settabwinvar()		指定ウィンドウ・タブページに変数を設定する
-	garbagecollect()	開放可能なメモリを解放する
+	garbagecollect()	解放可能なメモリを解放する
 
 カーソルとマークの位置:			*cursor-functions* *mark-functions*
 	col()			カーソルやマークの列番号を取得する
@@ -738,7 +739,7 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 	isdirectory()		ディレクトリの存在をチェックする
 	getfsize()		ファイルのサイズを得る
 	getcwd()		カレントディレクトリを得る
-	haslocaldir()		カレントウィンドウが |:lcd| を使用するかどうか
+	haslocaldir()		カレントウィンドウが |:lcd| を使用したかどうか
 				をチェックする
 	tempname()		一時ファイルの名前を得る
 	mkdir()			ディレクトリを作成する
@@ -756,7 +757,7 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 	strftime()		時刻を文字列に変換する
 	reltime()		現在時刻または経過時間を正確に取得する
 	reltimestr()		reltime()の結果を文字列に変換する
-	reltimefloat()		convert reltime() result to a Float
+	reltimefloat()		reltime()の結果を浮動小数点に変換する
 
 			*buffer-functions* *window-functions* *arg-functions*
 バッファ、ウィンドウ、引数リスト:
@@ -773,7 +774,7 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 	tabpagenr()		タブページの番号を取得する
 	tabpagewinnr()		タブページを対象にwinnr()と同様
 	winnr()			カレントウィンドウの番号を得る
-	bufwinid()		バッファ固有のウィンドウIDを得る
+	bufwinid()		バッファのウィンドウIDを得る
 	bufwinnr()		バッファのウィンドウ番号を得る
 	winbufnr()		ウィンドウのバッファ番号を得る
 	getbufline()		バッファの行のリストを得る
@@ -783,7 +784,7 @@ substitute() コマンドの前後にいろいろな処理を入れたりする�
 	win_id2tabwin()		IDで指定されたタブとウィンドウの番号を得る
 	win_id2win()		IDで指定されたウィンドウの番号を得る
 	getbufinfo()		バッファの情報一覧を得る
-	gettabinfo()		タブの情報一覧を得る
+	gettabinfo()		タブページの情報一覧を得る
 	getwininfo()		ウィンドウの情報一覧を得る
 
 コマンドライン:					*command-line-functions*
@@ -862,6 +863,7 @@ GUI:						*gui-functions*
 	getfontname()		現在使われているフォントの名前を取得
 	getwinposx()		GUIのVimウィンドウのX座標
 	getwinposy()		GUIのVimウィンドウのY座標
+	balloon_show()		バルーンの内容を設定する
 
 Vimサーバー:					*server-functions*
 	serverlist()		サーバー名のリストを返す
@@ -898,16 +900,19 @@ Vimサーバー:					*server-functions*
 	assert_fails()		関数呼び出しが失敗する事をテストする
 	test_alloc_fail()	メモリの確保を失敗させる
 	test_autochdir()	起動中に 'autochdir' を有効にする
-	test_disable_char_avail()	typeahead なしにテスト
-	test_garbagecollect_now()	直ちにメモリを解放する
+	test_override()		Vimの内部処理を置き換えてテストする
+	test_garbagecollect_now()   直ちにメモリを解放する
+	test_ignore_error()	特定のエラーメッセージを無視する
 	test_null_channel()	null のチャンネルを返す
 	test_null_dict()	null の辞書を返す
 	test_null_job()		null の Job を返す
 	test_null_list()	null のリストを返す
-	test_null_partial()	null の部分適用関数を返す
+	test_null_partial()	null の部分適用を返す
 	test_null_string()	null の文字列を返す
+	test_settime()		Vimが内部的に用いる時間を設定する
 
 プロセス間通信:					*channel-functions*
+	ch_canread()		何か読むものがあるかチェックする
 	ch_open()		チャンネルを開く
 	ch_close()		チャンネルを閉じる
 	ch_close_in()		チャンネルの入力パートを閉じる
@@ -917,7 +922,7 @@ Vimサーバー:					*server-functions*
 	ch_sendraw()		チャンネルにrawメッセージを送る
 	ch_evalexpr()		チャンネル経由で式を評価する
 	ch_evalraw()		チャンネル経由で raw 文字列を評価する
-	ch_status()		チャンネルの情報を取得する
+	ch_status()		チャンネルの状態を取得する
 	ch_getbufnr()		チャンネルのバッファ番号を取得する
 	ch_getjob()		チャンネルが割り当てられている Job を取得する
 	ch_info()		チャンネルの情報を取得する
@@ -925,9 +930,9 @@ Vimサーバー:					*server-functions*
 	ch_logfile()		チャンネルのログファイルを設定する
 	ch_setoptions()		チャンネルのオプションを設定する
 	json_encode()		式をJSONの文字列にエンコードする
-	json_decode()		JSONの文字列を式にデコードする
+	json_decode()		JSONの文字列をVimの型にデコードする
 	js_encode()		式をJSONの文字列にエンコードする
-	js_decode()		JSONの文字列を式にデコードする
+	js_decode()		JSONの文字列をVimの型にデコードする
 
 Jobs:		    			        *job-functions*
 	job_start()		Job を開始する
@@ -977,6 +982,7 @@ Timers:						*timer-functions*
 	perleval()		|Perl|の式を評価する (|+perl|)
 	py3eval()		|Python|の式を評価する (|+python3|)
 	pyeval()		|Python|の式を評価する (|+python|)
+	pyxeval()		|python_x| の式を評価する
 
 ==============================================================================
 *41.7*	関数を定義する
@@ -1538,8 +1544,8 @@ copy() 関数を使って "transdict" 辞書をコピーし、そのコピーに
 ==============================================================================
 *41.10*	注意事項
 
-Vim スクリプトにおいて注意すべきことの概要を簡単に説明します。他の場所にも同じ
-ような説明はありますが、手頃なチェックリストに使えるでしょう。
+Vim script において注意すべきことの概要を簡単に説明します。他の場所にも同じよ
+うな説明はありますが、手頃なチェックリストに使えるでしょう。
 
 改行記号はシステムによって異なります。Unix では <NL> 文字が使われますが、
 MS-DOS、Windows、OS/2 などでは <CR><LF> が使われます。末尾が <CR> になってい
@@ -1552,7 +1558,7 @@ MS-DOS、Windows、OS/2 などでは <CR><LF> が使われます。末尾が <CR
 空の行はあっても構いません。無視されます。
 
 行頭の空白 (スペースとTAB) は常に無視されます。引数と引数の間には空白がいくつ
-あっても構いません (例えば下記の 'set' と 'cpoptions' の間)。空白は一つのス
+あっても構いません (例えば下記の "set" と "cpoptions" の間)。空白は一つのス
 ペースにまとめられ、セパレータの役目をします。最後の文字より後ろにある空白文字
 は状況によって無視されたりされなかったりします。下記参照。
 
@@ -1619,7 +1625,7 @@ MS-DOS、Windows、OS/2 などでは <CR><LF> が使われます。末尾が <CR
 vimrc を編集するときに 'list' オプションをオンに設定しておくと、この問題が発見
 しやすくなります。
 
-Unix では特別なコメント書式を使って Vim スクリプトを実行形式にすることができま
+Unix では特別なコメント書式を使って Vim script を実行形式にすることができま
 す: >
 	#!/usr/bin/env vim -S
 	echo "this is a Vim script"
@@ -1704,9 +1710,9 @@ Unix では特別なコメント書式を使って Vim スクリプトを実行�
 ==============================================================================
 *41.11*	プラグインを書く				*write-plugin*
 
-Vim スクリプトを書いて、それを多くの人に使ってもらうことができます。そのような
-スクリプトはプラグインと呼ばれます。Vim ユーザーはあなたのスクリプトをプラグイ
-ンディレクトリにコピーするだけで、すぐにその機能を使うことができます。
+Vim script を書いて、それを多くの人に使ってもらうことができます。そのようなス
+クリプトはプラグインと呼ばれます。Vim ユーザーはあなたのスクリプトをプラグイン
+ディレクトリにコピーするだけで、すぐにその機能を使うことができます。
 |add-plugin| 参照。
 
 プラグインには二種類あります:
@@ -2043,9 +2049,9 @@ Note: 28 行目では ":noremap" を使って、他のマップでトラブル�
 ても動作は同じです。
 
 'fileformat' オプションを "unix" に設定することが推奨されています。そうすれ
-ば、Vim スクリプトはどこでも動作します。'fileformat' が "dos" に設定されたスク
-リプトは Unix では動作しません。|:source_crnl| も参照。設定が正しいことを確実
-にするため、ファイルを保存する前に次のコマンドを実行してください: >
+ば、Vim script はどこでも動作します。'fileformat' が "dos" に設定されたスクリ
+プトは Unix では動作しません。|:source_crnl| も参照。設定が正しいことを確実に
+するため、ファイルを保存する前に次のコマンドを実行してください: >
 
 	:set fileformat=unix
 
@@ -2519,14 +2525,14 @@ Unix では、このライブラリスクリプトは次のような場所に置
 より詳しくは |autoload| を参照してください。
 
 ==============================================================================
-*41.16*	Vim スクリプトを配布する			*distribute-script*
+*41.16*	Vim script を配布する			*distribute-script*
 
 Vim ユーザーは Vim のウェブサイト http://www.vim.org でスクリプトを探します。
 便利なスクリプトを作ったら、ぜひ共有しましょう！
 
-Vim スクリプトはどのシステムでも使えます。tar や gzip コマンドは存在しないこと
-があります。ファイルをまとめたり圧縮したりするには "zip" ユーティリティが推奨
-されています。
+Vim script はどのシステムでも使えます。tar や gzip コマンドは存在しないことが
+あります。ファイルをまとめたり圧縮したりするには "zip" ユーティリティが推奨さ
+れています。
 
 可搬性を最大限に高めるには、Vim 自身を使ってスクリプトをパッケージ化します。そ
 れには Vimball ユーティリティを使います。|vimball| を参照。

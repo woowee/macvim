@@ -115,9 +115,9 @@ function! GetSMLIndent()
 
 	" Return double 'shiftwidth' after lines matching:
 	if lline =~ '^\s*|.*=>\s*$'
-		return ind + 2 *shiftwidth()
+		return ind + &sw + &sw
 	elseif lline =~ '^\s*val\>.*=\s*$'
-		return ind + shiftwidth()
+		return ind + &sw
 	endif
 
   let line = getline(v:lnum)
@@ -157,7 +157,7 @@ function! GetSMLIndent()
 		if lastModule == -1
 			return 0
 		else
-			return lastModule + shiftwidth()
+			return lastModule + &sw
 		endif
 
 	" Indent lines starting with '|' from matching 'case', 'handle'
@@ -172,7 +172,7 @@ function! GetSMLIndent()
 		if switchLine =~ '\<case\>'
 			return col(".") + 2
 		elseif switchLine =~ '\<handle\>'
-			return switchLineIndent + shiftwidth()
+			return switchLineIndent + &sw
 		elseif switchLine =~ '\<datatype\>'
 			call search('=')
 			return col(".") - 1
@@ -184,7 +184,7 @@ function! GetSMLIndent()
   " Indent if last line ends with 'sig', 'struct', 'let', 'then', 'else',
   " 'in'
   elseif lline =~ '\<\(sig\|struct\|let\|in\|then\|else\)\s*$'
-		let ind = ind + shiftwidth()
+		let ind = ind + &sw
 
   " Indent if last line ends with 'of', align from 'case'
   elseif lline =~ '\<\(of\)\s*$'
@@ -199,14 +199,14 @@ function! GetSMLIndent()
 
 	" Indent if last line starts with 'fun', 'case', 'fn'
 	elseif lline =~ '^\s*\(fun\|fn\|case\)\>'
-		let ind = ind + shiftwidth()
+		let ind = ind + &sw
 
 	endif
 
 	" Don't indent 'let' if last line started with 'fun', 'fn'
 	if line =~ '^\s*let\>'
 		if lline =~ '^\s*\(fun\|fn\)'
-			let ind = ind - shiftwidth()
+			let ind = ind - &sw
 		endif
   endif
 

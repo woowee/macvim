@@ -432,7 +432,7 @@ Vimはいろいろな場面で自動的にエンコーディングを変換す�
 - 入力を受け取るとき、'termencoding' と 'encoding' が違う場合
 - メッセージを表示するとき、LC_MESSAGESのエンコーディングが 'encoding' と違う
   場合(gettextのサポートが必要)。
-- Vimスクリプトを読み込むとき、|:scriptencoding|が 'encoding' と違う場合
+- Vim script を読み込むとき、|:scriptencoding|が 'encoding' と違う場合
 - |viminfo|ファイルを読み書きするとき
 ほとんどの変換は|+iconv|の機能が必要である。ファイルを読み書きするときの変換の
 動作はオプション 'charconvert' での指定もできる。
@@ -452,7 +452,7 @@ Vimはいろいろな場面で自動的にエンコーディングを変換す�
 	Nkfはここから入手できる:
 	http://www.sfc.wide.ad.jp/~max/FreeBSD/ports/distfiles/nkf-1.62.tar.gz
 {訳注: utf-8対応などの機能が追加されているもの
-       http://sourceforge.jp/projects/nkf/ }
+	https://ja.osdn.net/projects/nkf/ }
 
     中国語:	    hc
 	"Hanzi Converter"。HcはGBからBig5へ、Big5からGBへ、の変換をする。Hcは
@@ -922,7 +922,7 @@ Vimに入力することができない。
 
 IMEについて (WHAT IS IME)
     IMEは東アジア向けのWindowsの一部で、マルチバイト文字を入力するためのもので
-    ある。 英語などの言語用のWindowsにはIMEは搭載されていない(普通は必要ない)。
+    ある。英語などの言語用のWindowsにはIMEは搭載されていない(普通は必要ない)。
     しかし、Microsoft Global IMEというものがある。これはInternet Explorer4.0以
     上に含まれている。詳しいことは下記のURLを参照。
 

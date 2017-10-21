@@ -50,17 +50,17 @@ fun! GetIshdIndent(lnum)
 
     " Add
     if previous_line =~ '^\s*\<\(function\|begin\|switch\|case\|default\|if.\{-}then\|else\|elseif\|while\|repeat\)\>'
-	let ind = ind + shiftwidth()
+	let ind = ind + &sw
     endif
 
     " Subtract
     if this_line =~ '^\s*\<endswitch\>'
-	let ind = ind - 2 * shiftwidth()
+	let ind = ind - 2 * &sw
     elseif this_line =~ '^\s*\<\(begin\|end\|endif\|endwhile\|else\|elseif\|until\)\>'
-	let ind = ind - shiftwidth()
+	let ind = ind - &sw
     elseif this_line =~ '^\s*\<\(case\|default\)\>'
 	if previous_line !~ '^\s*\<switch\>'
-	    let ind = ind - shiftwidth()
+	    let ind = ind - &sw
 	endif
     endif
 

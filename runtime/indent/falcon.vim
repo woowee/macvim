@@ -339,7 +339,7 @@ function FalconGetIndent(...)
 
     " If the previous line ended with a block opening, add a level of indent.
     if s:Match(lnum, s:block_regex)
-	return indent(s:GetMSL(lnum)) + shiftwidth()
+	return indent(s:GetMSL(lnum)) + &sw
     endif
 
     " If it contained hanging closing brackets, find the rightmost one, find its
@@ -350,20 +350,20 @@ function FalconGetIndent(...)
 	if opening.pos != -1
 	    if opening.type == '(' && searchpair('(', '', ')', 'bW', s:skip_expr) > 0
 		if col('.') + 1 == col('$')
-		    return ind + shiftwidth()
+		    return ind + &sw
 		else
 		    return virtcol('.')
 		endif
 	    else
 		let nonspace = matchend(line, '\S', opening.pos + 1) - 1
-		return nonspace > 0 ? nonspace : ind + shiftwidth()
+		return nonspace > 0 ? nonspace : ind + &sw
 	    endif
 	elseif closing.pos != -1
 	    call cursor(lnum, closing.pos + 1)
 	    normal! %
 
 	    if s:Match(line('.'), s:falcon_indent_keywords)
-		return indent('.') + shiftwidth()
+		return indent('.') + &sw
 	    else
 		return indent('.')
 	    endif
@@ -392,7 +392,7 @@ function FalconGetIndent(...)
     let col = s:Match(lnum, s:falcon_indent_keywords)
     if col > 0
 	call cursor(lnum, col)
-	let ind = virtcol('.') - 1 + shiftwidth()
+	let ind = virtcol('.') - 1 + &sw
 	" TODO: make this better (we need to count them) (or, if a searchpair
 	" fails, we know that something is lacking an end and thus we indent a
 	" level
@@ -422,9 +422,9 @@ function FalconGetIndent(...)
     " TODO: this does not take into account contrived things such as
     " module Foo; class Bar; end
     if s:Match(lnum, s:falcon_indent_keywords)
-	let ind = msl_ind + shiftwidth()
+	let ind = msl_ind + &sw
 	if s:Match(lnum, s:end_end_regex)
-	    let ind = ind - shiftwidth()
+	    let ind = ind - &sw
 	endif
 	return ind
     endif
@@ -433,7 +433,7 @@ function FalconGetIndent(...)
     " closing bracket, indent one extra level.
     if s:Match(lnum, s:non_bracket_continuation_regex) && !s:Match(lnum, '^\s*\([\])}]\|end\)')
 	if lnum == p_lnum
-	    let ind = msl_ind + shiftwidth()
+	    let ind = msl_ind + &sw
 	else
 	    let ind = msl_ind
 	endif

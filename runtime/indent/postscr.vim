@@ -41,16 +41,16 @@ function! PostscrIndentGet(lnum)
 
   " Indent for dicts, arrays, and saves with possible trailing comment
   if pline =~ '\(begin\|<<\|g\=save\|{\|[\)\s*\(%.*\)\=$'
-    let ind = ind + shiftwidth()
+    let ind = ind + &sw
   endif
 
   " Remove indent for popped dicts, and restores.
   if pline =~ '\(end\|g\=restore\)\s*$'
-    let ind = ind - shiftwidth()
+    let ind = ind - &sw
 
   " Else handle immediate dedents of dicts, restores, and arrays.
   elseif getline(a:lnum) =~ '\(end\|>>\|g\=restore\|}\|]\)'
-    let ind = ind - shiftwidth()
+    let ind = ind - &sw
 
   " Else handle DSC comments - always start of line.
   elseif getline(a:lnum) =~ '^\s*%%'

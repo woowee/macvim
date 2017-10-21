@@ -1,12 +1,14 @@
 " Vim indent file
+" Program:      CMake - Cross-Platform Makefile Generator
+" Module:       $RCSfile: cmake-indent.vim,v $
 " Language:     CMake (ft=cmake)
 " Author:       Andy Cedilnik <andy.cedilnik@kitware.com>
-" Maintainer:   Dimitri Merejkowsky <d.merej@gmail.com>
-" Former Maintainer: Karthik Krishnan <karthik.krishnan@kitware.com>
-" Last Change:  2017 Sep 24
+" Maintainer:   Karthik Krishnan <karthik.krishnan@kitware.com>
+" Last Change:  $Date: 2008-01-16 16:53:53 $
+" Version:      $Revision: 1.9 $
 "
 " Licence:      The CMake license applies to this file. See
-"               https://cmake.org/licensing
+"               http://www.cmake.org/HTML/Copyright.html
 "               This implies that distribution with Vim is allowed
 
 if exists("b:did_indent")
@@ -66,19 +68,19 @@ fun! CMakeGetIndent(lnum)
     let ind = ind
   else
     if previous_line =~? cmake_indent_begin_regex
-      let ind = ind + shiftwidth()
+      let ind = ind + &sw
     endif
     if previous_line =~? cmake_indent_open_regex
-      let ind = ind + shiftwidth()
+      let ind = ind + &sw
     endif
   endif
 
   " Subtract
   if this_line =~? cmake_indent_end_regex
-    let ind = ind - shiftwidth()
+    let ind = ind - &sw
   endif
   if previous_line =~? cmake_indent_close_regex
-    let ind = ind - shiftwidth()
+    let ind = ind - &sw
   endif
 
   return ind

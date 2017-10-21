@@ -1,4 +1,4 @@
-*if_pyth.txt*   For Vim バージョン 8.0.  Last change: 2016 Sep 17
+*if_pyth.txt*   For Vim バージョン 8.0.  Last change: 2017 Mar 09
 
 
 		  VIMリファレンスマニュアル    by Paul Moore
@@ -16,6 +16,8 @@ VimのPythonインターフェイス				*python* *Python*
 8. Vim 関数 pyeval() と py3eval()		|python-pyeval|
 9. 動的ローディング				|python-dynamic|
 10. Python 3					|python3|
+11. Python X					|python_x|
+12. Python 対応付きでビルドする			|python-building|
 
 {Vi にはこれらのコマンドはありません}
 
@@ -44,8 +46,7 @@ Python 3 インターフェイスは Vim が |+python3| 機能付きでコンパ
 
 {endmarker}の前に空白を置かないでください。"<<" の後に{endmarker}を省略した時
 は |:append| や |:insert| のように '.' が使われます。
-この形の |:python| コマンドはVimスクリプトにPythonコードを埋め込むのに特に便利
-です。
+この形の |:python| コマンドはVim scriptにPythonコードを埋め込むのに特に便利です。
 
 例: >
 	function! IcecreamInitialize()
@@ -168,8 +169,8 @@ vim.eval(str)						*python-eval*
 
 	    :py tagList = vim.eval('taglist("eval_expr")')
 <	最後のコマンドはPython辞書のPythonリストを返します。例:
-	[{'cmd': '/^eval_expr(arg, nextcmd)$/', 'static': 0, 'name':
-	'eval_expr', 'kind': 'f', 'filename': './src/eval.c'}]
+	[{'cmd': '/^eval_expr(arg, nextcmd)$/', 'static': 0, 'name': ~
+	'eval_expr', 'kind': 'f', 'filename': './src/eval.c'}] ~
 
 vim.bindeval(str)					*python-bindeval*
 	|python-eval| と似ていますが、特殊なオブジェクトを返します
@@ -424,7 +425,7 @@ vim._get_paths						*python-_get_paths*
 			|BufFilePre| と |BufFilePost| イベントが発生します。
 	b.number	バッファ番号。|python-buffers| のキーとして使えます。
 			読み込み専用。
-	b.valid		True または False。 関連バッファが破棄されるとバッファ
+	b.valid		True または False。関連バッファが破棄されるとバッファ
 			オブジェクトは無効となる。
 
 バッファオブジェクトのメソッドは次の通りです:
@@ -529,7 +530,7 @@ Range オブジェクトの型は vim モジュールの "Range" 属性で取得
 	row, col (読み専用)	スクリーン上でのウィンドウの表示位置。値は 0
 				から始まります。
 	tabpage (読み専用)	ウィンドウのタブページ。
-	valid (read-write)	True または False。 関連ウィンドウが閉じられる
+	valid (read-write)	True または False。関連ウィンドウが閉じられる
 				とウィンドウオブジェクトは無効になる。
 
 heightはスクリーンが水平方向に分割されているときのみ書き込み可能です。
@@ -661,13 +662,13 @@ vim.Function オブジェクト			*python-Function*
                      ジェクト。呼び出し時に明示的な `self` キーワードが使われ
                      た場合には、渡されるオブジェクトでこの属性はオーバーライ
                      ドされます。
-        auto_rebind  ブール値。Pythonのオブジェクトから作られVimLの辞書に格納
-                     された部分適用が、その辞書が参照された際に自動的に再バイ
-                     ンドされる場合に `True` となります。Vimスクリプトで説明す
-                     ると `dict.func` (auto_rebind=True) と
+        auto_rebind  ブール値。Python のオブジェクトから作られ Vim script の辞
+                     書に格納された部分適用が、その辞書が参照された際に自動的
+                     に再バインドされる場合に `True` となります。Vim script で
+                     説明すると `dict.func` (auto_rebind=True) と
                      `function(dict.func,dict)` (auto_rebind=False) の違いにな
-                     ります。 `self` 属性の値が `None` の場合には、この属性値
-                     には意味がありません。
+                     ります。`self` 属性の値が `None` の場合には、この属性値に
+                     は意味がありません。
 
     コンストラクタは、加えて `args`, `self`そして `auto_rebind` キーワードを受
     け付けます。`args` と `self` どちらか一方、もしくは両方が与えられた場合に
@@ -698,7 +699,8 @@ vim.Function オブジェクト			*python-Function*
 8. Vim 関数 pyeval() と py3eval()			*python-pyeval*
 
 双方向インターフェイスを容易にするため、|pyeval()| 関数と |py3eval()| 関数を
-使って Python の式を評価して、その値を VimL に渡すことができます。
+使って Python の式を評価して、その値を Vim script に渡すことができます。
+|pyxeval()| も使用可能です。
 
 ==============================================================================
 9. 動的ローディング					*python-dynamic*
@@ -720,8 +722,9 @@ WindowsでPythonインターフェイスを使うには、PythonのDLLが検索�
 オプションを Python の DLL を指定するのに使うこともできます。
 
 DLLの名前はVimをコンパイルした時のPythonのバージョンに一致しなければなりませ
-ん。現在その名前は "python24.dll" です。これはPython2.4用です。これを確かめる
-には、"gvim.exe" を開き、"python\d*.dll\c" を検索してください。
+ん。現在その名前は "python27.dll" です。これはPython 2.7用です。これは
+'pythondll' の既定値です。Python 3の場合はpython35.dll (Python3.5)です。これを
+確かめるには、"gvim.exe" を開き、"python\d*.dll\c" を検索してください。
 
 
 Unix ~
@@ -759,18 +762,18 @@ Vim のビルドは 4 種類あります (:version の出力):
 
 Python 2 と Python 3 をサポートするにはそれらを動的ロードする必要があります。
 
-Linux/Unix システムで動的ロード時にグローバルシンボルをインポートすると、 2 番
+Linux/Unix システムで動的ロード時にグローバルシンボルをインポートすると、2 番
 目にロードした Python が使われたときにクラッシュが発生します。そのため、グロー
 バルシンボルをロードして一つの Python バージョンだけを使うか、グローバルシンボ
 ルをロードしないかのどちらかしかありません。後者は特定のライブラリ (シンボルが
 Vim から提供されていることを期待しているライブラリ) において Python の
 "import" が失敗するようになります。
 							*E836* *E837*
-Vim のコンフィグスクリプトはすべてのライブラリがある標準の Python ライブラリ
-(termios) に基づいていると仮定します。このライブラリを両方の Python バージョン
-でインポートできるなら、両方のバージョンを Vim の中で同時に利用できます。そう
-でない場合は、どちらか最初に使われたもののみが利用可能になります。もう一方を使
-おうとすると E836 か E837 のエラーメッセージが表示されるでしょう。
+Vim のコンフィグスクリプトは、ある標準の Python ライブラリ (termios) に基づき、
+すべてのライブラリについて推測を行います。このライブラリを両方の Python バー
+ジョンでインポートできるなら、両方のバージョンを Vim の中で同時に利用できます。
+そうでない場合は、どちらか最初に使われたもののみが利用可能になります。もう一方
+を使おうとすると E836 か E837 のエラーメッセージが表示されるでしょう。
 
 Vim の動作はコンフィグを実行したシステムに依存します。Python の両方のバージョ
 ンが --enable-shared 付きでビルドされているなら、両方のバージョンを同時に使用
@@ -801,6 +804,96 @@ Note: Python の 2 と 3 の両方が利用可能で、Python が動的ロード
 ている場合、この has() 呼び出しによってそれらがロードされます。もし、同時に
 ロードできるのがどちらか一方だけだった場合、Python の 2 と 3 のどちらが利用で
 きるか調べるだけで、もう一方は利用できなくなります。
+
+==============================================================================
+11. Python X						*python_x* *pythonx*
+
+多くの python コードは、python 2.6+ と python 3 に両方で動くことができるように
+書けるため、pyx* 関数とコマンドが用意されました。それらは、Python 2 や 3 向け
+の変種とまったく同じように動作しますが、'pyxversion' 設定を用いて Python のバー
+ジョンを選択できる点が異なります。
+
+Python コマンドに Python 2 と 3 のどちらを使いたいかに応じて、|.vimrc| の中で
+'pyxversion' を設定してください。もしこの設定を実行時に変更すると、プラグイン
+の状態(例えば初期化など)が失われる危険性があります。
+
+モジュールを使用したい場合には、{rtp}/pythonx ディレクトリの中に置くことができ
+ます。|pythonx-directory| を参照してください。
+
+							*:pyx* *:pythonx*
+`:pyx` コマンドと `:pythonx` コマンドは `:python` と同様に機能します。`:pyx`
+コマンドが機能するか簡単にチェックするには: >
+	:pyx print("Hello")
+
+使っている Python のバージョンを見るには: >
+	:pyx import sys
+	:pyx print(sys.version)
+<
+					*:pyxfile* *python_x-special-comments*
+`:pyxfile` コマンドは `:pyfile` と同様に機能します。しかし、Vim が `:pyfile`
+または `:py3file` を使うように強制したい場合は以下のコメントのうち 1 つを追加
+することができます: >
+  #!/any string/python2		" Shebang。ファイルの先頭でなければならない。
+  #!/any string/python3		" Shebang。ファイルの先頭でなければならない。
+  # requires python 2.x		" 最大行数は 'modelines' に依存。
+  # requires python 3.x		" 最大行数は 'modelines' に依存。
+通常のモードラインとは異なり、ファイルの末尾はチェックされません。
+いずれのコメントも見つからない場合は、'pyxversion' の設定が使われます。
+							*W20* *W21*
+もし Vim が指定された Python のバージョンをサポートしない場合、静かなメッセー
+ジが表示されます。それらを読むには `:messages` を使用してください。
+
+							*:pyxdo*
+`:pyxdo` コマンドは `:pydo` と同様に機能します。
+
+							*has-pythonx*
+pyx* コマンドが使用できるかどうかを調べるには以下が使えます: >
+	if has('pythonx')
+	  echo 'pyx* commands are available. (Python ' . &pyx . ')'
+	endif
+
+|+python| または |+python3| のどちらか一方のみでコンパイルされている場合は、
+has() は 1 を返します。
+|+python| と |+python3| の両方でコンパイルされている場合は、テストは
+'pyxversion' の設定に依存します。もし 'pyxversion' が 0 ならば最初に Python 3
+がテストされ、使用可能でなければ Python 2 がテストされます。もし 'pyxversion'
+が 2 または 3 であれば、Python 2 または 3 のそれぞれどちらか一方のみをテストし
+ます。
+
+`has('pythonx')` が動作するために、Python 3 または 2 を動的にロードしようとす
+ることがある点に注意してください。これは特に Vim が 2 つのうち 1 つしかロード
+できない場合に副作用があります。
+
+もしもユーザーが Python 2 を優先し、Python 3 にフォールバックしたい場合は、
+|.vimrc| で 'pyxversion' を明示的に設定する必要があります。例: >
+	if has('python')
+	  set pyx=2
+	elseif has('python3')
+	  set pyx=3
+	endif
+
+==============================================================================
+12. Python 対応付きでビルドする				*python-building*
+
+Python 2 または 3 対応付きでビルドするためのいくつかのヒントがあります。
+
+UNIX
+
+Python インターフェイスを有効にする方法は src/Makefile を参照してください。
+
+Ubuntu では Python 2 用にこれらのパッケージをインストールする必要があるでしょ
+う:
+	python
+	python-dev
+Python 3 用は:
+	python3
+	pytyon3-dev
+Python 3.6 用は:
+	python3.6
+	pytyon3.6-dev
+
+もしも複数のバージョンの Python 3 がある場合は、configure を実行する前に
+python3 を望みのバージョンにリンクする必要があります。
 
 ==============================================================================
  vim:tw=78:ts=8:ft=help:norl:

@@ -1,4 +1,4 @@
-*channel.txt*      For Vim バージョン 8.0.  Last change: 2016 Dec 01
+*channel.txt*      For Vim バージョン 8.0.  Last change: 2016 Dec 02
 
 
 		  VIMリファレンスマニュアル    by Bram Moolenaar
@@ -80,7 +80,7 @@ T1ではVimが送った生のメッセージを確認できます:
 	[1,"got it"] ~
 この数値はメッセージを送るたびに増加していきます。
 
-サーバーはVimにコマンドを送信できます。T1に於いて、次のように正確に(引用符を含
+サーバーはVimにコマンドを送信できます。T1において、次のように正確に(引用符を含
 めて文字通りに)タイプしてください:
 	["ex","echo 'hi there'"] ~
 するとそのメッセージがVimに表示されます。カーソルを1単語先に移動することができ
@@ -606,11 +606,11 @@ job_setoptions(job, {options}) を使用して、ジョブの開始後にいく�
 						*job-close_cb*
 "close_cb": handler	チャンネルが閉じられるときのコールバック。
 			|ch_open()| の "close_cb" と同じです。|close_cb| 参照。
-						*job-exit_cb*
+						*job-drop*
 "drop"			メッセージをいつドロップするかを指定します。
 			|ch_open()| の "drop" と同様(|channel-drop| 参照)。
 			"auto" の場合、exit_cb は考慮されません。
-
+						*job-exit_cb*
 "exit_cb": handler	ジョブが終了したときのコールバック。引数はジョブと終
 			了ステータスです。
 			Vim は、終了したジョブに対して最大10回/秒をチェックし
@@ -713,10 +713,9 @@ out_io または err_io モードが "buffer" で、コールバックがある�
 に設定されます。他の設定が必要な場合は、まずバッファを作成し、バッファ番号を渡
 します。
 					*out_modifiable* *err_modifiable*
-"out_modifiable" と "err_modifiable" オプションは、 'modifiable' オプションを
-オフにするか、 'modifiable' になっているバッファに書き込むために使用できます。
-つまり、行がバッファに追加されますが、ユーザーはバッファを簡単に変更できませ
-ん。
+"out_modifiable" と "err_modifiable" オプションは、'modifiable' オプションをオ
+フにするか、'modifiable' になっているバッファに書き込むために使用できます。つ
+まり、行がバッファに追加されますが、ユーザーはバッファを簡単に変更できません。
 					*out_msg* *err_msg*
 "out_msg" オプションは、新しいバッファが最初の行を "Reading from channel
 output..." に設定するかどうかを指定するために使用できます。デフォルトではメッ
@@ -756,7 +755,7 @@ output..." に設定するかどうかを指定するために使用できます
 
 これはジョブを終了させる通常の方法です。Unix では、ジョブに SIGTERM を送信し
 ます。他の方法でジョブを停止したり、任意の信号を送信したりすることもできます。
-例えば、ジョブを強制的に停止させるには、 "kill it": >
+例えば、ジョブを強制的に停止させるには、"kill it": >
 	job_stop(job, "kill")
 
 他のオプションについては、|job_stop()| 参照。

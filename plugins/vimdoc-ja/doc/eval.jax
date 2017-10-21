@@ -1,15 +1,15 @@
-*eval.txt*	For Vim バージョン 8.0.  Last change: 2016 Sep 07
+*eval.txt*	For Vim バージョン 8.0.  Last change: 2017 Mar 09
 
 
 		VIMリファレンスマニュアル    by Bram Moolenaar
 
 
-Vimスクリプト				*expression* *expr* *E15* *eval*
+Vim script 				*expression* *expr* *E15* *eval*
 
-Vimスクリプトの利用についてはユーザーマニュアルの41章|usr_41.txt|でも解説され
+Vim script の利用についてはユーザーマニュアルの41章|usr_41.txt|でも解説され
 ている。
 
-注意: Vimスクリプトはコンパイル時に無効化できる。もしそうなっているとこのド
+注意: Vim script はコンパイル時に無効化できる。もしそうなっているとこのド
 キュメントに書かれている事は有効ではない。|+eval|と|no-eval-feature|を参照。
 
 1.  変数		|variables|
@@ -112,13 +112,13 @@ Note 次のコマンドをみると >
 <
 							*non-zero-arg*
 関数の引数は、|TRUE| とは少し異なる場合がある: 引数が存在し、それが非ゼロの
-Number に評価される場合、|v:true| または空でない String の場合、値は TRUE と見
-なされる。" "と "0" も空文字列ではないので、モードをクリアするのに注意すること。
+Number、|v:true| または空でない String に評価される場合、値は TRUE と見なされ
+る。" " と "0" も空文字列ではないので、モードをクリアするのに注意すること。
 List、Dictionary、または Float は数値または文字列ではないため、FALSE と評価さ
 れる。
 
 		*E745* *E728* *E703* *E729* *E730* *E731* *E908* *E910* *E913*
-リスト、辞書、Funcref、ジョブは自動的に変換されない。
+リスト、辞書、Funcref、ジョブ、チャンネルは自動的に変換されない。
 
 							*E805* *E806* *E808*
 数値と浮動小数点数をまぜると浮動小数点数になる。それ以外には浮動小数点数への自
@@ -676,7 +676,7 @@ MY_VAR_6		viminfoファイル
 	$VAR			環境変数
 	@r			レジスタ 'r' の値
 	function(expr1, ...)	関数呼出し
-	func{ti}on(expr1, ...)	波括弧付きの内部変数
+	func{ti}on(expr1, ...)	波括弧付きの関数呼出し
 	{args -> expr1}		ラムダ式
 
 ".." はその演算が、その後に他の演算を続ける事ができることを示している。
@@ -928,7 +928,7 @@ expr8が数値か文字列ならば、この値は文字列 expr8 の第 expr1 �
 る 1 バイトの文字列となる。expr8は文字列、expr1は数として扱われる。ただし
 expr8 がマルチバイト文字列である場合、この値は単なるバイトコードであり、1文字
 とはならないかもしれないことに注意。マルチバイト文字列に対する代替方法は
-|byteidx()| を参照するか、`split()`を使って文字列を文字のリストに変換すれば良
+`byteidx()` を参照するか、`split()`を使って文字列を文字のリストに変換すれば良
 い。
 
 インデックスが0の場合、先頭のバイトが得られることに注意。これはC言語のように働
@@ -1053,9 +1053,8 @@ number			数定数				*expr-number*
 論理的根拠:
 浮動小数点数が導入される前は、123.456 と書くと 123 と 456 の2つの数値と解釈
 され、それらが文字列に変換されて結合されて "123456" という文字列になった。
-これは無意味であり、Vim スクリプト内で意図的に使われているものが見つからな
-かったので、浮動小数点数の普通の表記法を用いるため、この後方非互換性は許容され
-た。
+これは無意味であり、Vim script 内で意図的に使われているものが見つからなかった
+ので、浮動小数点数の普通の表記法を用いるため、この後方非互換性は許容された。
 
 						*floating-point-precision*
 浮動小数点数の精度と範囲は、Vim とリンクしたライブラリの "double" の意味によ
@@ -1258,7 +1257,7 @@ Note Exコマンドを実行するためにどのように execute() を使っ�
 |tabpage-variable|   t:	  現在のタブページにローカル
 |global-variable|    g:	  グローバル
 |local-variable|     l:	  関数にローカル
-|script-variable|    s:	  |:source|されたVimスクリプトにローカル
+|script-variable|    s:	  |:source|されたVim scriptにローカル
 |function-argument|  a:	  関数の引数(関数内のみ)
 |vim-variable|       v:	  グローバル、Vimがあらかじめ定義
 
@@ -1284,7 +1283,8 @@ b:changedtick	現在のバッファに対する総変更の回数。変更を行
 		    :   let my_changedtick = b:changedtick
 		    :   call My_Update()
 		    :endif
-<
+<		b:changedtick 変数を変更したり削除することはできない。
+
 						*window-variable* *w:var* *w:*
 "w:" で始まる変数名は、カレントウィンドウにローカルな変数を意味する。これはウィ
 ンドウを閉じるときに破棄される。
@@ -1306,7 +1306,7 @@ b:changedtick	現在のバッファに対する総変更の回数。変更を行
 "l:count" とすればローカル変数countを参照できる。
 
 						*script-variable* *s:var*
-Vimスクリプト内では "s:" で始まる変数名を使うことができる。これはスクリプトに
+Vim script 内では "s:" で始まる変数名を使うことができる。これはスクリプトに
 ついてローカルであり、スクリプトの外部からはアクセスできない。
 
 スクリプト変数は次の場所で使える:
@@ -1469,9 +1469,8 @@ v:count1	"v:count" と同じように、しかしカウントが指定されな�
 
 						*v:ctype* *ctype-variable*
 v:ctype		文字に関する実行環境の現在のロケール設定。これを使えばVim
-		スクリプト内で現在のロケール設定に対応できるようになる。技術的
-		な詳細: LC_CTYPEに等しい。ロケールを使用していないときは "C"
-		になる。
+		script内で現在のロケール設定に対応できるようになる。技術的な詳
+		細: LC_CTYPEに等しい。ロケールを使用していないときは "C"になる。
 		この変数を設定するには|:language|コマンドを使うこと。直接設定
 		することはできない。
 		|multi-lang|を参照。
@@ -1604,8 +1603,8 @@ v:hlsearch	検索による強調表示がオンになっているかどうかを
 		|:nohlsearch|コマンドを実行することと同様に働き、1に設定するこ
 		とは以下と同様に働く >
 			let &hlsearch = &hlsearch
-<		Note that the value is restored when returning from a
-		function. |function-search-undo|.
+<		関数から戻ったときに値が復元されることに注意すること。
+		|function-search-undo|
 
 					*v:insertmode* *insertmode-variable*
 v:insertmode	オートコマンドイベント|InsertEnter|と|InsertChange|用。
@@ -1621,7 +1620,7 @@ v:key		辞書|Dictionary|の現在の要素のキー。|map()|と|filter()|で�
 
 						*v:lang* *lang-variable*
 v:lang		メッセージに関する実行環境の現在のロケール設定。これを使えば
-		Vimスクリプト内で現在のロケール設定に対応できるようになる。
+		Vim script内で現在のロケール設定に対応できるようになる。
 		技術的な詳細: LC_MESSAGESに等しい。この値はシステムに依存する。
 		この変数を設定するには|:language|コマンドを使うこと。直接設定
 		することはできない。
@@ -1630,7 +1629,7 @@ v:lang		メッセージに関する実行環境の現在のロケール設定。
 
 						*v:lc_time* *lc_time-variable*
 v:lc_time	時刻のメッセージに関する実行環境の現在のロケール設定。これを使
-		えばVimスクリプト内で現在のロケール設定に対応できるようになる。
+		えばVim script内で現在のロケール設定に対応できるようになる。
 		技術的な詳細: LC_TIMEに等しい。この値はシステムに依存する。こ
 		の変数を設定するには|:language|コマンドを使うこと。直接設定す
 		ることはできない。
@@ -1735,8 +1734,11 @@ v:progpath	Vim を起動したときのコマンド (パスを含む)。|--remot
 		Vim サーバーにメッセージを送信するときに便利。
 		フルパスを得るには: >
 			echo exepath(v:progpath)
-<		NOTE: これはコマンドが相対パスで、カレントディレクトリが変更さ
-		れたときは機能しない。
+<		パスが相対の場合、フルパスに展開され、これにより `:cd` 後でも
+		機能する。例えば "./vim" で開始すると
+		"/home/user/path/to/vim/src/vim" という結果になる。
+		MS-Windows では実行ファイルが "vim.exe" として呼び出されるかも
+		しれないが、".exe" は v:progpath には追加されない。
 		読出し専用。
 
 					*v:register* *register-variable*
@@ -1845,6 +1847,8 @@ v:termresponse	termcapのエントリ|t_RV|で端末から返されるエスケ�
 
 					*v:testing* *testing-variable*
 v:testing	`test_garbagecollect_now()` を使う前に設定する必要がある。
+		また、これが設定されていると、特定のエラーメッセージが 2 秒間
+		表示されなくなる。(例: "'dictionary' option is empty")
 
 				*v:this_session* *this_session-variable*
 v:this_session	最後にロードされたか、セーブされたセッションファイルの完全な
@@ -1866,7 +1870,7 @@ v:throwpoint	最も直近に捕捉されてまだ終了していない例外が�
 <		出力: "Exception from test.vim, line 2"
 
 						*v:true* *true-variable*
-v:true		数値 1。JSONでは "true" して使われる。|json_encode()|を参照。
+v:true		数値1。JSONでは "true" として使われる。|json_encode()|を参照。
 		文字列として使われた時、これは "v:true" として評価される。 >
 			echo v:true
 <			v:true ~
@@ -1948,14 +1952,16 @@ asin({expr})			浮動小数点数	{expr}のアークサイン
 atan({expr})			浮動小数点数	{expr}のアークタンジェント
 atan2({expr}, {expr})		浮動小数点数	{expr1} / {expr2} のアークタン
 						ジェント
+balloon_show({msg})		なし	{msg} をバルーン内に表示
 browse({save}, {title}, {initdir}, {default})
 				文字列	ファイル選択ダイアログを表示
 browsedir({title}, {initdir})	文字列	ディレクトリ選択ダイアログを表示
-bufexists({expr})		数値	バッファ{expr}が存在すればTRUE
-buflisted({expr})		数値	バッファ{expr}がリストにあるならTRUE
-bufloaded({expr})		数値	バッファ{expr}がロード済みならTRUE
+bufexists({expr})		数値	バッファ{expr}が存在すれば|TRUE|
+buflisted({expr})		数値	バッファ{expr}がリストにあるなら|TRUE|
+bufloaded({expr})		数値	バッファ{expr}がロード済みなら|TRUE|
 bufname({expr})			文字列	バッファ{expr}の名前
 bufnr({expr} [, {create}])	数値	バッファ{expr}の番号
+bufwinid({expr})		数値	バッファ{expr}のウィンドウID
 bufwinnr({nr})			数値	バッファ{nr}のウィンドウ番号
 byte2line({byte})		数値	{byte}番目のバイトの行番号
 byteidx({expr}, {nr})		数値	{expr}の{nr}文字目のバイトインデックス
@@ -1963,29 +1969,35 @@ byteidxcomp({expr}, {nr})	数値	{expr}の{nr}文字目のバイトインデッ�
 call({func}, {arglist} [, {dict}])
 				任意	引数{arglist}をつけて{func}を呼ぶ
 ceil({expr})			浮動小数点数	{expr} を切り上げる
-ch_close({handle})		none	close {handle}
-ch_close_in({handle})		none	close in part of {handle}
+ch_canread({handle})		数値	何か読むものがあるかをチェックする
+ch_close({handle})		なし	{handle} を閉じる
+ch_close_in({handle})		なし	{handle} の入力を閉じる
 ch_evalexpr({handle}, {expr} [, {options}])
-				any	evaluate {expr} on JSON {handle}
+				任意	{handle} に {expr} を送り応答をJSONと
+					して評価する
 ch_evalraw({handle}, {string} [, {options}])
-				any	evaluate {string} on raw {handle}
-ch_getbufnr({handle}, {what})	Number	get buffer number for {handle}/{what}
-ch_getjob({channel})		Job	get the Job of {channel}
-ch_info({handle})		String	info about channel {handle}
-ch_log({msg} [, {handle}])	none	write {msg} in the channel log file
-ch_logfile({fname} [, {mode}])	none	start logging channel activity
+				任意	{handle} に {string} を送り応答を生の
+					文字列として評価する
+ch_getbufnr({handle}, {what})	数値	{handle}/{what} に割り当てられたバッ
+					ファ番号を得る
+ch_getjob({channel})		ジョブ	{channel} の Job を得る
+ch_info({handle})		文字列	チャンネル {handle} に関する情報を得る
+ch_log({msg} [, {handle}])	なし	チャンネルのログファイルに {msg} を書
+					き込む
+ch_logfile({fname} [, {mode}])	なし	チャンネルの挙動ログ出力を開始する
 ch_open({address} [, {options}])
-				Channel	open a channel to {address}
-ch_read({handle} [, {options}]) String	read from {handle}
+				チャンネル	{address} へのチャンネルを開く
+ch_read({handle} [, {options}]) 文字列	{handle} から読み込む
 ch_readraw({handle} [, {options}])
-				String	read raw from {handle}
+				文字列	{handle} から生の文字列を読み込む
 ch_sendexpr({handle}, {expr} [, {options}])
 				任意	{expr}をJSONチャンネル{handle}に送る
 ch_sendraw({handle}, {string} [, {options}])
 				任意	{string}をrawチャンネル{handle}に送る
 ch_setoptions({handle}, {options})
-				none	set options for {handle}
-ch_status({handle})		String	status of channel {handle}
+				なし	{handle}にオプションを設定する
+ch_status({handle} [, {options}])
+				文字列	チャンネル{handle}の状態
 changenr()			数値	現在の変更番号
 char2nr({expr}[, {utf8}])	数値	{expr}の先頭文字のASCII/UTF8コード
 cindent({lnum})			数値	{lnum}行目のCインデント量
@@ -2011,23 +2023,23 @@ delete({fname} [, {flags}])	数値	ファイルやディレクトリ{fname}を�
 did_filetype()			数値	FileTypeのautocommandが実行されたか?
 diff_filler({lnum})		数値	差分モードで{lnum}に挿入された行
 diff_hlID({lnum}, {col})	数値	差分モードで{lnum}/{col}位置の強調
-empty({expr})			数値	{expr}が空ならTRUE
+empty({expr})			数値	{expr}が空なら|TRUE|
 escape({string}, {chars})	文字列	{string}内の{chars}を '\' でエスケープ
 eval({string})			任意	{string}を評価し、値を得る
-eventhandler()			数値	イベントハンドラの内側ならTRUE
+eventhandler()			数値	イベントハンドラの内側なら|TRUE|
 executable({expr})		数値	実行可能な{expr}が存在するなら1
-execute({command})		String	execute {command} and get the output
+execute({command})		文字列	{command}を実行し、出力を得る
 exepath({expr})			文字列	コマンド {expr} のフルパス
-exists({var})			数値	変数{var}が存在したらTRUE
+exists({var})			数値	変数{var}が存在したら|TRUE|
 extend({expr1}, {expr2} [, {expr3}])
 				リスト/辞書 {expr1}に{expr2}の要素を挿入
 exp({expr})			浮動小数点数	{expr}の指数
 expand({expr} [, {nosuf} [, {list}]])
 				任意	{expr}内の特別なキーワードを展開
 feedkeys({string} [, {mode}])	数値	先行入力バッファにキーシーケンスを追加
-filereadable({file})		数値	{file}が読みこみ可能ならTRUE
-filewritable({file})		数値	{file}が書き込み可能ならTRUE
-filter({expr}, {string})	リスト/辞書  {string}が0となる要素を{expr}から
+filereadable({file})		数値	{file}が読みこみ可能なら|TRUE|
+filewritable({file})		数値	{file}が書き込み可能なら|TRUE|
+filter({expr1}, {expr2})	リスト/辞書  {expr2}が0となる要素を{expr1}から
 					とり除く
 finddir({name}[, {path}[, {count}]])
 				文字列	{path}からディレクトリ{name}を探す
@@ -2047,14 +2059,14 @@ foldtext()			文字列	閉じた折り畳みに表示されている行
 foldtextresult({lnum})		文字列	{lnum}で閉じている折り畳みのテキスト
 foreground()			数値	Vimウィンドウを前面に移動する
 funcref({name} [, {arglist}] [, {dict}])
-				Funcref	reference to function {name}
+				Funcref	関数{name}への参照
 function({name} [, {arglist}] [, {dict}])
-				Funcref	関数{name}への参照を取得
+				Funcref	名前による関数{name}への参照
 garbagecollect([{atexit}])	なし	メモリを解放する。循環参照を断ち切る
 get({list}, {idx} [, {def}])	任意	{list}や{def}から要素{idx}を取得
 get({dict}, {key} [, {def}])	任意	{dict}や{def}から要素{key}を取得
-get({func}, {what})		any	get property of funcref/partial {func}
-getbufinfo([{expr}])		List	information about buffers
+get({func}, {what})		任意	funcref/partial {func}のプロパティ取得
+getbufinfo([{expr}])		リスト	バッファに関する情報
 getbufline({expr}, {lnum} [, {end}])
 				リスト	バッファ{expr}の{lnum}から{end}行目
 getbufvar({expr}, {varname} [, {def}])
@@ -2067,7 +2079,7 @@ getcmdpos()			数値	コマンドラインのカーソル位置を取得
 getcmdtype()			文字列	現在のコマンドラインの種類を取得
 getcmdwintype()			文字列	現在のコマンドラインウィンドウの種類
 getcompletion({pat}, {type} [, {filtered}])
-				List	list of cmdline completion matches
+				リスト	コマンドライン補完にマッチするリスト
 getcurpos()			リスト	カーソルの位置
 getcwd([{winnr} [, {tabnr}]])	文字列	現在の作業ディレクトリを取得
 getfontname([{name}])		文字列	使用しているフォントの名前
@@ -2085,12 +2097,12 @@ getqflist([{what}])		リスト	quickfix要素のリスト
 getreg([{regname} [, 1 [, {list}]]])
 				文字列/リスト   レジスタの中身を取得
 getregtype([{regname}])		文字列	レジスタの種類を取得
-gettabinfo([{expr}])		List	list of tab pages
+gettabinfo([{expr}])		リスト	タブページのリスト
 gettabvar({nr}, {varname} [, {def}])
 				任意	タブ{nr}の変数{varname}または{def}
 gettabwinvar({tabnr}, {winnr}, {name} [, {def}])
 				任意	タブページ{tabnr}の{winnr}の{name}
-getwininfo([{winid}])		List	list of windows
+getwininfo([{winid}])		リスト	ウィンドウのリスト
 getwinposx()			数値	GUI vim windowのX座標
 getwinposy()			数値	GUI vim windowのY座標
 getwinvar({nr}, {varname} [, {def}])
@@ -2101,18 +2113,18 @@ glob2regpat({expr})		文字列  globパターンを検索パターンに変換
 globpath({path}, {expr} [, {nosuf} [, {list} [, {alllinks}]]])
 				文字列	{path}の全ディレクトリに対し
 					glob({expr})を行う
-has({feature})			数値	機能{feature}がサポートならばTRUE
-has_key({dict}, {key})		数値	{dict}が要素{key}を持つならTRUE
+has({feature})			数値	機能{feature}がサポートならば|TRUE|
+has_key({dict}, {key})		数値	{dict}が要素{key}を持つなら|TRUE|
 haslocaldir([{winnr} [, {tabnr}]])
 				数値	現在のウィンドウで|:lcd|が実行された
-					ならTRUE
+					なら|TRUE|
 hasmapto({what} [, {mode} [, {abbr}]])
-				数値	{what}へのマッピングが存在するならTRUE
+				数値	{what}のマッピングが存在するなら|TRUE|
 histadd({history}, {item})	文字列	ヒストリに追加
 histdel({history} [, {item}])	文字列	ヒストリからitemを削除
 histget({history} [, {index}])	文字列	ヒストリから{index}アイテムを取得
 histnr({history})		数値	ヒストリの数
-hlexists({name})		数値	highlight group {name}が存在したらTRUE
+hlexists({name})		数値	highlight group {name}が存在したら|TRUE|
 hlID({name})			数値	highlight group {name}のID
 hostname()			文字列	vimが動作しているマシンの名前
 iconv({expr}, {from}, {to})	文字列	{expr}のエンコーディングを変換する
@@ -2129,17 +2141,17 @@ inputsave()			数値	先行入力を保存し、クリアする
 inputsecret({prompt} [, {text}]) 文字列	input()だがテキストを隠す
 insert({list}, {item} [, {idx}]) リスト	{list}に要素{item}を挿入 [{idx}の前]
 invert({expr})			数値	ビット反転
-isdirectory({directory})	数値	{directory}がディレクトリならばTRUE
-islocked({expr})		数値	{expr}がロックされているならTRUE
-isnan({expr})			Number	|TRUE| if {expr} is NaN
+isdirectory({directory})	数値	{directory}がディレクトリならば|TRUE|
+islocked({expr})		数値	{expr}がロックされているなら|TRUE|
+isnan({expr})			数値	{expr}がNaNならば|TRUE|
 items({dict})			リスト	{dict}のキーと値のペアを取得
-job_getchannel({job})		Channel	get the channel handle for {job}
-job_info({job})			Dict	get information about {job}
-job_setoptions({job}, {options}) none	set options for {job}
+job_getchannel({job})		チャンネル  {job}のチャンネルハンドルを取得
+job_info({job})			辞書	{job}についての情報を取得
+job_setoptions({job}, {options}) なし	{job}のオプションを設定する
 job_start({command} [, {options}])
-				Job	start a job
-job_status({job})		String	get the status of {job}
-job_stop({job} [, {how}])	Number	stop {job}
+				ジョブ	ジョブを開始する
+job_status({job})		文字列	{job}のステータスを取得する
+job_stop({job} [, {how}])	数値	{job}を停止する
 join({list} [, {sep}])		文字列	{list}の要素を連結して文字列にする
 js_decode({string})		任意	JS形式のJSONをデコードする
 js_encode({expr})		文字列	JS形式のJSONにエンコードする
@@ -2157,7 +2169,7 @@ log({expr})			浮動小数点数	{expr}の自然対数(底e)
 log10({expr})			浮動小数点数	浮動小数点数 {expr} の 10 を底
 						とする対数
 luaeval({expr}[, {expr}])	任意	|Lua| の式を評価する
-map({expr}, {string})		リスト/辞書  {expr}の各要素を{expr}に変える
+map({expr1}, {expr2})		リスト/辞書  {expr1}の各要素を{expr2}に変える
 maparg({name}[, {mode} [, {abbr} [, {dict}]]])
 				文字列/辞書
 					モード{mode}でのマッピング{name}の値
@@ -2178,9 +2190,9 @@ matchlist({expr}, {pat}[, {start}[, {count}]])
 matchstr({expr}, {pat}[, {start}[, {count}]])
 				文字列	{expr}内の{count}番目の{pat}のマッチ
 matchstrpos({expr}, {pat}[, {start}[, {count}]])
-				List	{count}'th match of {pat} in {expr}
-max({list})			数値	{list}内の要素の最大値
-min({list})			数値	{list}内の要素の最小値
+				リスト	{expr}内の{count}番目の{pat}のマッチ
+max({expr})			数値	{expr}内の要素の最大値
+min({expr})			数値	{expr}内の要素の最小値
 mkdir({name} [, {path} [, {prot}]])
 				数値	ディレクトリ{name}を作成
 mode([expr])			文字列	現在の編集モード
@@ -2196,12 +2208,13 @@ printf({fmt}, {expr1}...)	文字列	文字列を組み立てる
 pumvisible()			数値	ポップアップメニューが表示されているか
 pyeval({expr})			任意	|Python| の式を評価する
 py3eval({expr})			任意	|python3| の式を評価する
+pyxeval({expr})			任意	|python_x| の式を評価する
 range({expr} [, {max} [, {stride}]])
 				リスト	{expr}から{max}までの要素のリスト
 readfile({fname} [, {binary} [, {max}]])
 				リスト	ファイル{fname}から行のリストを取得
 reltime([{start} [, {end}]])	リスト	時刻の値を取得
-reltimefloat({time})		Float	turn the time value into a Float
+reltimefloat({time})		浮動小数点数	時刻の値を浮動小数点に変換
 reltimestr({time})		文字列	時刻の値を文字列に変換
 remote_expr({server}, {string} [, {idvar}])
 				文字列	式を送信する
@@ -2239,7 +2252,8 @@ setbufvar({expr}, {varname}, {val})	バッファ{expr}内の変数{varname}に{v
 					をセット
 setcharsearch({dict})		辞書	文字検索を{dict}に設定
 setcmdpos({pos})		数値	コマンドライン内のカーソル位置を設定
-setfperm({fname}, {mode})	Number	set {fname} file permissions to {mode}
+setfperm({fname}, {mode})	数値	ファイル {fname} のパーミッションを
+					{mode} に設定
 setline({lnum}, {line})		数値	行{lnum}に{line}(文字列)をセット
 setloclist({nr}, {list}[, {action}[, {what}]])
 				数値	{list}を使ってロケーションリストを変更
@@ -2276,10 +2290,12 @@ str2float({expr})		浮動小数点数	文字列を浮動小数点数に変換す
 str2nr({expr} [, {base}])	数値	文字列を数値に変換する
 strchars({expr} [, {skipcc}])	数値	文字列{expr}の文字の数
 strcharpart({str}, {start}[, {len}])
-				String	{len} characters of {str} at {start}
+				文字列	{str} の {start} から長さ {len} の文字
+					列を得る
 strdisplaywidth({expr} [, {col}]) 数値	文字列{expr}の表示幅
 strftime({format}[, {time}])	文字列	指定されたフォーマットでの時刻
-strgetchar({str}, {index})	Number	get char {index} from {str}
+strgetchar({str}, {index})	数値	{str} から {index} 番目の文字インデッ
+					クスを得る
 stridx({haystack}, {needle}[, {start}])
 				数値	{haystack}内の{needle}のインデックス
 string({expr})			文字列	{expr}の値の文字列表現
@@ -2316,22 +2332,23 @@ tanh({expr})			浮動小数点数	{expr}のハイパボリックタンジェ
 tempname()			文字列	テンポラリファイルの名前
 test_alloc_fail({id}, {countdown}, {repeat})
 				なし	メモリの確保を失敗にさせる
-test_autochdir()		none	enable 'autochdir' during startup
-test_disable_char_avail({expr}) none	test without typeahead
-test_garbagecollect_now()	none	free memory right now for testing
-test_null_channel()		Channel	null value for testing
-test_null_dict()		Dict	null value for testing
-test_null_job()			Job	null value for testing
-test_null_list()		List	null value for testing
-test_null_partial()		Funcref	null value for testing
-test_null_string()		String	null value for testing
-test_settime({expr})		none	set current time for testing
-timer_info([{id}])		List	information about timers
-timer_pause({id}, {pause})	none	pause or unpause a timer
+test_autochdir()		なし	起動時に 'autochdir' を有効にする
+test_garbagecollect_now()	なし	テスト用に直ちにメモリを解放する
+test_ignore_error({expr})	なし	特定のエラーを無視する
+test_null_channel()		チャンネル	テスト用のnull値
+test_null_dict()		辞書	テスト用のnull値
+test_null_job()			ジョブ	テスト用のnull値
+test_null_list()		リスト	テスト用のnull値
+test_null_partial()		Funcref	テスト用のnull値
+test_null_string()		文字列	テスト用のnull値
+test_override({expr}, {val})    なし	Vimの内部処理を置き換えてテストする
+test_settime({expr})		なし	テスト用に現在の時刻を設定する
+timer_info([{id}])		リスト	タイマーに関する情報
+timer_pause({id}, {pause})	なし	タイマーの一時停止または一時停止解除
 timer_start({time}, {callback} [, {options}])
-				Number	create a timer
-timer_stop({timer})		none	stop a timer
-timer_stopall()			none	stop all timers
+				数値	タイマーを作成する
+timer_stop({timer})		なし	タイマーを停止する
+timer_stopall()			なし	すべてのタイマーを停止する
 tolower({expr})			文字列	文字列{expr}を小文字にする
 toupper({expr})			文字列	文字列{expr}を大文字にする
 tr({src}, {fromstr}, {tostr})	文字列	{src}中に現れる文字{fromstr}を{tostr}
@@ -2346,11 +2363,11 @@ values({dict})			リスト	{dict}の値のリスト
 virtcol({expr})			数値	カーソルのスクリーンカラム位置
 visualmode([expr])		文字列	最後に使われたビジュアルモード
 wildmenumode()			数値	'wildmenu' モードが有効かどうか
-win_findbuf({bufnr})		List	find windows containing {bufnr}
-win_getid([{win} [, {tab}]])	Number	get window ID for {win} in {tab}
-win_gotoid({expr})		Number	go to window with ID {expr}
-win_id2tabwin({expr})		List	get tab and window nr from window ID
-win_id2win({expr})		Number	get window nr from window ID
+win_findbuf({bufnr})		リスト	{bufnr}を含むウィンドウを見つける
+win_getid([{win} [, {tab}]])	数値	{tab}の{win}のウィンドウIDを取得
+win_gotoid({expr})		数値	ID {expr}のウィンドウに行く
+win_id2tabwin({expr})		リスト	ウィンドウIDからタブとウィンドウnr取得
+win_id2win({expr})		数値	ウィンドウIDからウィンドウnr取得
 winbufnr({nr})			数値	ウィンドウ{nr}のバッファ番号
 wincol()			数値	カーソル位置のウィンドウ桁
 winheight({nr})			数値	ウィンドウ{nr}の高さ
@@ -2452,8 +2469,8 @@ argv([{nr}])	結果は引数リスト内の、{nr}番目のファイル。|argli
 	:  exe 'amenu Arg.' . f . ' :e ' . f . '<CR>'
 	:  let i = i + 1
 	:endwhile
-<		引数{nr}が指定されなかった場合は、引数リスト|arglist|全体を
-		返す。
+<		引数{nr}が指定されなかった場合は、引数リスト|arglist|全体を返
+		す。
 
 							*assert_equal()*
 assert_equal({expected}, {actual} [, {msg}])
@@ -2472,8 +2489,8 @@ assert_equal({expected}, {actual} [, {msg}])
 assert_exception({error} [, {msg}])			*assert_exception()*
 		v:exception に{error}が含まれていない時、|v:errors|にエラーメッ
 		セージを追加する。
-		これは例外を投げるコマンドのテストを行う場合に使うことができる。
-		コロンが続くエラー番号を使えば、翻訳の問題を回避できる: >
+		これは例外を投げるコマンドのテストを行う場合に使うことができ
+		る。コロンが続くエラー番号を使えば、翻訳の問題を回避できる: >
 			try
 			  失敗するコマンド
 			  call assert_false(1, 'command should have failed')
@@ -2484,7 +2501,8 @@ assert_exception({error} [, {msg}])			*assert_exception()*
 assert_fails({cmd} [, {error}])					*assert_fails()*
 		{cmd}を実行しエラーを生成しなかった場合、|v:errors|にエラーメッ
 		セージを追加する。
-		{error}が渡された場合、|v:errmsg|と一致しなければならない。
+		{error}が渡された場合、|v:errmsg|の一部にマッチしなければなら
+		ない。
 
 assert_false({actual} [, {msg}])				*assert_false()*
 		|assert_equal()|と同様に、{actual}がfalseでない場合、|v:errors|
@@ -2507,8 +2525,8 @@ assert_match({pattern}, {actual} [, {msg}])
 		ジが追加される。
 
 		|=~|と同じように{pattern}が使われる: マッチングは 'magic' や
-		'cpoptions' の実際の値に関係なく、'magic' が設定さ
-		れ、'cpoptions' が空であるように常に行われる。
+		'cpoptions' の実際の値に関係なく、'magic' が設定され、
+		'cpoptions' が空であるように常に行われる。
 
 		{actual}は文字列として使用され、自動変換が適用される。テキスト
 		の先頭と最後に一致させるためには、"^" と "$" を使用すること。
@@ -2576,6 +2594,27 @@ atan2({expr1}, {expr2})					*atan2()*
 <			2.356194
 		{|+float| 機能を有効にしてコンパイルしたときのみ有効}
 
+balloon_show({msg})					*balloon_show()*
+		{msg} をバルーン内に表示する。
+		例: >
+			func GetBalloonContent()
+			   " 内容の取得を開始
+			   return ''
+			endfunc
+			set balloonexpr=GetBalloonContent()
+
+			func BalloonCallback(result)
+			  call balloon_show(a:result)
+			endfunc
+<
+		想定される使用方法は、バルーンの内容の取得が 'balloonexpr' か
+		ら開始されることである。そこから非同期メソッドを呼び出し、コー
+		ルバックから balloon_show() を呼び出す。'balloonexpr' 自身は
+		空文字列かプレースホルダーを返すことができる。
+
+		バルーンを表示できないときは何も起こらず、エラーメッセージも表
+		示されない。
+		{Vimが |+balloon_eval| 機能付きでコンパイルされたときのみ有効}
 
 							*browse()*
 browse({save}, {title}, {initdir}, {default})
@@ -2675,7 +2714,7 @@ bufnr({expr} [, {create}])
 		ないときは、バッファリストに載せない新しいバッファを作成しその
 		番号を返す。
 		bufnr("$")は最後のバッファを意味する: >
-  :let last_buffer = bufnr("$")
+	:let last_buffer = bufnr("$")
 <		結果は存在しているバッファのうちで、もっとも大きなバッファ番号
 		となる。 Note そのバッファ番号より小さいバッファ番号を持つ(ハ
 		ズの)バッファが、必ずしも全て存在するとは限らない。なぜなら
@@ -2687,14 +2726,14 @@ bufnr({expr} [, {create}])
 		bufnr("$")の以前の名前: last_buffer_nr().
 
 bufwinid({expr})					*bufwinid()*
-		The result is a Number, which is the |window-ID| of the first
-		window associated with buffer {expr}.  For the use of {expr},
-		see |bufname()| above.  If buffer {expr} doesn't exist or
-		there is no such window, -1 is returned.  Example: >
+		その結果は数値で、バッファ{expr}に関連付けられた最初のウィンド
+		ウの|window-ID|。 {expr}の使い方は前述の|bufname()|を参照。バッ
+		ファ{expr}が存在しないか、ウィンドウが無い場合は、-1が返され
+		る。例: >
 
 	echo "A window containing buffer 1 is " . (bufwinid(1))
 <
-		Only deals with the current tab page.
+		現在のタブページのみを処理する。
 
 							*bufwinnr()*
 bufwinnr({expr})
@@ -2713,7 +2752,7 @@ byte2line({byte})
 		かを返す。これにはカレントバッファの 'fileformat' に依存した、
 		改行文字も含まれる。先頭の文字にはバイトカウント1が与えられる。
 		|line2byte()|と|go|と|:goto|も参照。
-		{|+byte_offset|機能付きでコンパイルされたときのみ有効}
+		{|+byte_offset| 機能付きでコンパイルされたときのみ有効}
 
 byteidx({expr}, {nr})					*byteidx()*
 		文字列{expr}の{nr}番目の文字のバイトインデックスを返す。
@@ -2764,6 +2803,203 @@ ceil({expr})							*ceil()*
 <			4.0
 		{|+float| 機能つきでコンパイルされたときのみ有効}
 
+ch_canread({handle})						*ch_canread()*
+		{handle} から何か読むものがあれば非ゼロを返す。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+
+		これはチャンネルから、都合のよいときに読むのに便利である。例え
+		ば、タイマーから。
+
+		チャンネルがコールバックを持っていない場合、メッセージはドロッ
+		プされることに注意。それを防ぐには close コールバックを追加す
+		ること。
+
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_close({handle})						*ch_close()*
+		{handle} を閉じる。|channel-close| を参照。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+		閉じられたコールバックは呼び出されない。
+
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_close_in({handle})						*ch_close_in()*
+		{handle} の "入力" を閉じる。|channel-close-in| を参照。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+		閉じられたコールバックは呼び出されない。
+
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_evalexpr({handle}, {expr} [, {options}])			*ch_evalexpr()*
+		{handle} へ {expr} を送信する。{expr} はチャンネル側と同じ型に
+		エンコードされる。この関数は生のチャンネルでは使用できない。
+		|channel-use| を参照。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+								*E917*
+		{options} は辞書でなければならない。また "callback" のエントリ
+		を持ってはならない。また個別のリクエストに対して "timeout" を
+		持つ事ができる。
+
+		ch_evalexpr() は応答を待ち、式をデコードした物が返される。エ
+		ラーもしくはタイムアウトの場合は空文字列が返る。
+
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_evalraw({handle}, {string} [, {options}])		*ch_evalraw()*
+		{handle} へ {expr} を送信する。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+
+		|ch_evalexpr()| と同様に動作する。しかしリクエストをエンコード
+		したり応答をデコードしたりはしない。呼び出しは正しいコンテンツ
+		である事が保証される。また NL モードでは改行が行われるが、ここ
+		では改行が付与されない。NL は応答から削除される。
+		|channel-use| を参照。
+
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_getbufnr({handle}, {what})				 *ch_getbufnr()*
+		{what} に使用されている {handle} のバッファ番号を得る。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+		{what} は標準エラーの為の "err"、標準出力の為の "out"、もしく
+		はソケット出力の為の空文字列が指定できる。
+		バッファが存在しない場合は -1 が返る。
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_getjob({channel})						*ch_getjob()*
+		{channel} に関連付けられた Job を得る。
+		もしジョブが無い場合、戻り値の Job で |job_status()| を呼び出
+		すと "fail" が返される。
+
+		{|+channel| と |+job| 機能付きでコンパイルされたときのみ有効}
+
+ch_info({handle})						*ch_info()*
+		{handle} に関する情報を辞書で返す。アイテムは:
+		   "id"		  チャネル番号
+		   "status"	  ch_status() と同様に、"open", "buffered" ま
+				  たは "closed"
+		ch_open() で開いた場合:
+		   "hostname"	  アドレスのホスト名
+		   "port"	  アドレスのポート
+		   "sock_status"  "open" または "closed"
+		   "sock_mode"	  "NL", "RAW", "JSON" または "JS"
+		   "sock_io"	  "socket"
+		   "sock_timeout" タイムアウト(ミリ秒)
+		job_start() で開いた場合:
+		   "out_status"	  "open", "buffered" または "closed"
+		   "out_mode"	  "NL", "RAW", "JSON" または "JS"
+		   "out_io"	  "null", "pipe", "file" または "buffer"
+		   "out_timeout"  タイムアウト(ミリ秒)
+		   "err_status"	  "open", "buffered" または "closed"
+		   "err_mode"	  "NL", "RAW", "JSON" または "JS"
+		   "err_io"	  "out", "null", "pipe", "file" または "buffer"
+		   "err_timeout"  タイムアウト(ミリ秒)
+		   "in_status"	  "open" または "closed"
+		   "in_mode"	  "NL", "RAW", "JSON" または "JS"
+		   "in_io"	  "null", "pipe", "file" または "buffer"
+		   "in_timeout"	  タイムアウト(ミリ秒)
+
+ch_log({msg} [, {handle}])					*ch_log()*
+		|ch_logfile()| によってログファイルが開かれている場合はチャン
+		ネルのログファイルに {msg} を書き込む。
+		{handle} が渡されている場合はチャンネル番号がメッセージの中で
+		使われる。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。使用されるチャンネル番号のチャンネルは開いていなければな
+		らない。
+
+ch_logfile({fname} [, {mode}])					*ch_logfile()*
+		{fname} へチャンネルの挙動ログ出力を開始する。
+		{fname} が空の場合、ロギングは停止する。
+
+		{mode} が省略されるか "a" の場合、ファイルへの追加になる。
+		{mode} が "w" の場合、空のファイルへで開始される。
+
+		UNIX で "tail -f" にてリアルタイムで何が行われているかが見える
+		様に、ファイルはメッセージ毎にフラッシュされる。
+
+
+ch_open({address} [, {options}])				*ch_open()*
+		{address}へのチャンネルを開く。|channel|を参照。
+		チャンネルを返す。失敗をチェックするには |ch_status()| を使用
+		する。
+
+		{address} は "localhost:8765" のように "ホスト名:ポート" の形
+		式である。
+
+		{options} が与えられる場合は辞書でなければならない。
+		|channel-open-options| を参照。
+
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_read({handle} [, {options}])					*ch_read()*
+		{handle} から読み込みメッセージを受信する。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+		|channel-more| を参照。
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_readraw({handle} [, {options}])			*ch_readraw()*
+		ch_read() と同様に動作するが JS や JSON の場合でもメッセージは
+		デコードされない。|channel-more| を参照。
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_sendexpr({handle}, {expr} [, {options}])			*ch_sendexpr()*
+		{handle} へ {expr} を送信する。{expr} はチャンネル側と同じ型に
+		エンコードされる。この関数は生のチャンネルでは使用できない。
+		|channel-use| を参照。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。チャンネルは開いていなければならない。。
+
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_sendraw({handle}, {string} [, {options}])		*ch_sendraw()*
+		{handle} を {string} に送る。
+		|ch_sendexpr()| と同様に動作するが、リクエストをエンコードした
+		り応答をデコードしたりはしない。呼び出しは正しいコンテンツで
+		ある事が保証される。また NL モードでは改行が行われるが、ここ
+		では改行が付与されない。NL は応答から削除される。
+		|channel-use| を参照。
+
+		{|+channel| 機能付きでコンパイルされたときのみ有効}
+
+ch_setoptions({handle}, {options})			*ch_setoptions()*
+		{handle} にオプションを設定する:
+			"callback"	チャンネルのコールバック
+			"timeout"	デフォルトの読み込みタイムアウト(ミリ秒)
+			"mode"		チャンネル全体のモード
+		より詳しい説明は |ch_open()| を参照。
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+
+		Note: モードの変更はキューイングされているメッセージを失ってし
+		まうかもしれない。
+
+		以下のオプションは変更できない:
+			"waittime"	|ch_open()|だけで適用できる
+
+ch_status({handle} [, {options}])				*ch_status()*
+		{handle} の状態を返す:
+			"fail"		チャンネルのオープンに失敗
+			"open"		チャンネルは利用可能
+			"buffered"	チャンネルは読込可能、または書き込まれ
+					ていない
+			"closed"	チャンネルは利用不可
+		{handle} はチャンネルもしくはチャンネルを持つジョブであっても
+		良い。
+		チャンネルは閉じられているが |ch_read()| を使って残ったデータ
+		をまだ読み取る事ができる場合には "buffered" が利用できる。
+
+		{options} が指定された場合、"part" 要素でチャンネルのどのパー
+		ト ("out" または "err") の状態を返すかを指定できる。例えば、エ
+		ラーの状態を得るには: >
+			ch_status(job, {"part": "err"})
+<
 changenr()						*changenr()*
 		最も最近の変更の番号を返す。|:undolist|で表示される番号と同じ
 		であり、|:undo|コマンドの引数として使うことができる。
@@ -2797,8 +3033,7 @@ clearmatches()						*clearmatches()*
 		て消去する。
 
 							*col()*
-col({expr})	
-		戻り値は数値で、{expr}で与えられる位置の桁番号(バイトインデッ
+col({expr})	戻り値は数値で、{expr}で与えられる位置の桁番号(バイトインデッ
 		クス)。有効な位置は:
 		    .	    現在の位置
 		    $	    カレント行の末尾(カレント行のバイト数+1を返す)
@@ -2923,178 +3158,6 @@ confirm({msg} [, {choices} [, {default} [, {type}]]])
 		は、垂直配置が使われる。幾つかのシステムでは常に水平配置が使わ
 		れる。
 
-ch_close({handle})						*ch_close()*
-		Close {handle}.  See |channel-close|.
-		{handle} can be Channel or a Job that has a Channel.
-		A close callback is not invoked.
-
-		{only available when compiled with the |+channel| feature}
-
-ch_close_in({handle})						*ch_close_in()*
-		Close the "in" part of {handle}.  See |channel-close-in|.
-		{handle} can be Channel or a Job that has a Channel.
-		A close callback is not invoked.
-
-		{only available when compiled with the |+channel| feature}
-
-ch_evalexpr({handle}, {expr} [, {options}])			*ch_evalexpr()*
-		Send {expr} over {handle}.  The {expr} is encoded
-		according to the type of channel.  The function cannot be used
-		with a raw channel.  See |channel-use|.
-		{handle} can be Channel or a Job that has a Channel.
-								*E917*
-		{options} must be a Dictionary.  It must not have a "callback"
-		entry.  It can have a "timeout" entry to specify the timeout
-		for this specific request.
-
-		ch_evalexpr() waits for a response and returns the decoded
-		expression.  When there is an error or timeout it returns an
-		empty string.
-
-		{only available when compiled with the |+channel| feature}
-
-ch_evalraw({handle}, {string} [, {options}])		*ch_evalraw()*
-		Send {string} over {handle}.
-		{handle} can be Channel or a Job that has a Channel.
-
-		Works like |ch_evalexpr()|, but does not encode the request or
-		decode the response.  The caller is responsible for the
-		correct contents.  Also does not add a newline for a channel
-		in NL mode, the caller must do that.  The NL in the response
-		is removed.
-		See |channel-use|.
-
-		{only available when compiled with the |+channel| feature}
-
-ch_getbufnr({handle}, {what})				 *ch_getbufnr()*
-		Get the buffer number that {handle} is using for {what}.
-		{handle} can be Channel or a Job that has a Channel.
-		{what} can be "err" for stderr, "out" for stdout or empty for
-		socket output.
-		Returns -1 when there is no buffer.
-		{only available when compiled with the |+channel| feature}
-
-ch_getjob({channel})						*ch_getjob()*
-		Get the Job associated with {channel}.
-		If there is no job calling |job_status()| on the returned Job
-		will result in "fail".
-
-		{only available when compiled with the |+channel| and
-		|+job| features}
-
-ch_info({handle})						*ch_info()*
-		Returns a Dictionary with information about {handle}.  The
-		items are:
-		   "id"		  number of the channel
-		   "status"	  "open" (any part is open) or "closed"
-		When opened with ch_open():
-		   "hostname"	  the hostname of the address
-		   "port"	  the port of the address
-		   "sock_status"  "open" or "closed"
-		   "sock_mode"	  "NL", "RAW", "JSON" or "JS"
-		   "sock_io"	  "socket"
-		   "sock_timeout" timeout in msec
-		When opened with job_start():
-		   "out_status"	  "open" or "closed"
-		   "out_mode"	  "NL", "RAW", "JSON" or "JS"
-		   "out_io"	  "null", "pipe", "file" or "buffer"
-		   "out_timeout"  timeout in msec
-		   "err_status"	  "open" or "closed"
-		   "err_mode"	  "NL", "RAW", "JSON" or "JS"
-		   "err_io"	  "out", "null", "pipe", "file" or "buffer"
-		   "err_timeout"  timeout in msec
-		   "in_status"	  "open" or "closed"
-		   "in_mode"	  "NL", "RAW", "JSON" or "JS"
-		   "in_io"	  "null", "pipe", "file" or "buffer"
-		   "in_timeout"	  timeout in msec
-
-ch_log({msg} [, {handle}])					*ch_log()*
-		Write {msg} in the channel log file, if it was opened with
-		|ch_logfile()|.
-		When {handle} is passed the channel number is used for the
-		message.
-		{handle} can be Channel or a Job that has a Channel.  The
-		Channel must open.
-
-ch_logfile({fname} [, {mode}])					*ch_logfile()*
-		Start logging channel activity to {fname}.
-		When {fname} is an empty string: stop logging.
-
-		When {mode} is omitted or "a" append to the file.
-		When {mode} is "w" start with an empty file.
-
-		The file is flushed after every message, on Unix you can use
-		"tail -f" to see what is going on in real time.
-
-
-ch_open({address} [, {options}])				*ch_open()*
-		{address}へのチャンネルを開く。|channel|を参照。
-		チャンネルを返す。失敗をチェックするには |ch_status()| を使用
-		する。
-
-		{address}は "localhost:8765" のように "ホスト名:ポート" の形式
-		である。
-
-		If {options} is given it must be a |Dictionary|.
-		See |channel-open-options|.
-
-		{only available when compiled with the |+channel| feature}
-
-ch_read({handle} [, {options}])					*ch_read()*
-		Read from {handle} and return the received message.
-		{handle} can be Channel or a Job that has a Channel.
-		See |channel-more|.
-		{only available when compiled with the |+channel| feature}
-
-ch_readraw({handle} [, {options}])			*ch_readraw()*
-		Like ch_read() but for a JS and JSON channel does not decode
-		the message.  See |channel-more|.
-		{only available when compiled with the |+channel| feature}
-
-ch_sendexpr({handle}, {expr} [, {options}])			*ch_sendexpr()*
-		{expr}を{handle}に送る。The {expr} is encoded
-		according to the type of channel.  The function cannot be used
-		with a raw channel.
-		|channel-use|を参照。
-		{handle} can be Channel or a Job that has a Channel.
-
-		{only available when compiled with the |+channel| feature}
-
-ch_sendraw({handle}, {string} [, {options}])		*ch_sendraw()*
-		{string}を{handle}に送る。
-		|ch_sendexpr()|のように動作するがリクエストをエンコードしたり、
-		レスポンスをデコードしたりはしない。The caller is responsible
-		for the correct contents.  Also does not add a newline for a
-		channel in NL mode, the caller must do that.  The NL in the
-		response is removed.
-		|channel-use|を参照。
-
-		{only available when compiled with the |+channel| feature}
-
-ch_setoptions({handle}, {options})			*ch_setoptions()*
-		Set options on {handle}:
-			"callback"	the channel callback
-			"timeout"	default read timeout in msec
-			"mode"		mode for the whole channel
-		See |ch_open()| for more explanation.
-		{handle} can be Channel or a Job that has a Channel.
-
-		Note that changing the mode may cause queued messages to be
-		lost.
-
-		These options cannot be changed:
-			"waittime"	only applies to |ch_open()|
-
-ch_status({handle})						*ch_status()*
-		Return the status of {handle}:
-			"fail"		failed to open the channel
-			"open"		channel can be used
-			"buffered"	channel can be read, not written to
-			"closed"	channel can not be used
-		{handle} can be Channel or a Job that has a Channel.
-		"buffered" is used when the channel was closed but there is
-		still data that can be obtained with |ch_read()|.
-
 							*copy()*
 copy({expr})	{expr}のコピーを作る。数値と文字列の場合は、{expr}そのものとコ
 		ピーの間に違いはない。
@@ -3186,7 +3249,7 @@ cursor({list})
 			[{lnum}, {col}]
 			[{lnum}, {col}, {off}]
 			[{lnum}, {col}, {off}, {curswant}]
-		これは |getpos()| や |getcurpos()| の返り値とほぼ同じである。
+		これは |getpos()| や |getcurpos()| の戻り値とほぼ同じである。
 		違いは最初の要素がないこと。
 
 		この関数を呼んでもジャンプリストは変更されない。
@@ -3222,7 +3285,7 @@ deepcopy({expr}[, {noref}])				*deepcopy()* *E698*
 		|copy()|も参照。
 
 delete({fname} [, {flags}])					*delete()*
-		{flags}を指定しないもくは{flags}を空で指定した場合: ファイル
+		{flags}を指定しないもしくは{flags}を空で指定した場合: ファイル
 		{fname}を削除する。
 		これは{fname}がシンボリックリンクの時でも動作する。
 
@@ -3244,9 +3307,9 @@ delete({fname} [, {flags}])					*delete()*
 		ている場合は|:exe|を使う。
 
 							*did_filetype()*
-did_filetype()	autocommandが実行されFileTypeイベントが一度でも起こっていれ
-		ば、|TRUE|が返る。スクリプトのFileTypeイベントが、複数回呼び出
-		されるのを回避するのに使える。 |FileType|
+did_filetype()	autocommandが実行されFileTypeイベントが一度でも起こっていれば、
+		|TRUE|が返る。スクリプトのFileTypeイベントが、複数回呼び出され
+		るのを回避するのに使える。 |FileType|
 		他のファイルへ移動すると、このカウンタはリセットされる。よって
 		実際は、カレントバッファに対してFileTypeイベントが発生したかど
 		うかを判定する。他のバッファを開くオートコマンドの中でこの関数
@@ -3326,30 +3389,32 @@ executable({expr})					*executable()*
 			-1	このシステム上では実装されていない
 
 execute({command} [, {silent}])					*execute()*
-		Execute an Ex command or commands and return the output as a
-		string.
-		{command} can be a string or a List.  In case of a List the
-		lines are executed one by one.
-		This is equivalent to: >
+		単一あるいは複数のExコマンドを実行して、出力を文字列として返
+		す。
+		{command} は文字列かリストを使える。リストの場合はそれらの行は
+		一行ずつ実行される。
+		以下と同等である: >
 			redir => var
 			{command}
 			redir END
 <
-		The optional {silent} argument can have these values:
-			""		no `:silent` used
-			"silent"	`:silent` used
-			"silent!"	`:silent!` used
-		The default is 'silent'.  Note that with "silent!", unlike
-		`:redir`, error messages are dropped.  When using an external
-		command the screen may be messed up, use `system()` instead.
+		オプションの {silent} の引数は以下の値を取ることができる:
+			""		`:silent` を使わない
+			"silent"	`:silent` を使う
+			"silent!"	`:silent!`を使う
+		デフォルトは "silent" である。 Note "silent!" は `redir` とは
+		異なり、エラーメッセージは削除されることに注意すること。もし外
+		部コマンドを使って画面がおかしくなる様であれば、代わりに
+		`system()`を使うことができる。
 							*E930*
-		It is not possible to use `:redir` anywhere in {command}.
+		{command} の中のどこかで`:redir`を使うことができない。
 
-		To get a list of lines use |split()| on the result: >
+		行のリストを得るために、出力に|split()|を使うことができる:
+>
 			split(execute('args'), "\n")
 
-<		When used recursively the output of the recursive call is not
-		included in the output of the higher level call.
+<		再帰的に使用されると、再帰呼び出しの出力は、上位呼び出しの出力
+		に含まれません。
 
 exepath({expr})						*exepath()*
 		{expr} が実行ファイルで、それが絶対パス、相対パス、または
@@ -3593,13 +3658,12 @@ feedkeys({string} [, {mode}])				*feedkeys()*
 			これは ":normal!" を使うのと似ている。
 			'x' なしで数回feedkeys()を呼んだ後、'x' ありで1回
 			({string}が空でも可能) feedkeys()を呼ぶことで先行入力
-			をすべて実行できる。Note that when Vim ends in Insert
-			mode it will behave as if <Esc> is typed, to avoid
-			getting stuck, waiting for a character to be typed
-			before the script continues.
-		'!'	When used with 'x' will not end Insert mode. Can be
-			used in a test when a timer is set to exit Insert mode
-			a little later.  Useful for testing CursorHoldI.
+			をすべて実行できる。Note Vimが挿入モードを終了したとき
+			は、スクリプト続行前の文字入力待ちによる立ち往生を避け
+			るために、<Esc>が入力されたかのように振る舞う。
+		'!'	'x' と一緒に使用すると挿入モードを終了しない。タイマー
+			が少し後で挿入モードを終了するように設定されているとき
+			にテストで使用できる。CursorHoldIのテストに便利である。
 
 		戻り値は常に0。
 
@@ -3620,7 +3684,7 @@ filewritable({file})					*filewritable()*
 		み可能な場合、結果は2となる。
 
 
-filter({expr}, {expr2})					*filter()*
+filter({expr1}, {expr2})					*filter()*
 		{expr1}はリスト|List|または辞書|Dictionary|でなければならない。
 		{expr1}の各要素に対して{expr2}を評価し、その結果が0ならばリス
 		トまたは辞書からその要素を削除する。
@@ -3629,7 +3693,8 @@ filter({expr}, {expr2})					*filter()*
 
 		{expr2}が文字列の場合、{expr2}の内部では|v:val|が現在の要素の
 		値を保持している。辞書の場合は|v:key|が現在の要素のキーを保持
-		している。
+		しており、リストの場合は|v:key|が現在の要素のインデックスを保
+		持している。
 		例: >
 			call filter(mylist, 'v:val !~ "OLD"')
 <		は要素 "OLD" を削除する。 >
@@ -3651,6 +3716,10 @@ filter({expr}, {expr2})					*filter()*
 			  return a:idx % 2 == 1
 			endfunc
 			call filter(mylist, function('Odd'))
+<		|lambda| を使えばより短く書ける: >
+			call filter(myList, {idx, val -> idx * val <= 42})
+<		"val" を使わない場合は省略できる: >
+			call filter(myList, {idx -> idx % 2 == 1})
 <
 		この操作はその場で(in-place)行われる。リストや辞書を変更したく
 		ない場合は最初にコピーを作ること: >
@@ -3725,8 +3794,8 @@ floor({expr})							*floor()*
 fmod({expr1}, {expr2})					*fmod()*
 		{expr1} / {expr2} の余りを返す (割り算が表現できなくても)。
 		{expr2} が非ゼロなら {expr1} - i * {expr2} の結果を返す (i は
-		返り値が {expr1} と同じ符号を持ちその絶対値が {expr2} よりも小
-		さくなるような値)。{expr2} がゼロならゼロが返る。返り値の型は
+		戻り値が {expr1} と同じ符号を持ちその絶対値が {expr2} よりも小
+		さくなるような値)。{expr2} がゼロならゼロが返る。戻り値の型は
 		浮動小数点数 (|Float|)。
 		{expr1} と {expr2} は浮動小数点数 (|Float|) か数値 (|Number|)
 		でなければならない。
@@ -3819,57 +3888,56 @@ foreground()	Vimのウィンドウを前面に移動する。この関数はク�
 
 						*funcref()*
 funcref({name} [, {arglist}] [, {dict}])
-		Just like |function()|, but the returned Funcref will lookup
-		the function by reference, not by name.  This matters when the
-		function {name} is redefined later.
+		|function()|と全く同じである。ただし、Funcrefは名前ではなく関
+		数の参照で検索された関数の参照を返す。これは関数{name}が後で
+		再定義されるときに重要である。
 
-		Unlike |function()|, {name} must be an existing user function.
-		Also for autoloaded functions. {name} cannot be a builtin
-		function.
+		|function()|とは違い、{name}はユーザー定義関数として存在してい
+		なければならない。また、autoload関数についても同様である。
+		{name}は組込み関数であってはならない。
 
 					*function()* *E700* *E922* *E923*
 function({name} [, {arglist}] [, {dict}])
 		関数{name}を参照する|Funcref|の変数を返す。{name}はユーザー定義
 		関数でも組み込み関数でもよい。
 
-		{name} can also be a Funcref or a partial.  When it is a
-		partial the dict stored in it will be used and the {dict}
-		argument is not allowed. E.g.: >
+		ここで{name}は関数の参照、もしくは部分適用である。部分適用であ
+		るとき、それに格納されている辞書が使用され、{dict}引数が使用で
+		きない。例: >
 			let FuncWithArg = function(dict.Func, [arg])
 			let Broken = function(dict.Func, [arg], dict)
 <
-		When using the Funcref the function will be found by {name},
-		also when it was redefined later.  Use |funcref()| to keep the
-		same function.
+		Funcrefが利用されるとき、その関数は{name}から見つけられる。こ
+		れは後で再定義された場合も同様である。常に同じ関数を見つけるた
+		めには|funcref()|を使うこと。
 
-		When {arglist} or {dict} is present this creates a partial.
-		That means the argument list and/or the dictionary is stored in
-		the Funcref and will be used when the Funcref is called.
+		{arglist}もしくは{dict}が与えられると、関数の部分適用が作られ
+		る。すなわち引数のリスト及び/または辞書はFuncrefに格納され、
+		そのFuncrefが呼ばれるときに使用される。
 		
-		The arguments are passed to the function in front of other
-		arguments.  Example: >
+		格納された引数は他の引数よりも前に関数に渡される。例えば: >
 			func Callback(arg1, arg2, name)
 			...
 			let Func = function('Callback', ['one', 'two'])
 			...
 			call Func('name')
-<		Invokes the function as with: >
+<		関数は次のように呼び出す: >
 			call Callback('one', 'two', 'name')
 
-<		The function() call can be nested to add more arguments to the
-		Funcref.  The extra arguments are appended to the list of
-		arguments.  Example: >
+<		function()はFuncrefにより多くの引数を加えるためにネストして呼
+		び出すことができる。余分な引数は、引数のリストに追加される。
+		例えば: >
 			func Callback(arg1, arg2, name)
 			...
 			let Func = function('Callback', ['one'])
 			let Func2 = function(Func, ['two'])
 			...
 			call Func2('name')
-<		Invokes the function as with: >
+<		これは次のように関数を呼び出す: >
 			call Callback('one', 'two', 'name')
 
-<		The Dictionary is only useful when calling a "dict" function.
-		In that case the {dict} is passed in as "self". Example: >
+<		辞書は "dict" 関数を呼び出すときのみ有用である。この場合、
+		{dict}は "self" として渡される。例えば: >
 			function Callback() dict
 			   echo "called for " . self.name
 			endfunction
@@ -3878,19 +3946,19 @@ function({name} [, {arglist}] [, {dict}])
 			let Func = function('Callback', context)
 			...
 			call Func()	" will echo: called for example
-<		The use of function() is not needed when there are no extra
-		arguments, these two are equivalent: >
+<		余分な引数がない場合、funciton()は必要ない。以下の二つは同等で
+		ある: >
 			let Func = function('Callback', context)
 			let Func = context.Callback
 
-<		The argument list and the Dictionary can be combined: >
+<		引数のリストと辞書を同時に使用することもできる: >
 			function Callback(arg1, count) dict
 			...
 			let context = {"name": "example"}
 			let Func = function('Callback', ['one'], context)
 			...
 			call Func(500)
-<		Invokes the function as with: >
+<		これは次のように関数を呼び出す: >
 			call context.Callback('one', 500)
 
 
@@ -3910,10 +3978,10 @@ garbagecollect([{atexit}])				*garbagecollect()*
 		にもガーべッジコレクションが行われる。これはメモリリークを発見
 		するのに役に立つ。
 
-		The garbage collection is not done immediately but only when
-		it's safe to perform.  This is when waiting for the user to
-		type a character.  To force garbage collection immediately use
-		|test_garbagecollect_now()|.
+		ガーベッジコレクションはすぐには実行されず、安全な場合のみ実行
+		される。これはユーザーが文字を入力するのを待っているときであ
+		る。ガーベッジコレクションを強制するには、すぐに
+		|test_garbagecollect_now()|を使用すること。
 
 get({list}, {idx} [, {default}])			*get()*
 		リスト|List| {list}から{idx}番目の要素を取得する。この要素を取
@@ -3924,54 +3992,48 @@ get({dict}, {key} [, {default}])
 		る。この要素を取得できないときは{default}を返す。{default}が省
 		略されたときは0を返す。
 get({func}, {what})
-		Get an item with from Funcref {func}.  Possible values for
-		{what} are:
-			'name'	The function name
-			'func'	The function
-			'dict'	The dictionary
-			'args'	The list with arguments
+		Funcref {func}から項目を取得する。{what}の可能な値は:
+			"name"	関数名
+			"func"	関数
+			"dict"	辞書
+			"args"	引数リスト
 
 							*getbufinfo()*
 getbufinfo([{expr}])
 getbufinfo([{dict}])
-		Get information about buffers as a List of Dictionaries.
+		バッファの情報を辞書のリストとして取得する。
 
-		Without an argument information about all the buffers is
-		returned.
+		引数なしの場合、すべてのバッファに関する情報が返される。
 
-		When the argument is a Dictionary only the buffers matching
-		the specified criteria are returned.  The following keys can
-		be specified in {dict}:
-			buflisted	include only listed buffers.
-			bufloaded	include only loaded buffers.
+		引数が辞書の場合、指定された条件を満たすバッファのみが返され
+		る。{dict}には以下のキーを指定できる：
+			buflisted	リストされたバッファのみを含む。
+			bufloaded	ロードされたバッファのみを含む。
 
-		Otherwise, {expr} specifies a particular buffer to return
-		information for.  For the use of {expr}, see |bufname()|
-		above.  If the buffer is found the returned List has one item.
-		Otherwise the result is an empty list.
+		それ以外の場合、{expr}は情報を返す特定のバッファを指定する。
+		{expr}の使用については、上記の|bufname()|を参照。バッファが見
+		つかった場合、返されるListには1つの項目がある。それ以外の場合、
+		結果は空のリストになる。
 
-		Each returned List item is a dictionary with the following
-		entries:
-			bufnr		buffer number.
-			changed		TRUE if the buffer is modified.
-			changedtick	number of changes made to the buffer.
-			hidden		TRUE if the buffer is hidden.
-			listed		TRUE if the buffer is listed.
-			lnum		current line number in buffer.
-			loaded		TRUE if the buffer is loaded.
-			name		full path to the file in the buffer.
-			signs		list of signs placed in the buffer.
-					Each list item is a dictionary with
-					the following fields:
-					    id	  sign identifier
-					    lnum  line number
-					    name  sign name
-			variables	a reference to the dictionary with
-					buffer-local variables.
-			windows		list of |window-ID|s that display this
-					buffer
+		返される各List項目は、次のエントリを持つ辞書である:
+			bufnr		バッファ番号。
+			changed		バッファが変更されている場合はTRUE。
+			changedtick	バッファに加えられた変更の数。
+			hidden		バッファが隠されている場合はTRUE。
+			listed		バッファがリストされている場合はTRUE。
+			lnum		バッファ内の現在の行番号。
+			loaded		バッファがロードされている場合はTRUE。
+			name		バッファ内のファイルへのフルパス。
+			signs		バッファに配置された目印のリスト。
+					各リスト項目は、次のフィールドを含む辞
+					書である:
+					    id	  目印識別子
+					    lnum  行番号
+					    name  目印名
+			variables	バッファローカル変数の辞書への参照。
+			windows		バッファを表示する|window-ID|のリスト
 
-		Examples: >
+		例: >
 			for buf in getbufinfo()
 			    echo buf.name
 			endfor
@@ -3981,7 +4043,7 @@ getbufinfo([{dict}])
 			    endif
 			endfor
 <
-		To get buffer-local options use: >
+		バッファローカルオプションを取得するには: >
 			getbufvar({bufnr}, '&')
 
 <
@@ -4015,10 +4077,10 @@ getbufvar({expr}, {varname} [, {def}])				*getbufvar()*
 		の値を返す。Note "b:" をつけない変数名を指定すること。
 		{varname} が空文字列の場合、全てのバッファローカル変数からなる
 		辞書を返す。
-		When {varname} is equal to "&" returns a dictionary with all
-		the buffer-local options.
-		Otherwise, when {varname} starts with "&" returns the value of
-		a buffer-local option.
+		{varname} が "&" に等しいとき、すべてのバッファローカルオプショ
+		ンを持つ辞書を返す。
+		そうでなく、{varname} が "&" で始まるとき、バッファローカルオ
+		プションの値を返す。
 		グローバルオプション、バッファローカルオプションのどちらに対し
 		ても動作するが、グローバル変数、ウィンドウローカル変数、ウィン
 		ドウローカルオプションに対しては動作しない。
@@ -4066,6 +4128,10 @@ getchar([expr])						*getchar()*
 			  exe "normal " . v:mouse_col . "|"
 			endif
 <
+		bracketed pasteを使用しているときは最初の文字のみが返され、ペー
+		ストされた残りのテキストは切り捨てられる。
+		|xterm-bracketed-paste|.
+
 		この関数を呼んだときプロンプトは表示されない。文字入力を待って
 		いることをなんらかの方法でユーザーがわかるようにしなければなら
 		ないだろう。
@@ -4123,8 +4189,8 @@ getcharsearch()						*getcharsearch()*
 		    until	文字検索の種類。1は|t|もしくは|T|の文字検索、0は
 				|f|もしくは|F|の文字検索。
 
-		下記の設定は前回の文字検索の方向に関わらず、
-		|;| で前方検索、|,| で後方検索を常に行えるようになり便利である: >
+		下記の設定は前回の文字検索の方向に関わらず、|;| で前方検索、
+		|,| で後方検索を常に行えるようになり便利である: >
 			:nnoremap <expr> ; getcharsearch().forward ? ';' : ','
 			:nnoremap <expr> , getcharsearch().forward ? ',' : ';'
 <		|setcharsearch()|も参照。
@@ -4160,55 +4226,57 @@ getcmdtype()						*getcmdtype()*
 
 getcmdwintype()						*getcmdwintype()*
 		現在のコマンドラインウィンドウ (|command-line-window|) の種類
-		を返す。返り値の意味は |getcmdtype()| と同じ。コマンドライン
+		を返す。戻り値の意味は |getcmdtype()| と同じ。コマンドライン
 		ウィンドウでなければ空文字列を返す。
 
 getcompletion({pat}, {type} [, {filtered}])		*getcompletion()*
-		Return a list of command-line completion matches. {type}
-		specifies what for.  The following completion types are
-		supported:
+		コマンドライン補完のマッチするリストを返す。{type}は何のための
+		ものかを指定する。 次の補完タイプがサポートされている:
 
-		augroup		autocmd groups
-		buffer		buffer names
-		behave		:behave suboptions
-		color		color schemes
-		command		Ex command (and arguments)
-		compiler	compilers
-		cscope		|:cscope| suboptions
-		dir		directory names
-		environment	environment variable names
-		event		autocommand events
-		expression	Vim expression
-		file		file and directory names
-		file_in_path	file and directory names in |'path'|
-		filetype	filetype names |'filetype'|
-		function	function name
-		help		help subjects
-		highlight	highlight groups
-		history		:history suboptions
-		locale		locale names (as output of locale -a)
-		mapping		mapping name
-		menu		menus
-		option		options
-		shellcmd	Shell command
-		sign		|:sign| suboptions
-		syntax		syntax file names |'syntax'|
-		syntime		|:syntime| suboptions
-		tag		tags
-		tag_listfiles	tags, file names
-		user		user names
-		var		user variables
+		augroup		自動コマンドグループ
+		buffer		バッファ名
+		behave		|:behave|サブオプション
+		color		カラースキーム
+		command		Exコマンド (および引数)
+		compiler	コンパイラ
+		cscope		|:cscope|のサブオプション
+		dir		辞書名
+		environment	環境変数名
+		event		自動コマンドのイベント
+		expression	Vim式
+		file		ファイルおよびディレクトリ名
+		file_in_path	|'path'|のファイルおよびディレクトリ名
+		filetype	ファイルタイプ名 |'filetype'|
+		function	関数名
+		help		ヘルプ項目
+		highlight	ハイライトグループ
+		history		|:history|サブオプション
+		locale		ロケール名 (locale -aの出力)
+		mapping		マッピング名
+		menu		メニュー
+		messages	|:messages|サブオプション
+		option		オプション
+		packadd		任意パッケージ |pack-add| 名
+		shellcmd	シェルコマンド
+		sign		|:sign|サブオプション
+		syntax		構文ファイル名 |'syntax'|
+		syntime		|:syntime|サブオプション
+		tag		タグ
+		tag_listfiles	タグ、ファイル名
+		user		ユーザー名
+		var		ユーザー変数
 
-		If {pat} is an empty string, then all the matches are returned.
-		Otherwise only items matching {pat} are returned. See
-		|wildcards| for the use of special characters in {pat}.
+		{pat}が空文字列の場合、すべてのマッチが返される。それ以外の場
+		合、{pat}と一致する項目のみが返される。{pat}での特殊文字の使用
+		については、|wildcards|を参照。
 
-		If the optional {filtered} flag is set to 1, then 'wildignore'
-		is applied to filter the results.  Otherwise all the matches
-		are returned. The 'wildignorecase' option always applies.
+		オプションの{filtered}フラグが1に設定されている場合、結果をフィ
+		ルタリングするために 'wildignore'が適用される。そうでなければ、
+		すべての一致が返される。'wildignorecase'オプションは常に適用さ
+		れる。
 
-		If there are no matches, an empty list is returned.  An
-		invalid value for {type} produces an error.
+		一致するものがなければ、空のリストが返される。{type}の値が無効
+		だと、エラーが発生する。
 
 							*getcurpos()*
 getcurpos()	カーソルの位置を返す。これは getpos('.') に似ているが、追加の
@@ -4249,8 +4317,8 @@ getfontname([{name}])					*getfontname()*
 		GUIモードで実行しているときのみ動作する。よってvimrcやgvimrcの
 		中では使えない。GUIモードが起動した直後にこの関数を呼ぶには、
 		オートコマンド|GUIEnter|を使うこと。
-		Note GTK 2のGUIはどんなフォント名でも受け付けてしまうため、名
-		前が有効であるかのチェックは動作しない。
+		Note GTKのGUIはどんなフォント名でも受け付けてしまうため、名前
+		が有効であるかのチェックは機能しない。
 
 getfperm({fname})					*getfperm()*
 		{fname}で指定されたファイルの読み込み、書き込み、実行の許可属
@@ -4327,9 +4395,9 @@ getloclist({nr}[, {what}])				*getloclist()*
 		ているロケーションリストが返る。ウィンドウ番号{nr}が無効な場合
 		は、空リストが返る。それ以外は|getqflist()|と同じ。
 
-		If the optional {what} dictionary argument is supplied, then
-		returns the items listed in {what} as a dictionary. Refer to
-		|getqflist()| for the supported items in {what}.
+		オプションの{what}辞書引数が指定されている場合、{what}にリスト
+		されている項目を辞書として返す。{what}のサポートされている項目
+		については、|getqflist()|を参照。
 
 getmatches()						*getmatches()*
 		|matchadd()| と |:match| により定義された全てのマッチの |List|
@@ -4404,24 +4472,24 @@ getqflist([{what}])					*getqflist()*
 			:   echo bufname(d.bufnr) ':' d.lnum '=' d.text
 			:endfor
 <
-		If the optional {what} dictionary argument is supplied, then
-		returns only the items listed in {what} as a dictionary. The
-		following string items are supported in {what}:
-			nr	get information for this quickfix list
-			title	get the list title
-			winid	get the |window-ID| (if opened)
-			all	all of the above quickfix properties
-		Non-string items in {what} are ignored.
-		If "nr" is not present then the current quickfix list is used.
-		In case of error processing {what}, an empty dictionary is
-		returned.
+		オプションの{what}辞書引数が指定されている場合は、{what}にリス
+		トされている項目のみを辞書として返す。{what}では、以下の文字列
+		項目がサポートされている:
+			nr	このquickfixリストの情報を取得。0 は現在の
+				quickfixリストを意味する
+			title	リストタイトルを取得
+			winid	|window-ID|を取得 (もし開かれていれば)
+			all	上記のquickfixのすべてのプロパティ
+		{what}の文字列以外の項目は無視される。
+		"nr" が存在しない場合、現在のquickfixリストが使用される。{what}
+		の処理中にエラーとなった場合、空の辞書が返される。
 
-		The returned dictionary contains the following entries:
-			nr	quickfix list number
-			title	quickfix list title text
-			winid	quickfix |window-ID| (if opened)
+		返される辞書には、次のエントリが含まれる:
+			nr	quickfixリスト番号
+			title	quickfixリストのタイトルテキスト
+			winid	quickfixの|window-ID| (もし開かれていれば)
 
-		Examples: >
+		例: >
 			:echo getqflist({'all': 1})
 			:echo getqflist({'nr': 2, 'title': 1})
 <
@@ -4435,7 +4503,7 @@ getreg([{regname} [, 1 [, {list}]]])			*getreg()*
 		getreg('=', 1)はその式そのものを返す。これを使って|setreg()|で
 		復元することができる。他のレジスタの場合は、この引数は無視され
 		るので、常に指定していても害はない。
-		{list} が指定され、その値が|TRUE|のときは、返り値はリスト
+		{list} が指定され、その値が|TRUE|のときは、戻り値はリスト
 		(|List|) になる。リストの各要素はテキスト 1 行である。これはレ
 		ジスタの中に値ゼロのバイトが含まれる場合に使用する。{list} を
 		指定しなかった場合は NL 文字と値ゼロのバイトは両方とも NL 文字
@@ -4456,17 +4524,15 @@ getregtype([{regname}])					*getregtype()*
 		{regname}を指定しないときは|v:register|が使われる。
 
 gettabinfo([{arg}])					*gettabinfo()*
-		If {arg} is not specified, then information about all the tab
-		pages is returned as a List. Each List item is a Dictionary.
-		Otherwise, {arg} specifies the tab page number and information
-		about that one is returned.  If the tab page does not exist an
-		empty List is returned.
+		{arg}を指定しないと、すべてのタブページに関する情報がリストと
+		して返される。各リスト項目は辞書である。それ以外の場合、{arg}
+		はタブページ番号を指定し、それに関する情報が返される。タブペー
+		ジが存在しない場合、空のリストが返される。
 
-		Each List item is a Dictionary with the following entries:
-			tabnr		tab page number.
-			variables	a reference to the dictionary with
-					tabpage-local variables
-			windows		List of |window-ID|s in the tag page.
+		各リストアイテムは、次のエントリを持つ辞書である:
+			tabnr		タブページ番号。
+			variables	タブページローカル変数の辞書への参照。
+			windows		タブページの|window-ID|のリスト。
 
 gettabvar({tabnr}, {varname} [, {def}])				*gettabvar()*
 		タブページ {tabnr} のタブローカル変数 {varname} を取得する。
@@ -4510,30 +4576,31 @@ getwinposy()	結果はGUIのVimウィンドウの上端の、デスクトップ�
 		値)。情報が存在しない(コンソールの)場合は-1となる。
 
 getwininfo([{winid}])					*getwininfo()*
-		Returns information about windows as a List with Dictionaries.
+		ウィンドウに関する情報を、辞書のリストとして返す。
 
-		If {winid} is given Information about the window with that ID
-		is returned.  If the window does not exist the result is an
-		empty list.
+		{winid}が与えられた場合、そのIDを持つウィンドウに関する情報が
+		返される。ウィンドウが存在しない場合、結果は空のリストになる。
 
-		Without {winid} information about all the windows in all the
-		tab pages is returned.
+		{winid}がなければすべてのタブページのすべてのウィンドウに関す
+		る情報が返される。
 
-		Each List item is a Dictionary with the following entries:
-			bufnr		number of buffer in the window
-			height		window height
-			loclist		1 if showing a location list
-					{only with the +quickfix feature}
-			quickfix	1 if quickfix or location list window
-					{only with the +quickfix feature}
-			tabnr		tab page number
-			variables	a reference to the dictionary with
-					window-local variables
-			width		window width
+		各Listアイテムは次のエントリを持つ辞書である:
+			bufnr		ウィンドウ内のバッファ数
+			height		ウィンドウの高さ
+			loclist		ロケーションリストを表示してる場合は1
+					{Vimが|+quickfix|機能付きでコンパイルさ
+					れたときのみ有効}
+			quickfix	quickfixまたはロケーションリストウィン
+					ドウの場合は1
+					{Vimが|+quickfix|機能付きでコンパイルさ
+					れたときのみ有効}
+			tabnr		タブページ番号
+			variables	ウィンドウローカル変数の辞書への参照
+			width		ウィンドウ幅
 			winid		|window-ID|
-			winnr		window number
+			winnr		ウィンドウ番号
 
-		To obtain all window-local variables use: >
+		すべてのウィンドウローカル変数を取得するには: >
 			gettabwinvar({tabnr}, {winnr}, '&')
 
 getwinvar({winnr}, {varname} [, {def}])				*getwinvar()*
@@ -4581,10 +4648,9 @@ glob2regpat({expr})					 *glob2regpat()*
 			if filename =~ glob2regpat('Make*.mak')
 <		上記は次と同じである: >
 			if filename =~ '^Make.*\.mak$'
-<		When {expr} is an empty string the result is "^$", match an
-		empty string.
-		Note that the result depends on the system.  On MS-Windows
-		a backslash usually means a path separator.
+<		{expr}が空文字列の場合、結果は "^$" で、空文字列にマッチする。
+		結果はシステムによって異なることに注意すること。MS-Windowsで
+		は、バックスラッシュは通常、パス区切りを意味する。
 
 								*globpath()*
 globpath({path}, {expr} [, {nosuf} [, {list} [, {alllinks}]]])
@@ -4609,7 +4675,7 @@ globpath({path}, {expr} [, {nosuf} [, {list} [, {alllinks}]]])
 		{list} が指定され、その値が|TRUE|なら、マッチしたすべてのファ
 		イルがリストとして返る。リストとして受け取る利点は、改行文字を
 		含んだファイル名も正しく扱えることである。{list} を指定しな
-		かった場合は、返り値は文字列であり、マッチした複数のファイル名
+		かった場合は、戻り値は文字列であり、マッチした複数のファイル名
 		は <NL> 文字で連結されてしまう。例: >
 			:echo globpath(&rtp, "syntax/c.vim", 0, 1)
 <
@@ -4662,8 +4728,8 @@ hasmapto({what} [, {mode} [, {abbr}]])			*hasmapto()*
 			c	コマンドラインモード
 		{mode}が省略されたときは "nvo" となる。
 
-		この関数はVimスクリプトの中で、ある関数へのマッピングが既に存
-		在するか判定するために有用である。例: >
+		この関数はVim scriptの中で、ある関数へのマッピングが既に存在す
+		るか判定するために有用である。例: >
 			:if !hasmapto('\ABCdoit')
 			:   map <Leader>d \ABCdoit
 			:endif
@@ -4955,120 +5021,117 @@ items({dict})						*items()*
 		の要素の順序は不定である。
 
 job_getchannel({job})					 *job_getchannel()*
-		Get the channel handle that {job} is using.
-		To check if the job has no channel: >
+		{job}が使用しているチャンネルハンドルを取得する。
+		ジョブにチャンネルがないかどうかを確認するには: >
 			if string(job_getchannel()) == 'channel fail'
 <
-		{only available when compiled with the |+job| feature}
+		{Vimが|+job|機能付きでコンパイルされたときのみ有効}
 
 job_info({job})						*job_info()*
-		Returns a Dictionary with information about {job}:
-		   "status"	what |job_status()| returns
-		   "channel"	what |job_getchannel()| returns
-		   "exitval"	only valid when "status" is "dead"
-		   "exit_cb"	function to be called on exit
+		{job}に関する情報を持つ辞書を返す:
+		   "status"	|job_status()|が返すもの
+		   "channel"	|job_getchannel()|が返すもの
+		   "exitval"	"status" が "dead" のときのみ有効
+		   "exit_cb"	終了時に呼び出される関数
 		   "stoponexit"	|job-stoponexit|
 
 job_setoptions({job}, {options})			*job_setoptions()*
-		Change options for {job}.  Supported are:
+		{job}のオプションを変更する。サポートされているものは:
 		   "stoponexit"	|job-stoponexit|
 		   "exit_cb"	|job-exit_cb|
 
 job_start({command} [, {options}])			*job_start()*
-		Start a job and return a Job object.  Unlike |system()| and
-		|:!cmd| this does not wait for the job to finish.
+		ジョブを開始し、ジョブオブジェクトを返す。|system()|と|:!cmd|
+		とは異なり、これはジョブが終了するのを待つことはない。
 
-		{command} can be a String.  This works best on MS-Windows.  On
-		Unix it is split up in white-separated parts to be passed to
-		execvp().  Arguments in double quotes can contain white space.
+		{command}は文字列にできる。これはMS-Windowsで最も効果的である。
+		Unixでは、それはexecvp()に渡すために空白で区切られたパーツに分
+		割される。二重引用符で囲まれた引数には空白を含められる。
 
-		{command} can be a List, where the first item is the executable
-		and further items are the arguments.  All items are converted
-		to String.  This works best on Unix.
+		{command}はリストにでき、最初の項目は実行可能ファイルであり、
+		残りの項目は引数である。すべての項目は文字列に変換される。これ
+		はUnixで最も効果的である。
 
-		On MS-Windows, job_start() makes a GUI application hidden. If
-		want to show it, Use |:!start| instead.
+		MS-Windowsでは、|job_start()|はGUIアプリケーションを隠す。それ
+		を表示したい場合は、|:!start|を代わりに使用すること。
 
-		The command is executed directly, not through a shell, the
-		'shell' option is not used.  To use the shell: >
+		コマンドはシェルではなく直接実行され、'shell' オプションは使用
+		されない。シェルを使用するには: >
 	let job = job_start(["/bin/sh", "-c", "echo hello"])
-<		Or: >
+<		または: >
 	let job = job_start('/bin/sh -c "echo hello"')
-<		Note that this will start two processes, the shell and the
-		command it executes.  If you don't want this use the "exec"
-		shell command.
+<		これは2つのプロセス、シェルとそれが実行するコマンドを開始する
+		ことに注意すること。これを望まない場合は、"exec" シェルコマン
+		ドを使用する。
 
-		On Unix $PATH is used to search for the executable only when
-		the command does not contain a slash.
+		Unixでは$PATHは、コマンドにスラッシュが含まれていない場合にの
+		み実行可能ファイルを検索するために使用される。
 
-		The job will use the same terminal as Vim.  If it reads from
-		stdin the job and Vim will be fighting over input, that
-		doesn't work.  Redirect stdin and stdout to avoid problems: >
+		ジョブはVimと同じ端末を使用する。ジョブがstdinを読む場合、ジョ
+		ブとVimが入力を奪い合うことになるのでうまく動作しない。問題を
+		避けるためにstdinとstdoutをリダイレクトする: >
 	let job = job_start(['sh', '-c', "myserver </dev/null >/dev/null"])
 <
-		The returned Job object can be used to get the status with
-		|job_status()| and stop the job with |job_stop()|.
+		返されたジョブオブジェクトを使用して、|job_status()|でステータ
+		スを取得し、|job_stop()|でジョブを停止することができる。
 
-		{options} must be a Dictionary.  It can contain many optional
-		items, see |job-options|.
+		{options}は辞書でなければならない。多くのオプション項目を含め
+		ることができる。|job-options|参照。
 
-		{only available when compiled with the |+job| feature}
+		{Vimが|+job|機能付きでコンパイルされたときのみ有効}
 
 job_status({job})					*job_status()* *E916*
-		Returns a String with the status of {job}:
-			"run"	job is running
-			"fail"	job failed to start
-			"dead"	job died or was stopped after running
-		
-		On Unix a non-existing command results in "dead" instead of
-		"fail", because a fork happens before the failure can be
-		detected.
+		{job}のステータスをStringで返す:
+			"run"	ジョブが実行中
+			"fail"	ジョブを開始できなかった
+			"dead"	ジョブが死んだか実行後にジョブが停止した
 
-		If an exit callback was set with the "exit_cb" option and the
-		job is now detected to be "dead" the callback will be invoked.
+		Unixでは存在しないコマンドは、失敗が検出される前にフォークが発
+		生するため、"fail" ではなく "dead" になる。
 
-		For more information see |job_info()|.
+		exitコールバックが "exit_cb" オプションで設定され、ジョブが
+		"dead" と検出された場合、コールバックが呼び出される。
 
-		{only available when compiled with the |+job| feature}
+		詳細は|job_info()|参照。
+
+		{Vimが|+job|機能付きでコンパイルされたときのみ有効}
 
 job_stop({job} [, {how}])					*job_stop()*
-		Stop the {job}.  This can also be used to signal the job.
+		{job}を停止する。これはジョブを通知するためにも使用できる。
 
-		When {how} is omitted or is "term" the job will be terminated.
-		For Unix SIGTERM is sent.  On MS-Windows the job will be
-		terminated forcedly (there is no "gentle" way).
-		This goes to the process group, thus children may also be
-		affected.
+		{how}が省略されたり、"term" の場合、ジョブは終了する。Unixでは
+		SIGTERMが送信される。MS-Windowsでは、ジョブは強制的に終了する
+		("優しい"方法は存在しない)。これはプロセスグループに行くので、
+		子供たちも影響を受けるかもしれない。
 
-		Effect for Unix:
-			"term"	 SIGTERM (default)
+		UNIXへの影響:
+			"term"	 SIGTERM (既定)
 			"hup"	 SIGHUP
 			"quit"	 SIGQUIT
 			"int"	 SIGINT
-			"kill"	 SIGKILL (strongest way to stop)
-			number	 signal with that number
+			"kill"	 SIGKILL (停止するための最も強い方法)
+			number	 その番号の信号
 
-		Effect for MS-Windows:
-			"term"	 terminate process forcedly (default)
+		MS-Windowsへの影響:
+			"term"	 プロセスを強制終了 (既定)
 			"hup"	 CTRL_BREAK
 			"quit"	 CTRL_BREAK
 			"int"	 CTRL_C
-			"kill"	 terminate process forcedly
+			"kill"	 プロセスを強制終了
 			Others	 CTRL_BREAK
 
-		On Unix the signal is sent to the process group.  This means
-		that when the job is "sh -c command" it affects both the shell
-		and the command.
+		Unixでは、シグナルはプロセスグループに送られる。これは、ジョブ
+		が "sh -c command" であるときにシェルとコマンドの両方に影響を
+		与えることを意味する。
 
-		The result is a Number: 1 if the operation could be executed,
-		0 if "how" is not supported on the system.
-		Note that even when the operation was executed, whether the
-		job was actually stopped needs to be checked with
-		job_status().
-		The status of the job isn't checked, the operation will even
-		be done when Vim thinks the job isn't running.
+		結果は数値で、操作が実行できる場合は1、システムでは "how" がサ
+		ポートされていない場合は0。
+		ジョブが実際に停止したかどうかは、操作が実行された場合でも、
+		job_status()でチェックする必要があることに注意すること。
+		ジョブのステータスがチェックされていない場合、Vimがジョブが実
+		行されていないと判断した場合でも操作が実行される。
 
-		{only available when compiled with the |+job| feature}
+		{Vimが|+job|機能付きでコンパイルされたときのみ有効}
 
 join({list} [, {sep}])					*join()*
 		リスト{list}の要素を連結し、1個の文字列にして返す。
@@ -5082,24 +5145,25 @@ join({list} [, {sep}])					*join()*
 		この逆を行う関数は|split()|である。
 
 js_decode({string})					*js_decode()*
-		This is similar to |json_decode()| with these differences:
-		- Object key names do not have to be in quotes.
-		- Empty items in an array (between two commas) are allowed and
-		  result in v:none items.
+		|json_decode()| に似ているが以下が異なる:
+		- オブジェクトのキー名はクォートされてなくてもよい。
+		- 文字列はシングルクォートでくくることができる。
+		- 配列内の(2つのコンマで区切られた)空アイテムが許可され結果と
+		  して v:none のアイテムとなる。
 
 js_encode({expr})					*js_encode()*
-		This is similar to |json_encode()| with these differences:
-		- Object key names are not in quotes.
-		- v:none items in an array result in an empty item between
-		  commas.
-		For example, the Vim object:
+		|json_encode()| に似ているが以下が異なる:
+		- オブジェクトのキー名がクォートされない
+		- 配列の中のアイテム v:none はコンマで区切られた空のアイテムに
+		  なる。
+		例えば Vim オブジェクト:
 			[1,v:none,{"one":1},v:none] ~
-		Will be encoded as:
+		は以下にエンコードされ:
 			[1,,{one:1},,] ~
-		While json_encode() would produce:
+		json_encode() であれば以下にエンコードされる:
 			[1,null,{"one":1},null] ~
-		This encoding is valid for JavaScript. It is more efficient
-		than JSON, especially when using an array with optional items.
+		このエンコードは JavaScript では妥当である。特に配列内でオプ
+		ショナルアイテムを扱う場合には JSON より能率的である。
 
 
 json_decode({string})					*json_decode()*
@@ -5109,6 +5173,8 @@ json_decode({string})					*json_decode()*
 		- 配列やオブジェクトの末尾コンマは無視される。
 		- 多くの浮動小数点数を認識する。例えば "1." は "1.0" として認
 		  識される。
+									*E938*
+		しかし、1つのオブジェクトに重複するキーを含むことはできない。
 		結果は必ずVimの型として有効になる:
 		- オブジェクトの空のメンバ名は許されない。
 		- オブジェクトのメンバ名の重複は許されない。
@@ -5133,9 +5199,9 @@ json_encode({expr})					*json_encode()*
 		   v:true		"true"
 		   v:none		"null"
 		   v:null		"null"
-		Note that NaN and Infinity are passed on as values.  This is
-		missing in the JSON standard, but several implementations do
-		allow it.  If not then you will get an error.
+		NaNとInfinityは値として渡されることに注意すること。これはJSON
+		標準には存在しないが、いくつかの実装でそれが可能である。そうで
+		ない場合、エラーが発生する。
 
 keys({dict})						*keys()*
 		{dict}の全キーからなるリストを返す。リストの順序は不定である。
@@ -5184,8 +5250,8 @@ libcall({libname}, {funcname}, {argument})
 		Win32のシステムでは、{libname}はDLLのファイル名の拡張子 ".DLL"
 		を付けてはならない。通常の(パスの通った)場所にDLLがない場合に
 		は、フルパスで指定する必要がある。
-		Unixでは、独自のプラグインをコンパイルするときはオブジェクトコー
-		ドを位置独立('PIC')としてコンパイルしなければならない。
+		Unixでは、独自のプラグインをコンパイルするときはオブジェクト
+		コードを位置独立('PIC')としてコンパイルしなければならない。
 		{Win32 といくつかの Unix で、|+libcall| 機能が有効になっている
 		ときのみ利用可能}
 		例: >
@@ -5316,6 +5382,10 @@ map({expr1}, {expr2})					*map()*
 			  return a:key . '-' . a:val
 			endfunc
 			call map(myDict, function('KeyValue'))
+<		|lambda| を使えばより短く書ける: >
+			call map(myDict, {key, val -> key . '-' . val})
+<		"val" を使わない場合は省略できる: >
+			call map(myDict, {key -> 'item: ' . key})
 <
 		この操作はその場で(in-place)行われる。リストや辞書を変更したく
 		ない場合は最初にコピーを作ること: >
@@ -5524,7 +5594,7 @@ matchaddpos({group}, {pos}[, {priority}[, {id}[, {dict}]]])
 		  れる。
 		- 数値を 2 つ持ったリスト。例 [23, 11]。最初の数値は行番号、2
 		  番目の数値は列番号である (最初の列は 1 である。値は |col()|
-		  の返り値と同じようにバイト単位である)。指定した位置の文字が
+		  の戻り値と同じようにバイト単位である)。指定した位置の文字が
 		  強調表示される。
 		- 数値を 3 つ持ったリスト。例 [23, 11, 3]。数値 2 つの場合と同
 		  じだが、3 つ目に強調表示する文字の長さ (バイト単位) を指定す
@@ -5553,7 +5623,7 @@ matcharg({nr})							*matcharg()*
 			引数で指定した検索パターン
 		{nr}が1、2、3のどれでもないときは空リストを返す。
 		マッチパターンがセットされていないときは['', '']を返す。
-		|:match|を保存し、復元するのに便利である。
+		|:match| を保存し、復元するのに便利である。
 		|:match| を使った強調は 3 個までに限られている。
 		|matchadd()| にはこの制限はない。
 
@@ -5606,34 +5676,37 @@ matchstr({expr}, {pat}[, {start}[, {count}]])			*matchstr()*
 		い。
 
 matchstrpos({expr}, {pat}[, {start}[, {count}]])		*matchstrpos()*
-		Same as |matchstr()|, but return the matched string, the start
-		position and the end position of the match.  Example: >
+		|matchstr()| と同じだがマッチした文字列とマッチした開始位置と
+		終了位置を返す。例: >
 			:echo matchstrpos("testing", "ing")
-<		results in ["ing", 4, 7].
-		When there is no match ["", -1, -1] is returned.
-		The {start}, if given, has the same meaning as for |match()|. >
+<		結果は ["ing", 4, 7] である。
+		マッチが無い場合は ["", -1, -1] が返る。
+		{start} が指定されている場合は |match()| と同じ意味になる。 >
 			:echo matchstrpos("testing", "ing", 2)
-<		results in ["ing", 4, 7]. >
+<		結果は ["ing", 4, 7] である。 >
 			:echo matchstrpos("testing", "ing", 5)
-<		result is ["", -1, -1].
-		When {expr} is a |List| then the matching item, the index
-		of first item where {pat} matches, the start position and the
-		end position of the match are returned. >
+<		結果は ["", -1, -1] である。
+		{expr} が |List| の場合、マッチしたアイテム、{pat} でマッチし
+		た最初のインデックス、マッチの開始位置と終了位置が返る。 >
 			:echo matchstrpos([1, '__x'], '\a')
-<		result is ["x", 1, 2, 3].
-		The type isn't changed, it's not necessarily a String.
+<		結果は ["x", 1, 2, 3] である。
+		型は変更されない。必ずしも文字列である必要はない。
 
 							*max()*
-max({list})	{list}の全要素の値の最大値を返す。
-		{list}がリストでなかったり、要素のどれかが数値に変換できない場
-		合はエラーとなる。
-		空リストの場合は0を返す。
+max({expr})	{expr}の全要素の値の最大値を返す。
+		{expr}はリストか辞書である。辞書の場合、辞書に含まれるすべての
+		値の最大値を返す。
+		{expr}がリストでも辞書でもなかったり、要素のどれかが数値に変換
+		できない場合はエラーとなる。
+		空のリストまたは辞書の場合は0を返す。
 
 							*min()*
-min({list})	{list}の全要素の値の最小値を返す。
-		{list}がリストでなかったり、要素のどれかが数値に変換できない場
-		合はエラーとなる。
-		空リストの場合は0を返す。
+min({expr})	{expr}の全要素の値の最小値を返す。
+		{expr}はリストか辞書である。辞書の場合、辞書に含まれるすべての
+		値の最小値を返す。
+		{expr}がリストでも辞書でもなかったり、要素のどれかが数値に変換
+		できない場合はエラーとなる。
+		空のリストまたは辞書の場合は0を返す。
 
 							*mkdir()* *E739*
 mkdir({name} [, {path} [, {prot}]])
@@ -5667,9 +5740,13 @@ mode([expr])		現在のモードを示す文字列を返す。
 			S	行単位選択
 			CTRL-S	矩形選択
 			i	挿入
+			ic	挿入モード補完 |compl-generic|
+			ix	挿入モード |i_CTRL-X| 補完
 			R	置換 |R|
+			Rc	置換モード補完 |compl-generic|
 			Rv	仮想置換 |gR|
-			c	コマンドライン
+			Rx	置換モード |i_CTRL-X| 補完
+			c	コマンドライン編集
 			cv	Vim Ex モード |gQ|
 			ce	ノーマル Ex モード |Q|
 			r	Hit-enter プロンプト
@@ -5736,7 +5813,7 @@ pathshorten({expr})					*pathshorten()*
 perleval({expr})					*perleval()*
 		Perl の式 {expr} をスカラーコンテキストで評価して、結果をVimの
 		データ形式にして返す。
-		もし値が変換できない場合、Perlに於ける文字列として返される。
+		もし値が変換できない場合、Perlにおける文字列として返される。
 		Note: もし配列かハッシュが必要ならば、{expr}ではそれらへの参照
 		を返す必要がある。
 		例: >
@@ -5783,13 +5860,13 @@ printf({fmt}, {expr1} ...)				*printf()*
 		  %04x	0で埋めて少なくとも4文字にした16進数値
 		  %X	16進数値(大文字)
 		  %o	8進数値
-+		  %08b	最低8文字の0埋めされた2進数
+		  %08b	最低8文字の0埋めされた2進数
 		  %f	浮動小数点数。12.23, inf, -inf, nan
 		  %F	浮動小数点数。12.23, INF, -INF, NAN
 		  %e	浮動小数点数。1.23e3, inf, -inf, nan
 		  %E	浮動小数点数。1.23E3, INF, -INF, NAN
 		  %g	浮動小数点数。値によって %f または %e となる
-		  %G	浮動小数点数。値によって %f または %E となる
+		  %G	浮動小数点数。値によって %F または %E となる
 		  %%    文字 % そのもの
 
 		変換指示子は '%' で始まり、変換文字で終わる。それ以外の全ての
@@ -5867,16 +5944,16 @@ printf({fmt}, {expr1} ...)				*printf()*
 			フィールド幅が存在しない場合や小さすぎる場合でも、数値
 			の幅を切り詰めることは決してない。変換結果がフィールド
 			幅より多くの桁を必要とする場合は、十分な幅に広げられる。
-			The 'h' modifier indicates the argument is 16 bits.
-			The 'l' modifier indicates the argument is 32 bits.
-			The 'L' modifier indicates the argument is 64 bits.
-			Generally, these modifiers are not useful. They are
-			ignored when type is known from the argument.
+			モディファイア 'h' は引数が16ビット引数である事を示す。
+			モディファイア 'l' は引数が32ビット引数をある事を示す。
+			モディファイア 'L' は引数が64ビット引数をある事を示す。
+			一般的にモディファイアは便利ではない。引数から型が分か
+			る時には無視されてしまう。
 
-		i	alias for d
-		D	alias for ld
-		U	alias for lu
-		O	alias for lo
+		i	d のエイリアス
+		D	ld のエイリアス
+		U	lu のエイリアス
+		O	lo のエイリアス
 
 							*printf-c*
 		c	引数の数値を1バイトに変換し、結果の文字列を書き出す。
@@ -5960,6 +6037,15 @@ pyeval({expr})						*pyeval()*
 		のキーはエラーになる。
 		{|+python| 機能付きでコンパイルされたときのみ利用可能}
 
+pyxeval({expr})						*pyxeval()*
+		Python の式 {expr} を評価して、結果を Vim のデータ形式にして返
+		す。
+		Python 2 または 3 を使用する。|python_x| と 'pyxversion' を参
+		照。
+		|pyeval()|, |py3eval()| も参照。
+		{|+python| または |+python3| 機能付きでコンパイルされたときの
+		み利用可能}
+
 							*E726* *E727*
 range({expr} [, {max} [, {stride}]])				*range()*
 		以下のような数値のリスト|List|を返す。
@@ -6019,14 +6105,14 @@ reltime([{start} [, {end}]])				*reltime()*
 		{|+reltime| 機能付きでコンパイルされたときのみ利用可能}
 
 reltimefloat({time})				*reltimefloat()*
-		Return a Float that represents the time value of {time}.
-		Example: >
+		{time} の値を代わりに浮動小数点で返す。
+		例: >
 			let start = reltime()
 			call MyFunction()
 			let seconds = reltimefloat(reltime(start))
-<		See the note of reltimestr() about overhead.
+<		オーバーヘッドについては reltimestr() の note を参照。
 		Also see |profiling|.
-		{only available when compiled with the |+reltime| feature}
+		{|+reltime| 機能付きでコンパイルされたときのみ利用可能}
 
 reltimestr({time})				*reltimestr()*
 		時刻値{time}を表現する文字列を返す。秒、ドット、マイクロ秒とい
@@ -6054,8 +6140,8 @@ remote_expr({server}, {string} [, {idvar}])
 		|clientserver|と|RemoteReply|も参照。
 		|sandbox|の中ではこの関数は利用できない。
 		{|+clientserver|機能付きでコンパイルされたときのみ利用可能}
-		Note: なんらかのエラーが発生した場合は、ローカルでエラーメッセー
-		ジが表示され、戻り値は空文字列となる。
+		Note: なんらかのエラーが発生した場合は、ローカルでエラーメッ
+		セージが表示され、戻り値は空文字列となる。
 		例: >
 			:echo remote_expr("gvim", "2+2")
 			:echo remote_expr("gvim1", "b:current_syntax")
@@ -6066,9 +6152,9 @@ remote_foreground({server})				*remote_foreground()*
 		次を実行するのと同様である: >
 			remote_expr({server}, "foreground()")
 <		
-		ただし、次の点が異なる: Win32では、OSが必ずしもサーバーが自分自
-		身をフォアグラウンドにすることを許可しないので、対応策としてク
-		ライアントが仕事を行う。
+		ただし、次の点が異なる: Win32では、OSが必ずしもサーバーが自分
+		自身をフォアグラウンドにすることを許可しないので、対応策として
+		クライアントが仕事を行う。
 		Note: foreground()と違い、最小化されていたウィンドウを復元しな
 		い。
 		|sandbox|の中ではこの関数は利用できない。
@@ -6101,9 +6187,9 @@ remote_read({serverid})				*remote_read()*
 <
 							*remote_send()* *E241*
 remote_send({server}, {string} [, {idvar}])
-		{string}を{server}に送信する。{string}はキー入力として解釈され、
-		この関数の呼び出しは即座に戻ってくる。Vimサーバーにおいて、受け
-		取ったキー入力はマッピング展開されない。|:map|
+		{string}を{server}に送信する。{string}はキー入力として解釈さ
+		れ、この関数の呼び出しは即座に戻ってくる。Vimサーバーにおいて、
+		受け取ったキー入力はマッピング展開されない。|:map|
 		{idvar}には変数名を指定する。後でremote_read()で使われる
 		{serverid}がその変数に保存される。
 		|clientserver|と|RemoteReply|も参照。
@@ -6214,7 +6300,7 @@ screencol()							*screencol()*
 screenrow()							*screenrow()*
 		現在のカーソルのスクリーン行を数値で返す。一番上の行番号は 1。
 		この関数は主にテスト用。
-		Alternatively you can use |winline()|.
+		代用として |winline()| を使う事ができる。
 
 		Note: |screencol()| と同様の制約あり。
 
@@ -6377,7 +6463,7 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}
 		後に "\zs" をつけるとよいかもしれない。するとカーソルがendの
 		マッチの内側にあるとき、対応するstartを見つけるようになる。
 
-		例: Vimスクリプトの "endif" コマンドを見つけるには: >
+		例: Vim script の "endif" コマンドを見つけるには: >
 
 	:echo searchpair('\<if\>', '\<el\%[seif]\>', '\<en\%[dif]\>', 'W',
 			\ 'getline(".") =~ "^\\s*\""')
@@ -6489,21 +6575,20 @@ setcmdpos({pos})					*setcmdpos()*
 		成功なら0、コマンドラインを編集しているとき以外には1を返す。
 
 setfperm({fname}, {mode})				*setfperm()* *chmod*
-		Set the file permissions for {fname} to {mode}.
-		{mode} must be a string with 9 characters.  It is of the form
-		"rwxrwxrwx", where each group of "rwx" flags represent, in
-		turn, the permissions of the owner of the file, the group the
-		file belongs to, and other users.  A '-' character means the
-		permission is off, any other character means on.  Multi-byte
-		characters are not supported.
+		{fname} のファイル許可属性を {mode} に設定する。
+		{mode} は9文字の文字列でなければならない。形式は "rwxrwxrwx"
+		であり、それぞれはファイルの所有者権限、グループ権限、その他
+		のユーザーを表す "rwx" というフラグのグループである。文字 "-"
+		は許可属性がオフであり、その他の文字はオンである。マルチバイト
+		文字はサポートされない。
 
-		For example "rw-r-----" means read-write for the user,
-		readable by the group, not accessible by others.  "xx-x-----"
-		would do the same thing.
+		例えば "rw-r-----" はそのユーザーの読み書き、グループでは読み
+		取り専用、その他のユーザーはアクセス不可である。"xx-x-----" は
+		同じ意味となる。
 
-		Returns non-zero for success, zero for failure.
+		成功するとゼロ以外を返し、失敗するとゼロを返す。
 
-		To read permissions see |getfperm()|.
+		許可属性の読み取りについては|getfperm()|を参照。
 
 
 setline({lnum}, {text})					*setline()*
@@ -6528,19 +6613,19 @@ setloclist({nr}, {list}[, {action}[, {what}]])		*setloclist()*
 		{nr} にはウィンドウ番号または|window-ID|が使える。
 		{nr}が0のときはカレントウィンドウを対象にする。
 
-		ロケーションリストウィンドウの場合、そこに表示しているロ
-		ケーションリストが修正される。ウィンドウ番号{nr}が無効な場
-		合、-1を返す。それ以外は|setqflist()|と同じ。
+		ロケーションリストウィンドウの場合、そこに表示しているロケー
+		ションリストが修正される。ウィンドウ番号{nr}が無効な場合、-1を
+		返す。それ以外は|setqflist()|と同じ。
 		|location-list| も参照。
 
-		If the optional {what} dictionary argument is supplied, then
-		only the items listed in {what} are set. Refer to |setqflist()|
-		for the list of supported keys in {what}.
+		オプショナル引数の辞書 {what} が提供される場合、{what} で指定
+		されるアイテムのみが設定される。サポートされる {what} の一覧は
+		|setqflist()|を参照。
 
 setmatches({list})					*setmatches()*
-		|getmatches()| で取得したマッチのリストを復元する。成功なら 
-		0、失敗なら -1 を返す。リストを復元するに先立って、現在のマッ
-		チはすべて消去される。|getmatches()| の例を参照。
+		|getmatches()| で取得したマッチのリストを復元する。成功なら 0、
+		失敗なら -1 を返す。リストを復元するに先立って、現在のマッチは
+		すべて消去される。|getmatches()| の例を参照。
 
 							*setpos()*
 setpos({expr}, {list})
@@ -6552,10 +6637,14 @@ setpos({expr}, {list})
 		    [bufnum, lnum, col, off]
 		    [bufnum, lnum, col, off, curswant]
 
-		"bufnum" はバッファ番号。0にするとカレントバッファを表す。カー
-		ソル位置の設定はカレントバッファに対してのみ可能。他のバッファ
-		のマークを設定するには、関数|bufnr()|を使ってファイル名をバッ
-		ファ番号に変換する。
+		"bufnum" はバッファ番号。0にするとカレントバッファを表す。大文
+		字のマークを設定するとき、"bufnum" はマーク位置として用いられ
+		る。それ以外のマークの場合、"bufnum" はマークを設定するバッファ
+		を指定する。関数|bufnr()|を使ってファイル名をバッファ番号に変
+		換することができる。
+		カーソルと ' マークを設定する場合、バッファ番号は無視される。
+		なぜならそれらはバッファではなくウィンドウに関連付けられている
+		からである。
 		ジャンプリストは変更されない。
 
 		"lnum" と "col" はバッファ内の位置。桁番号は1から始まる。
@@ -6567,7 +6656,7 @@ setpos({expr}, {list})
 		または最後の文字より後に設定したいときに使う。
 
 		"curswant" はカーソル位置を設定するときのみ使われる。これは縦
-		方向移動の優先的列番号である。 "curswant" を指定しなかった場合
+		方向移動の優先的列番号である。"curswant" を指定しなかった場合
 		は優先値は設定されない。マークの位置を設定するときに
 		"curswant" を指定した場合はその値は使用されない。
 
@@ -6588,8 +6677,7 @@ setpos({expr}, {list})
 setqflist({list} [, {action}[, {what}]])		*setqflist()*
 		{list}の要素によりQuickFixリストを作成・置き換え・追加する。
 		{list}の各要素は辞書であること。
-		辞書でない{list}の要素は無視される。各辞書は以下の要素を
-		持つ:
+		辞書でない{list}の要素は無視される。各辞書は以下の要素を持つ:
 
 		    bufnr	バッファ番号。有効なバッファ番号でなければなら
 				ない。
@@ -6626,17 +6714,16 @@ setqflist({list} [, {action}[, {what}]])		*setqflist()*
 		{action}が指定されないとき、または ' ' のときは新しい QuickFix
 		リストを作成する。
 
-		If the optional {what} dictionary argument is supplied, then
-		only the items listed in {what} are set. The first {list}
-		argument is ignored.  The following items can be specified in
-		{what}:
-		    nr		list number in the quickfix stack
-		    title	quickfix list title text
-		Unsupported keys in {what} are ignored.
-		If the "nr" item is not present, then the current quickfix list
-		is modified.
+		オプショナル引数の辞書 {what} が提供される場合、{what} で指定
+		されるアイテムのみが設定される。最初の {list} は無視される。
+		{what} では以下のアイテムを指定する事ができる:
+		    nr		quickfix スタックでのリスト番号
+		    title	quickfix リストのタイトルテキスト
+		{what} 内でのサポートされていないキーは無視される。
+		"nr" 番目のアイテムが提供されていない場合は現在の quickfix リ
+		ストが変更される。
 
-		Examples: >
+		例: >
 			:call setqflist([], 'r', {'title': 'My search'})
 			:call setqflist([], 'r', {'nr': 2, 'title': 'Errors'})
 <
@@ -6650,7 +6737,7 @@ setqflist({list} [, {action}[, {what}]])		*setqflist()*
 							*setreg()*
 setreg({regname}, {value} [, {options}])
 		レジスタ{regname}に{value}をセットする。
-		{value} には |getreg()| の返り値ならどんな値でも (リストでも)
+		{value} には |getreg()| の戻り値ならどんな値でも (リストでも)
 		指定できる。
 		{options}が "a" を含んでいるとき、または{regname}が大文字のと
 		きは、その値に追加する。
@@ -6739,7 +6826,7 @@ shellescape({string} [, {special}])			*shellescape()*
 		バックスラッシュは再び除かれる。
 		'shell' の値の末尾が "csh" である場合、{special} が
 		|non-zero-arg| ならば "!" の文字もエスケープされる。これは、
-		cshと tcsh は シングルクォートの中であっても "!" を履歴置換と
+		csh と tcsh は シングルクォートの中であっても "!" を履歴置換と
 		解釈するためである。
 		<NL> 文字もエスケープされる。{special} が |non-zero-arg| であ
 		り 'shell' の末尾が "csh" である場合、これは2回エスケープされ
@@ -6930,8 +7017,8 @@ split({expr} [, {pattern} [, {keepempty}]])			*split()*
 
 sqrt({expr})						*sqrt()*
 		浮動小数点数 {expr} の非負平方根を |Float| で返す。
-		{expr} は |Float| または |Number| に評価されなければならな
-		い。{expr} が負の場合、結果は NaN (Not a Number) になる。
+		{expr} は |Float| または |Number| に評価されなければならない。
+		{expr} が負の場合、結果は NaN (Not a Number) になる。
 		例: >
 			:echo sqrt(100)
 <			10.0 >
@@ -6993,12 +7080,12 @@ strchars({expr} [, {skipcc}])					*strchars()*
 		    endif
 <
 strcharpart({src}, {start}[, {len}])			*strcharpart()*
-		Like |strpart()| but using character index and length instead
-		of byte index and length.
-		When a character index is used where a character does not
-		exist it is assumed to be one byte.  For example: >
+		|strpart()| と同様だがバイトのインデックスおよび長さではなく文
+		字のインデックスおよび長さを使用する。
+		文字インデックスが存在しない文字を指す場合、それは1文字である
+		として扱われる。例: >
 			strcharpart('abc', -1, 2)
-<		results in 'a'.
+<		結果は "a" である。
 
 strdisplaywidth({expr}[, {col}])			*strdisplaywidth()*
 		結果は数値で、文字列 {expr} が {col} で始まる時のスクリーン上
@@ -7034,10 +7121,10 @@ strftime({format} [, {time}])
 			:if exists("*strftime")
 
 strgetchar({str}, {index})				*strgetchar()*
-		Get character {index} from {str}.  This uses a character
-		index, not a byte index.  Composing characters are considered
-		separate characters here.
-		Also see |strcharpart()| and |strchars()|.
+		{str} 内の {index} 番目の文字インデックスを得る。これは文字の
+		インデックスでありバイトのインデックスではない。合成文字は分割
+		された文字として考慮される。
+		|strcharpart()| と |strchars()| も参照。
 
 stridx({haystack}, {needle} [, {start}])		*stridx()*
 		結果は数値で、{heystack}の中で文字列{needle}が最初に現れる位置
@@ -7140,11 +7227,14 @@ submatch({nr}[, {list}])			*submatch()* *E935*
 		|sub-replace-expression| も参照。
 
 		{list} に非ゼロの値が指定されたときは submatch() は文字列のリ
-		ストを返す。|getline()| に 2 つの引数を指定したときの返り値と
+		ストを返す。|getline()| に 2 つの引数を指定したときの戻り値と
 		同じである。テキスト中の NL 文字は NUL 文字を表す。
 		|:substitute| で使われたときのみ複数要素のリストを返す。
 		|substitute()| では、実際の改行はそこにはないので、リストは常
 		に 0 または 1 つの要素である。
+
+		substitute() が再帰的に使用された場合、現在の（最も深い）サブ
+		マッチのみが取得できる。
 
 		例: >
 			:s/\d\+/\=submatch(0) + 1/
@@ -7156,21 +7246,20 @@ substitute({expr}, {pat}, {sub}, {flags})
 		結果は文字列で、{expr}内で最初に{pat}にマッチした部分を{sub}に
 		置換えたコピーになる。
 		{flags} が "g" なら、{expr} 内の {pat} にマッチした部分をすべ
-		て置換する。そうしたくない場合は {flags} は "" にすべきであ
-		る。
+		て置換する。そうしたくない場合は {flags} は "" にすべきである。
 
 		これはコマンド ":substitute" (一切のフラグ無し) のように働く。
 		しかしマッチングは常にオプション 'magic' が設定され、オプショ
 		ン 'cpoptions' は空にして実行される(スクリプトをポータブルにす
 		るため)。'ignorecase' は適用される。'ignorecase' の設定に関わ
 		らず大文字小文字を区別するかしないか固定するには |/\c| か
-		|/\C| を使う。 'smartcase' は適用されない。{pat}がどう扱われる
+		|/\C| を使う。'smartcase' は適用されない。{pat}がどう扱われる
 		かについては|string-match|を参照。
 
 		また、{sub}内の "~" は前回の{sub}に置換されない。
-		{sub}内の幾つかのコードには|sub-replace-special|の特殊な意味
-		があることに注意。例えば、何かの文字列をリテラルの "\n" に置換
-		えるためには、"\\\\n" か '\\n' を使う必要がある。
+		{sub}内の幾つかのコードには|sub-replace-special|の特殊な意味が
+		あることに注意。例えば、何かの文字列をリテラルの "\n" に置換え
+		るためには、"\\\\n" か '\\n' を使う必要がある。
 
 		{pat}が{expr}の何処にもマッチしなければ、{expr}が何の変更も受
 		けずに返される。
@@ -7186,12 +7275,11 @@ substitute({expr}, {pat}, {sub}, {flags})
 		   :echo substitute(s, '%\(\x\x\)',
 			   \ '\=nr2char("0x" . submatch(1))', 'g')
 
-<		When {sub} is a Funcref that function is called, with one
-		optional argument.  Example: >
+<		{sub} が関数リファレンスの場合、1個のオプショナル引数と共にそ
+		の関数が呼び出される。例: >
 		   :echo substitute(s, '%\(\x\x\)', SubNr, 'g')
-<		The optional argument is a list which contains the whole
-		matched string and up to nine submatches, like what
-		|submatch()| returns.  Example: >
+<		オプショナル引数はマッチ文字列全体と9個のサブマッチが含まれる
+		以下の |submatch()| が返す様なリストである。例: >
 		   :echo substitute(s, '%\(\x\x\)', {m -> '0x' . m[1]}, 'g')
 
 synID({lnum}, {col}, {trans})				*synID()*
@@ -7270,9 +7358,9 @@ synconcealed({lnum}, {col})				*synconcealed()*
 
 
 synstack({lnum}, {col})					*synstack()*
-		カレントウィンドウの {lnum}, {col} の位置の構文アイテムのス
-		タックを |List| にして返す。このリストの要素は |synID()|が
-		返すのと同じ種類の ID である。
+		カレントウィンドウの {lnum}, {col} の位置の構文アイテムのスタッ
+		クを |List| にして返す。このリストの要素は |synID()|が返すのと
+		同じ種類の ID である。
 		リストの最初の要素が一番外側の領域で、続く要素がその中に内包さ
 		れている。アイテム全体がハイライトされている、または最後の要素
 		が transparent なアイテムである場合を除き、最後の要素が
@@ -7282,7 +7370,7 @@ synstack({lnum}, {col})					*synstack()*
 			for id in synstack(line("."), col("."))
 			   echo synIDattr(id, "name")
 			endfor
-<		{lnum} と {col} が不正な場所を指しているときは返り値なし。行の
+<		{lnum} と {col} が不正な場所を指しているときは戻り値なし。行の
 		最後の文字の一つ後ろと空行の一番目の列は有効な位置である。
 
 system({expr} [, {input}])				*system()* *E677*
@@ -7297,7 +7385,12 @@ system({expr} [, {input}])				*system()* *E677*
 		{binary} に "b" を指定したのと同様にファイルに書き出される (つ
 		まり、リストの各要素は改行文字で連結され、要素内の改行文字は
 		NUL 文字に変換される)。
-		パイプは使用されない。
+		{input} が指定され、それが数値で既存のバッファとして有効な id
+		であるならば、そのバッファの内容が 1 行ずつファイルに書き出さ
+		れる。それぞれの行は NL で終端され、テキスト中の NL は NUL 文
+		字に置き換えられる。
+
+		パイプは使用されず、'shelltemp' オプションは使用されない。
 
 		|:silent| が前置されたときは、端末は cooked モードには設定され
 		ない。これはユーザー入力を必要としないコマンドを使用することを
@@ -7318,10 +7411,10 @@ system({expr} [, {input}])				*system()* *E677*
 <		システムに依存しないような戻り値にするために、シェルの出力を
 		フィルタリングし、マッキントッシュにおいては<CR>を<NL>に変換
 		し、DOS系のシステムにおいては<CR><NL>を<NL>に変換している。
-		実行されるコマンドはいくつかのオプションを適用して構成される:
 		文字列が NUL 文字で切れるのを防ぐため、すべての NUL 文字は SOH
 		(0x01) に置換される。
 
+		実行されるコマンドはいくつかのオプションを適用して構成される:
 	'shell' 'shellcmdflag' 'shellxquote' {expr} 'shellredir' {tmp} 'shellxquote'
 		({tmp}は自動的に生成されるファイル名)
 		UnixとOS/2ではコマンドの連結ができるように{expr}の両側に波括弧
@@ -7344,6 +7437,7 @@ systemlist({expr} [, {input}])				*systemlist()*
 		|system()| と同じだが行のリスト (|List|) を返す。行は NL 文字
 		で区切られ、NUL 文字は NL 文字に変換される。出力は
 		|readfile()| の {binary} 引数に "b" を指定したのと同様である。
+		MS-Windows では末尾の CR 文字がつくかもしれないことに注意。
 
 		エラー時には空文字列が返る。
 
@@ -7374,8 +7468,8 @@ tabpagewinnr({tabarg} [, {arg}])			*tabpagewinnr()*
 		|winnr()|と同様だが、タブページ{tabarg}を対象とする。
 		{tabarg}は対象とするタブページの番号を指定する。
 		{arg}は|winnr()|の場合と同じように扱われる。すなわち:
-		- 省略するとカレントウィンドウの番号を返す。これは、このタブペー
-		  ジに入るとき使われるウィンドウである。
+		- 省略するとカレントウィンドウの番号を返す。これは、このタブ
+		  ページに入るとき使われるウィンドウである。
 		- "$" とするとウィンドウの個数を返す。
 		- "#" とすると前のウィンドウ番号を返す。
 		役に立つ例: >
@@ -7410,7 +7504,7 @@ taglist({expr})							*taglist()*
 		フィールド "struct"、"class"、"enum" が現れることがある。これ
 		らは、タグを含んでいるものの名前を示す。
 
-		exコマンド 'cmd' は検索パターンか、行番号か、行番号とバイト番
+		exコマンド "cmd" は検索パターンか、行番号か、行番号とバイト番
 		号のいずれかである。
 
 		マッチするタグがない場合は空リストを返す。
@@ -7469,20 +7563,23 @@ test_alloc_fail({id}, {countdown}, {repeat})		*test_alloc_fail()*
 		未満の場合は、失敗を1回のみ発生させる。
 
 test_autochdir()					*test_autochdir()*
-		Vimの起動が完了する前に 'autochdir' を有効にする。
-
-						*test_disable_char_avail()*
-test_disable_char_avail({expr})
-		{expr} が 1 であれば、内部の char_avail() 関数は |FALSE| を返
-		すようになる。{expr} が 0 であれば、 char_avail() 関数は通常通
-		り機能する。これは、入力によってテストが動作しない場合のみに使
-		用される。例:CursorMovedI イベントを起動したい場合
+		Vimの起動が完了する前に 'autochdir' の効果を有効にするためのフ
+		ラグをセットする。
 
 test_garbagecollect_now()			 *test_garbagecollect_now()*
 		garbagecollect() とほぼ同じであるが、この関数はガーベッジコレ
 		クトを直ちに実行する。この関数を実行する場合は、構造体が内部に
 		存在しないようにするために直接呼び出す必要がある。また、この関
 		数を呼び出す前に |v:testing| を設定する必要がある。
+
+test_ignore_error({expr})			 *test_ignore_error()*
+		{expr} を含むすべてのエラーを無視する。代わりに通常メッセージ
+		が表示される。
+		これは、テストにおいて、try/catch を用いてエラーを捕捉できない
+		(以降のコードをスキップするので)場合のみに使うことを意図してい
+		る。
+		{expr} は文字通り用いられ、パターンとしてではない。
+		現在、これを元に戻す方法はない。
 
 test_null_channel()					*test_null_channel()*
 		null の Channel を返す。これはテストのみに使われる。
@@ -7504,89 +7601,100 @@ test_null_partial()					*test_null_partial()*
 test_null_string()					*test_null_string()*
 		null の String を返す。これはテストのみに使われる。
 
+test_override({name}, {val})				*test_override()*
+		テストを実行できるようにするため、Vimの内部処理の特定の部分を
+		置き換える。Vimをテストするためだけに使用すること!
+		置き換えは、{val} が非 0 のときに有効化され、{val} が 0 のとき
+		に取り除かれる。
+		現在、name に使える値は:
+
+		name	     {val} が非 0 のときの効果 ~
+		redraw       redrawing() 関数を無効化する
+		char_avail   char_avail() 関数を無効化する
+		ALL	     すべての置き換えをクリアする ({val} は使われない)
+
 test_settime({expr})					*test_settime()*
 		Vim が内部的に用いる時間を設定する。現在は history のタイムス
-		タンプ、viminfo のタイムスタンプ、undo に使用されている。{expr}
-		には、数値が設定される。また {expr} に 0 を渡せば、Vimの内部時
-		間は通常動作に戻る。
+		タンプ、viminfo のタイムスタンプ、undo に使用されている。
+		1 を渡せば、Vim は、警告やエラーメッセージの後、スリープしなく
+		なる。
+		{expr} は、数値として評価されなければならない。0 を渡せば、Vim
+		の内部時間は通常動作に戻る。
 
 							*timer_info()*
 timer_info([{id}])
-		Return a list with information about timers.
-		When {id} is given only information about this timer is
-		returned.  When timer {id} does not exist an empty list is
-		returned.
-		When {id} is omitted information about all timers is returned.
+		タイマーに関する情報のリストを返す。
+		{id} が指定された場合はそのタイマーに関する情報だけが返され
+		る。タイマー {id} が存在しない場合は空のリストが返される。
+		{id} が省略された場合は全てのタイマーに関する情報が返される。
 
-		For each timer the information is stored in a Dictionary with
-		these items:
-		    "id"	    the timer ID
-		    "time"	    time the timer was started with
-		    "remaining"	    time until the timer fires
-		    "repeat"	    number of times the timer will still fire;
-				    -1 means forever
-		    "callback"	    the callback
-		    "paused"	    1 if the timer is paused, 0 otherwise
+		各タイマーの情報は以下の項目を含んだ辞書で格納される:
+		    "id"	    タイマーのID
+		    "time"	    タイマーが開始してからの時間
+		    "remaining"	    タイマーが発火するまでの時間
+		    "repeat"	    何回タイマーを発火させるかの回数;
+				    -1 は無限を意味する
+		    "callback"	    コールバック
+		    "paused"	    タイマーが一時停止中なら 1、それ以外は 0
 
-		{only available when compiled with the |+timers| feature}
+		{|+timers| 機能を有効にしてコンパイルしたときのみ有効}
 
 timer_pause({timer}, {paused})				*timer_pause()*
-		Pause or unpause a timer.  A paused timer does not invoke its
-		callback when its time expires.  Unpausing a timer may cause
-		the callback to be invoked almost immediately if enough time
-		has passed.
+		タイマーを一時停止もしくは再開する。一時停止したタイマーは時間
+		が経過してもコールバックを呼び出さない。タイマーの再開は十分
+		に時間が経過しているなら、すぐさまコールバックが呼び出されるか
+		もしれない。
 
-		Pausing a timer is useful to avoid the callback to be called
-		for a short time.
+		タイマーの停止は少しの間、コールバックが呼び出されるのを避ける
+		のに便利である。
 
-		If {paused} evaluates to a non-zero Number or a non-empty
-		String, then the timer is paused, otherwise it is unpaused.
-		See |non-zero-arg|.
+		{paused} が 0 以外の数値、もしくは空でない文字列で評価される
+		場合にタイマーが停止し、それ以外は再開する。
+		|non-zero-arg| を参照。
 
-		{only available when compiled with the |+timers| feature}
+		{|+timers| 機能を有効にしてコンパイルしたときのみ有効}
 
 						*timer_start()* *timer* *timers*
 timer_start({time}, {callback} [, {options}])
-		Create a timer and return the timer ID.
+		タイマーを作成しその ID を返す。
 
-		{time} is the waiting time in milliseconds. This is the
-		minimum time before invoking the callback.  When the system is
-		busy or Vim is not waiting for input the time will be longer.
+		{time} はミリ秒での待機時間。これはコールバックが呼び出される
+		までの最短の時間である。システムがビジーもしくは Vim が入力待
+		ちでない場合、これは長くなる。
 
-		{callback} is the function to call.  It can be the name of a
-		function or a |Funcref|.  It is called with one argument, which
-		is the timer ID.  The callback is only invoked when Vim is
-		waiting for input.
+		{callback} は呼び出す関数。関数の名前もしくは|Funcref|であって
+		も良い。引数にはタイマーIDの引数が1つだけ渡されて呼び出され
+		る。コールバックは Vim が入力待ちの場合だけ呼び出される。
 
-		{options} is a dictionary.  Supported entries:
-		   "repeat"	Number of times to repeat calling the
-				callback.  -1 means forever.  When not present
-				the callback will be called once.
+		{options} は辞書。以下がサポートされている:
+		   "repeat"	コールバックを呼び出す繰り返し回数。-1 は無限
+				を意味する。指定されない場合はコールバックは一
+				度だけ呼び出される。
 
-		Example: >
+		例: >
 			func MyHandler(timer)
 			  echo 'Handler called'
 			endfunc
 			let timer = timer_start(500, 'MyHandler',
 				\ {'repeat': 3})
-<		This will invoke MyHandler() three times at 500 msec
-		intervals.
+<		これは MyHandler() を 500ms 間隔で3回呼び出す。
 
-		{only available when compiled with the |+timers| feature}
+		{|+timers| 機能を有効にしてコンパイルしたときのみ有効}
 
 timer_stop({timer})					*timer_stop()*
-		Stop a timer.  The timer callback will no longer be invoked.
-		{timer} is an ID returned by timer_start(), thus it must be a
-		Number.  If {timer} does not exist there is no error.
+		タイマーを停止する。タイマーのコールバックは以降呼び出されな
+		い。{timer} は timer_start() が返した ID である。よって数値で
+		なければならない。{timer} が存在しなかった場合でもエラーは発生
+		しない。
 
-		{only available when compiled with the |+timers| feature}
+		{|+timers| 機能を有効にしてコンパイルしたときのみ有効}
 
 timer_stopall()						*timer_stopall()*
-		Stop all timers.  The timer callbacks will no longer be
-		invoked.  Useful if some timers is misbehaving.  If there are
-		no timers there is no error.
+		全てのタイマーを停止する。タイマーのコールバックは以降呼び出さ
+		れない。タイマーが不作法に振る舞う場合に便利である。タイマーが
+		存在しなかった場合でもエラーは発生しない。
 
-		{only available when compiled with the |+timers| feature}
+		{|+timers| 機能を有効にしてコンパイルしたときのみ有効}
 
 tolower({expr})						*tolower()*
 		引数の文字列の大文字を小文字に変換してできた文字列を返す(文字
@@ -7748,11 +7856,11 @@ virtcol({expr})						*virtcol()*
 		    echo max(map(range(1, line('$')), "virtcol([v:val, '$'])"))
 
 visualmode([expr])						*visualmode()*
-		結果は文字列で、カレントバッファ内で最後に使われたビジュアルモー
-		ドを教えてくれる。初期状態では単に空文字列を返すだけだが、一度
-		でもビジュアルモードが使われた場合、その種類によって "v" か
-		"V" か "<CTRL-V>" (CTRL-Vの文字が1文字で) 返される。これはそれ
-		ぞれ文字選択、行選択、矩形選択を意味している。
+		結果は文字列で、カレントバッファ内で最後に使われたビジュアル
+		モードを教えてくれる。初期状態では単に空文字列を返すだけだが、
+		一度でもビジュアルモードが使われた場合、その種類によって "v"
+		か "V" か "<CTRL-V>" (CTRL-Vの文字が1文字で) 返される。これは
+		それぞれ文字選択、行選択、矩形選択を意味している。
 		例: >
 			exe "normal " . visualmode()
 <		これは最後に使われたのと同じビジュアルモードに入る。また、スク
@@ -7778,31 +7886,32 @@ wildmenumode()					*wildmenumode()*
 
 
 win_findbuf({bufnr})					*win_findbuf()*
-		Returns a list with |window-ID|s for windows that contain
-		buffer {bufnr}.  When there is none the list is empty.
+		バッファ {bufnr} が含まれているウィンドウについて |window-ID|
+		のリストを返す。存在しない場合は空のリストになる。
 
 win_getid([{win} [, {tab}]])				*win_getid()*
-		Get the |window-ID| for the specified window.
-		When {win} is missing use the current window.
-		With {win} this is the window number.  The top window has
-		number 1.
-		Without {tab} use the current tab, otherwise the tab with
-		number {tab}.  The first tab has number one.
-		Return zero if the window cannot be found.
+		特定のウィンドウに関する |window-ID|を得る。
+		{win} が未指定の時は現在のウィンドウとなる。
+		この {win} はウィンドウ番号である。トップウィンドウは番号 1 を
+		持つ。
+		{tab} が未指定の場合現在のタブが使用され、{tab} が番号で指定さ
+		れた場合はそのタブとなる。最初のタブ番号は 1 である。
+		ウィンドウが見付からない場合には 0 を返す。
 
 win_gotoid({expr})					*win_gotoid()*
-		Go to window with ID {expr}.  This may also change the current
-		tabpage.
-		Return 1 if successful, 0 if the window cannot be found.
+		{expr} の ID で示されるウィンドウへ移動する。これは現在のタブ
+		ページも移動する。
+		成功した場合は 1 を、ウィンドウが見付からない場合は 0 を返す。
 
 win_id2tabwin({expr})					*win_id2tabwin()*
-		Return a list with the tab number and window number of window
-		with ID {expr}: [tabnr, winnr].
-		Return [0, 0] if the window cannot be found.
+		{expr} の ID で示されるタブ番号とウィンドウ番号のリストを返す:
+		[tabnr, winnr]
+		ウィンドウが見付からなかった場合は [0, 0] を返す。
 
 win_id2win({expr})					*win_id2win()*
-		Return the window number of window with ID {expr}.
-		Return 0 if the window cannot be found in the current tabpage.
+		{expr} の ID で示されるウィンドウのウィンドウ番号を返す。
+		現在のタブページ内でそのウィンドウが見付からなかった場合は 0
+		を返す。
 
 							*winbufnr()*
 winbufnr({nr})	結果は数値で、{nr}番目のウィンドウに関連付けられているバッファ
@@ -7845,13 +7954,13 @@ winnr([{arg}])	結果は現在のウィンドウを示す数値。最上位の�
 		以前のウィンドウがない場合、またはそれが他のタブページにある場
 		合は0を返す。
 		この番号は|CTRL-W_w|と ":wincmd w" で使える。|:wincmd|
-		|tabpagewinnr()|も参照。
+		|tabpagewinnr()|と|win_getid()|も参照。
 
 							*winrestcmd()*
 winrestcmd()	現在のウィンドウサイズを復元するための一連の|:resize|コマンド
-		を返す。これが返すコマンドは、ウィンドウを開閉せず、カレントウィ
-		ンドウとカレントタブページが変更されていないときのみ正しく動作
-		する。
+		を返す。これが返すコマンドは、ウィンドウを開閉せず、カレント
+		ウィンドウとカレントタブページが変更されていないときのみ正しく
+		動作する。
 		例: >
 			:let cmd = winrestcmd()
 			:call MessWithWindowSizes()
@@ -7861,7 +7970,7 @@ winrestcmd()	現在のウィンドウサイズを復元するための一連の|
 winrestview({dict})
 		|winsaveview()|が返す辞書|Dictionary|を使ってカレントウィンド
 		ウの表示状態を復元する。
-		Note: {dict} は |winsaveview()| の返り値に含まれる値をすべて
+		Note: {dict} は |winsaveview()| の戻り値に含まれる値をすべて
 		持っていなくても構わない。値がない場合はその設定は復元されな
 		い。次のようにできる: >
 		    :call winrestview({'curswant': 4})
@@ -7908,8 +8017,7 @@ winwidth({nr})						*winwidth()*
   :if winwidth(0) <= 50
   :  exe "normal 50\<C-W>|"
   :endif
-<               For getting the terminal or screen size, see the 'columns'
-               option.
+<               端末または画面サイズを取得するには、'columns' オプション参照。
 
 
 wordcount()						*wordcount()*
@@ -7986,8 +8094,8 @@ xor({expr}, {expr})					*xor()*
 	:if has("patch-7.4.248")
 <    Note: 148 が適用されていても、147 が抜けていることもありうるので注意。
 
-Hint: To find out if Vim supports backslashes in a file name (MS-Windows),
-use: `if exists('+shellslash')`
+ヒント: Vim がファイル名(MS-Windows)でバックスラッシュをサポートしているかどうか
+を調べるには `if exists('+shellslash')` を使用する。
 
 
 acl			|ACL| をサポート
@@ -8098,6 +8206,7 @@ printer			|:hardcopy| をサポート
 profile			|:profile| をサポート
 python			Python 2.x インターフェイスをサポート |has-python|
 python3			Python 3.x インターフェイスをサポート |has-python|
+pythonx			|python_x| インターフェイスをサポート |has-pythonx|
 qnx			QNXバージョン
 quickfix		|quickfix|をサポート
 reltime			|reltime()|をサポート
@@ -8115,7 +8224,7 @@ sun_workshop		Sun |workshop|をサポート
 syntax			構文ハイライトをサポート
 syntax_items		現在のバッファに有効なシンタックスが設定されている
 system			fork()/exec()の代わりにsystem()が使用されている
-tag_binary		タグファイル内のバイナリサーチ |tag-binary-search|
+tag_binary		タグファイル内の二分探索 |tag-binary-search|
 tag_old_static		旧式の静的tagsをサポート |tag-old-static|
 tag_any_white		タグファイル内の空白文字をサポート |tag-any-white|
 tcl			TCLインターフェイスをサポート
@@ -8127,7 +8236,10 @@ tgetent			tgetentをサポート。termcapかterminfoファイルが使用可能
 timers                  |timer_start()| をサポート
 title			ウィンドウタイトルをサポート |'title'|
 toolbar			|gui-toolbar|をサポート
+ttyin			入力が端末 (tty) である
+ttyout			出力が端末 (tty) である
 unix			UNIXバージョン
+unnamedplus		'clipboard' に "unnamedplus" をサポート
 user_commands		ユーザー定義コマンドをサポート
 vertsplit		ウィンドウの垂直分割をサポート |:vsplit|
 vim_starting		Vimの初期化プロセス中は真となる。|startup|
@@ -8269,7 +8381,7 @@ x11			X11をサポート
 						*:func-closure* *E932*
 			引数 [closure] を追加すると、関数は外側のスコープの変
 			数と引数をアクセスできるようになる。これは一般的にク
-			ロージャーと呼ばれる。以下の例では Bar() は Foo() のス
+			ロージャと呼ばれる。以下の例では Bar() は Foo() のス
 			コープの "x" を使用している。それは Foo() から戻っても
 			参照され続ける: >
 				:function! Foo()
@@ -8426,10 +8538,10 @@ a: のスコープとこの変数は固定されており、変更できない�
 
 これはユーザーマニュアルのセクション|41.14|で説明されている。
 
-オートコマンドは、長いVimスクリプトファイルのプラグインに対して有用である。自
-動コマンドを定義し、すぐに|:finish|でそのスクリプトを抜ける。こうするとVimの起
-動が速くなる。その後オートコマンドにより|:finish|コマンドをスキップする変数を
-定義し、そのファイルが再び読み込まれる。
+オートコマンドは、長いVim scriptファイルのプラグインに対して有用である。自動コ
+マンドを定義し、すぐに|:finish|でそのスクリプトを抜ける。こうするとVimの起動が
+速くなる。その後オートコマンドにより|:finish|コマンドをスキップする変数を定義
+し、そのファイルが再び読み込まれる。
 
 定義すべき関数名にマッチするパターンを指定してオートコマンドイベント
 FuncUndefinedを使う。例: >
@@ -8607,6 +8719,11 @@ Vimはこれを見つけると、まず波括弧の中の式を評価し、そ�
 			カルな値とグローバルな値の両方が変更される。
 			例: >
 				:let &path = &path . ',/usr/local/include'
+<			これは、t_xx 形式の端末コードにも使える。ただし、英数
+			字の名前に限る。例: >
+				:let &t_k1 = "\<Esc>[234;"
+<			コードが存在していなかったときは端末キーコードとして作
+			成され、エラーは発生しない。
 
 :let &{option-name} .= {expr1}
 			文字列のオプションの場合: その値に{expr}を付け加える。
@@ -8712,9 +8829,12 @@ Vimはこれを見つけると、まず波括弧の中の式を評価し、そ�
 				:lockvar v
 				:let v = 'asdf'		" 失敗!
 				:unlet v
-<							*E741*
+<							*E741* *E940*
 			ロックされた変数を変更しようとするとエラーメッセージ
 			"E741: Value is locked: {name}" が表示される。
+			もしも組み込み変数をロック・アンロックしようとすると、
+			エラーメッセージ "E940: Cannot lock or unlock variable
+			{name}" が表示される。
 
 			[depth]はリスト|List|や辞書|Dictionary|をロックすると
 			きに意味がある。どれだけ深くロックするかを指定する:
@@ -9032,7 +9152,7 @@ Vimはこれを見つけると、まず波括弧の中の式を評価し、そ�
 		:execute '!ls' | echo "theend"
 <			{訳注: 普通の使い方では ":!ls" の後には '|' を使って、
 			Exコマンドを続けることはできない}
-			また ":execute" は、Vimスクリプト内でコマンド ":normal"
+			また ":execute" は、Vim script 内でコマンド ":normal"
 			の引数に制御文字を書くことを避けるために役に立つ。 >
 		:execute "normal ixxx\<Esc>"
 <			これで<Esc>文字を表す。|expr-string|を参照。
@@ -9076,7 +9196,7 @@ Vimはこれを見つけると、まず波括弧の中の式を評価し、そ�
 ==============================================================================
 8. 例外処理					*exception-handling*
 
-Vimスクリプト言語は例外処理機構を備えている。この節では例外処理をどのように行
+Vim script 言語は例外処理機構を備えている。この節では例外処理をどのように行
 うかについて説明する。
 
 例外はエラー発生時や割り込み発生時にVimによって投げられる。それについては
@@ -9368,8 +9488,8 @@ try条件文によって捕捉されない例外はそれを囲むtry条件文�
 これを実行すると "Caught foo, throw bar" と "Caught bar" が表示される。
 
 							*rethrow*
-Vimスクリプト言語には本物のrethrowはないが、代わりに "v:exception" を使うこと
-ができる: >
+Vim script言語には本物のrethrowはないが、代わりに "v:exception" を使うことがで
+きる: >
 
 	:function! Bar()
 	:  try
@@ -9937,7 +10057,7 @@ Vimのエラー例外は失敗したコマンドの名前(わかっているな�
 例外制御のコンセプトは、例外を引き起こしたコマンドは即座に異常終了し、制御が
 finally節またはcatch節に移るという前提に基づいている。
 
-Vimスクリプト言語では、エラーの後もスクリプトや関数が処理を続行する場合がある。
+Vim script言語では、エラーの後もスクリプトや関数が処理を続行する場合がある。
 "abort" フラグのない関数や、":silent!" をつけて実行されたコマンドでは、制御は
 次の行、そして関数の外へ移り、制御フローは最外側の ":endwhile" や ":endif" の
 次の行へ移る。一方、エラーは例外と同様に捕捉できるべきである (つまり、即座に異
@@ -10129,7 +10249,7 @@ matchstr()やsubstitute()を使えば実現できる。以下の例は、"foobar
 10. +eval機能が無効					*no-eval-feature*
 
 コンパイル時に|+eval|機能が無効とされている場合、全ての式評価(eval)コマンドは
-提供されない。その場合、Vimスクリプトが全ての種類のエラーを引き起こすことを避
+提供されない。その場合、Vim script が全ての種類のエラーを引き起こすことを避
 ける為、":if" と ":endif" は解釈される。":if" とそれに対応する ":endif" に挟ま
 れた内容は無視される。":if" の後に続く引数も無視される。この ":if" コマンドは
 ネスティングが可能である。しかし必ず行の先頭に書かれている必要がある。":else"
