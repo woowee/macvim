@@ -3918,6 +3918,8 @@ build_stl_str_hl(
     int		width;
     int		itemcnt;
     int		curitem;
+    int		group_end_userhl;
+    int		group_start_userhl;
     int		groupitem[STL_MAX_ITEM];
     int		groupdepth;
     struct stl_item
@@ -4058,11 +4060,20 @@ build_stl_str_hl(
 	    if (curitem > groupitem[groupdepth] + 1
 		    && item[groupitem[groupdepth]].minwid == 0)
 	    {
-		/* remove group if all items are empty */
+		/* remove group if all items are empty and highlight group
+		 * doesn't change */
+		group_start_userhl = group_end_userhl = 0;
+		for (n = 0; n < groupitem[groupdepth]; n++)
+		    if (item[n].type == Highlight)
+			group_start_userhl = item[n].minwid;
 		for (n = groupitem[groupdepth] + 1; n < curitem; n++)
-		    if (item[n].type == Normal || item[n].type == Highlight)
+		{
+		    if (item[n].type == Normal)
 			break;
-		if (n == curitem)
+		    if (item[n].type == Highlight)
+			group_end_userhl = item[n].minwid;
+		}
+		if (n == curitem && group_start_userhl == group_end_userhl)
 		{
 		    p = t;
 		    l = 0;
@@ -4349,6 +4360,7 @@ build_stl_str_hl(
 
 	case STL_OFFSET_X:
 	    base = 'X';
+	    /* FALLTHROUGH */
 	case STL_OFFSET:
 #ifdef FEAT_BYTEOFF
 	    l = ml_find_line_or_offset(wp->w_buffer, wp->w_cursor.lnum, NULL);
@@ -4360,6 +4372,7 @@ build_stl_str_hl(
 
 	case STL_BYTEVAL_X:
 	    base = 'X';
+	    /* FALLTHROUGH */
 	case STL_BYTEVAL:
 	    num = byteval;
 	    if (num == NL)
