@@ -83,10 +83,6 @@ typedef void *FARPROC;
 # undef PY_SSIZE_T_CLEAN
 #endif
 
-#if defined(MACOS) && !defined(MACOS_X_UNIX)
-# include "macglue.h"
-# include <CodeFragments.h>
-#endif
 #undef main /* Defined in python.h - aargh */
 #undef HAVE_FCNTL_H /* Clash with os_win32.h */
 
@@ -965,11 +961,7 @@ Python_Init(void)
 	Py_NoSiteFlag++;
 #endif
 
-#if !defined(MACOS) || defined(MACOS_X_UNIX)
 	Py_Initialize();
-#else
-	PyMac_Initialize();
-#endif
 
 #if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02070000
 	/* 'import site' explicitly. */
@@ -1041,9 +1033,6 @@ DoPyCommand(const char *cmd, rangeinitializer init_range, runner run, void *arg)
 #ifndef PY_CAN_RECURSE
     static int		recursive = 0;
 #endif
-#if defined(MACOS) && !defined(MACOS_X_UNIX)
-    GrafPtr		oldPort;
-#endif
 #if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
     char		*saved_locale;
 #endif
@@ -1062,12 +1051,6 @@ DoPyCommand(const char *cmd, rangeinitializer init_range, runner run, void *arg)
     if (python_end_called)
 	return;
 
-#if defined(MACOS) && !defined(MACOS_X_UNIX)
-    GetPort(&oldPort);
-    /* Check if the Python library is available */
-    if ((Ptr)PyMac_Initialize == (Ptr)kUnresolvedCFragSymbolAddress)
-	goto theend;
-#endif
     if (Python_Init())
 	goto theend;
 
@@ -1116,9 +1099,6 @@ DoPyCommand(const char *cmd, rangeinitializer init_range, runner run, void *arg)
 
     Python_Lock_Vim();		    /* enter vim */
     PythonIO_Flush();
-#if defined(MACOS) && !defined(MACOS_X_UNIX)
-    SetPort(oldPort);
-#endif
 
 theend:
 #ifndef PY_CAN_RECURSE
