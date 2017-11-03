@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 8.0.  Last change: 2017 Apr 07
+*autocmd.txt*   For Vim version 8.0.  Last change: 2017 Oct 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -492,6 +492,22 @@ CmdUndefined			When a user command is used but it isn't
 				command is defined.  An alternative is to
 				always define the user command and have it
 				invoke an autoloaded function.  See |autoload|.
+							*CmdlineEnter*
+CmdlineEnter			After moving the cursor to the command line,
+				where the user can type a command or search
+				string.
+				<afile> is set to a single character,
+				indicating the type of command-line.
+				|cmdwin-char|
+							*CmdlineLeave*
+CmdlineLeave			Before leaving the command line.
+				Also when abandoning the command line, after
+				typing CTRL-C or <Esc>.
+				When the commands result in an error the
+				command line is still executed.
+				<afile> is set to a single character,
+				indicating the type of command-line.
+				|cmdwin-char|
 							*CmdwinEnter*
 CmdwinEnter			After entering the command-line window.
 				Useful for setting options specifically for
@@ -610,7 +626,7 @@ FileChangedShell		When Vim notices that the modification time of
 				|timestamp|
 				Mostly triggered after executing a shell
 				command, but also with a |:checktime| command
-				or when Gvim regains input focus.
+				or when gvim regains input focus.
 				This autocommand is triggered for each changed
 				file.  It is not used when 'autoread' is set
 				and the buffer was not changed.  If a
@@ -651,7 +667,8 @@ FileType			When the 'filetype' option has been set.  The
 				pattern is matched against the filetype.
 				<afile> can be used for the name of the file
 				where this option was set, and <amatch> for
-				the new value of 'filetype'.
+				the new value of 'filetype'.  Navigating to
+				another window or buffer is not allowed.
 				See |filetypes|.
 							*FileWriteCmd*
 FileWriteCmd			Before writing to a file, when not writing the
