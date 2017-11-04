@@ -1625,7 +1625,7 @@ SRC =	$(BASIC_SRC) \
 TAGS_SRC = *.c *.cpp if_perl.xs
 
 EXTRA_SRC = hangulin.c if_lua.c if_mzsch.c auto/if_perl.c if_perlsfio.c \
-	    if_python.c if_python3.c if_tcl.c if_ruby.c if_ruby19.c \
+	    if_python.c if_python3.c if_tcl.c if_ruby.c \
 	    gui_beval.c workshop.c wsdebug.c integration.c \
 	    netbeans.c channel.c if_lua52.c \
 	    $(GRESOURCE_SRC)
@@ -1815,7 +1815,6 @@ PRO_AUTO = \
 	if_python.pro \
 	if_python3.pro \
 	if_ruby.pro \
-	if_ruby19.pro \
 	if_xcmdsrv.pro \
 	json.pro \
 	list.pro \
@@ -3195,9 +3194,6 @@ objects/if_python3.o: if_python3.c if_py_both.h
 objects/if_ruby.o: if_ruby.c
 	$(CCC_NF) $(RUBY_CFLAGS) $(ALL_CFLAGS) -o $@ if_ruby.c
 
-objects/if_ruby19.o: if_ruby19.c
-	$(CCC) $(RUBY19_CFLAGS) -o $@ if_ruby19.c
-
 objects/if_tcl.o: if_tcl.c
 	$(CCC_NF) $(TCL_CFLAGS) $(ALL_CFLAGS) -o $@ if_tcl.c
 
@@ -3874,10 +3870,6 @@ objects/if_tcl.o: if_tcl.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h 
  gui_beval.h proto/gui_beval.pro alloc.h ex_cmds.h spell.h proto.h \
  globals.h farsi.h arabic.h
 objects/if_ruby.o: if_ruby.c auto/config.h vim.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h option.h structs.h regexp.h gui.h \
- gui_beval.h proto/gui_beval.pro alloc.h ex_cmds.h spell.h proto.h \
- globals.h farsi.h arabic.h version.h
-objects/if_ruby19.o: if_ruby19.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ascii.h keymap.h term.h macros.h option.h structs.h regexp.h gui.h \
  gui_beval.h proto/gui_beval.pro alloc.h ex_cmds.h spell.h proto.h \
  globals.h farsi.h arabic.h version.h
