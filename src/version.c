@@ -571,11 +571,6 @@ static char *(features[]) =
 #else
 	"-ruby",
 #endif
-#ifdef FEAT_RUBY19
-	"+ruby19/dyn",
-#else
-	"-ruby19",
-#endif
 #ifdef FEAT_SCROLLBIND
 	"+scrollbind",
 #else
