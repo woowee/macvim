@@ -690,7 +690,7 @@ if test "$enable_luainterp" = "yes" -o "$enable_luainterp" = "dynamic"; then
       LUA_CFLAGS="-DDYNAMIC_LUA_DLL=\\\"${vi_cv_dll_name_lua}\\\" $LUA_CFLAGS"
     fi
     if test "X$LUA_CFLAGS$LUA_LIBS" != "X" && \
-       test "x$MACOS_X" = "xyes" && test "x$vi_cv_with_luajit" != "xno" && \
+       test "x$MACOS_X" = "xyes" && \
        test "`(uname -m) 2>/dev/null`" = "x86_64"; then
       dnl OSX/x64 requires these flags. See http://luajit.org/install.html
       LUA_LIBS="-pagezero_size 10000 -image_base 100000000 $LUA_LIBS"
@@ -801,10 +801,6 @@ if test "$enable_lua52interp" = "yes" -o "$enable_lua52interp" = "dynamic"; then
       AC_DEFINE(DYNAMIC_LUA52)
       LUA52_LIBS=""
       LUA52_CFLAGS="-DDYNAMIC_LUA52_DLL=\\\"${vi_cv_dll_name_lua52}\\\" $LUA52_CFLAGS"
-    fi
-    if test "x$MACOSX" = "xyes" && \
-      test "`(uname -m) 2>/dev/null`" = "x86_64"; then
-        LUA52_LIBS="-pagezero_size 10000 -image_base 100000000 $LUA52_LIBS"
     fi
   fi
   if test "$fail_if_missing" = "yes" -a -z "$LUA52_SRC"; then
