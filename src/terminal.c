@@ -38,11 +38,8 @@
  * in tl_scrollback are no longer used.
  *
  * TODO:
- * - Termdebug: issue #2154 might be avoided by adding -quiet to gdb?
- *   patch by Christian, 2017 Oct 23.
  * - in GUI vertical split causes problems.  Cursor is flickering. (Hirohito
  *   Higashi, 2017 Sep 19)
- * - double click in Window toolbar starts Visual mode (but not always?).
  * - Shift-Tab does not work.
  * - after resizing windows overlap. (Boris Staletic, #2164)
  * - Redirecting output does not work on MS-Windows, Test_terminal_redir_file()
@@ -183,11 +180,9 @@ static int create_pty_only(term_T *term, jobopt_T *opt);
 static void term_report_winsize(term_T *term, int rows, int cols);
 static void term_free_vterm(term_T *term);
 
-/* The characters that we know (or assume) that the terminal expects for the
- * backspace and enter keys. */
+/* The character that we know (or assume) that the terminal expects for the
+ * backspace key. */
 static int term_backspace_char = BS;
-static int term_enter_char = CAR;
-static int term_nl_does_cr = FALSE;
 
 
 /**************************************
@@ -653,30 +648,8 @@ free_terminal(buf_T *buf)
 term_write_job_output(term_T *term, char_u *msg, size_t len)
 {
     VTerm	*vterm = term->tl_vterm;
-    char_u	*p;
-    size_t	done;
-    size_t	len_now;
 
-    if (term_nl_does_cr)
-	vterm_input_write(vterm, (char *)msg, len);
-    else
-	/* need to convert NL to CR-NL */
-	for (done = 0; done < len; done += len_now)
-	{
-	    for (p = msg + done; p < msg + len; )
-	    {
-		if (*p == NL)
-		    break;
-		p += utf_ptr2len_len(p, (int)(len - (p - msg)));
-	    }
-	    len_now = p - msg - done;
-	    vterm_input_write(vterm, (char *)msg + done, len_now);
-	    if (p < msg + len && *p == NL)
-	    {
-		vterm_input_write(vterm, "\r\n", 2);
-		++len_now;
-	    }
-	}
+    vterm_input_write(vterm, (char *)msg, len);
 
     /* this invokes the damage callbacks */
     vterm_screen_flush_damage(vterm_obtain_screen(vterm));
@@ -758,11 +731,12 @@ term_convert_key(term_T *term, int c, char *buf)
     VTerm	    *vterm = term->tl_vterm;
     VTermKey	    key = VTERM_KEY_NONE;
     VTermModifier   mod = VTERM_MOD_NONE;
-    int		    mouse = FALSE;
+    int		    other = FALSE;
 
     switch (c)
     {
-	case CAR:		c = term_enter_char; break;
+	/* don't use VTERM_KEY_ENTER, it may do an unwanted conversion */
+
 				/* don't use VTERM_KEY_BACKSPACE, it always
 				 * becomes 0x7f DEL */
 	case K_BS:		c = term_backspace_char; break;
@@ -834,22 +808,22 @@ term_convert_key(term_T *term, int c, char *buf)
 				key = VTERM_KEY_UP; break;
 	case TAB:		key = VTERM_KEY_TAB; break;
 
-	case K_MOUSEUP:		mouse = term_send_mouse(vterm, 5, 1); break;
-	case K_MOUSEDOWN:	mouse = term_send_mouse(vterm, 4, 1); break;
+	case K_MOUSEUP:		other = term_send_mouse(vterm, 5, 1); break;
+	case K_MOUSEDOWN:	other = term_send_mouse(vterm, 4, 1); break;
 	case K_MOUSELEFT:	/* TODO */ return 0;
 	case K_MOUSERIGHT:	/* TODO */ return 0;
 
 	case K_LEFTMOUSE:
-	case K_LEFTMOUSE_NM:	mouse = term_send_mouse(vterm, 1, 1); break;
-	case K_LEFTDRAG:	mouse = term_send_mouse(vterm, 1, 1); break;
+	case K_LEFTMOUSE_NM:	other = term_send_mouse(vterm, 1, 1); break;
+	case K_LEFTDRAG:	other = term_send_mouse(vterm, 1, 1); break;
 	case K_LEFTRELEASE:
-	case K_LEFTRELEASE_NM:	mouse = term_send_mouse(vterm, 1, 0); break;
-	case K_MIDDLEMOUSE:	mouse = term_send_mouse(vterm, 2, 1); break;
-	case K_MIDDLEDRAG:	mouse = term_send_mouse(vterm, 2, 1); break;
-	case K_MIDDLERELEASE:	mouse = term_send_mouse(vterm, 2, 0); break;
-	case K_RIGHTMOUSE:	mouse = term_send_mouse(vterm, 3, 1); break;
-	case K_RIGHTDRAG:	mouse = term_send_mouse(vterm, 3, 1); break;
-	case K_RIGHTRELEASE:	mouse = term_send_mouse(vterm, 3, 0); break;
+	case K_LEFTRELEASE_NM:	other = term_send_mouse(vterm, 1, 0); break;
+	case K_MIDDLEMOUSE:	other = term_send_mouse(vterm, 2, 1); break;
+	case K_MIDDLEDRAG:	other = term_send_mouse(vterm, 2, 1); break;
+	case K_MIDDLERELEASE:	other = term_send_mouse(vterm, 2, 0); break;
+	case K_RIGHTMOUSE:	other = term_send_mouse(vterm, 3, 1); break;
+	case K_RIGHTDRAG:	other = term_send_mouse(vterm, 3, 1); break;
+	case K_RIGHTRELEASE:	other = term_send_mouse(vterm, 3, 0); break;
 	case K_X1MOUSE:		/* TODO */ return 0;
 	case K_X1DRAG:		/* TODO */ return 0;
 	case K_X1RELEASE:	/* TODO */ return 0;
@@ -883,8 +857,12 @@ term_convert_key(term_T *term, int c, char *buf)
 #ifdef FEAT_AUTOCMD
 	case K_CURSORHOLD:	return 0;
 #endif
-	case K_PS:		vterm_keyboard_start_paste(vterm); return 0;
-	case K_PE:		vterm_keyboard_end_paste(vterm); return 0;
+	case K_PS:		vterm_keyboard_start_paste(vterm);
+				other = TRUE;
+				break;
+	case K_PE:		vterm_keyboard_end_paste(vterm);
+				other = TRUE;
+				break;
     }
 
     /*
@@ -896,7 +874,7 @@ term_convert_key(term_T *term, int c, char *buf)
     if (key != VTERM_KEY_NONE)
 	/* Special key, let vterm convert it. */
 	vterm_keyboard_key(vterm, key, mod);
-    else if (!mouse)
+    else if (!other)
 	/* Normal character, let vterm convert it. */
 	vterm_keyboard_unichar(vterm, c, mod);
 
@@ -1536,7 +1514,8 @@ terminal_loop(int blocking)
     int		termkey = 0;
     int		ret;
 #ifdef UNIX
-    int		tty_fd = curbuf->b_term->tl_job->jv_channel->ch_part[get_tty_part(curbuf->b_term)].ch_fd;
+    int		tty_fd = curbuf->b_term->tl_job->jv_channel
+				 ->ch_part[get_tty_part(curbuf->b_term)].ch_fd;
 #endif
 
     /* Remember the terminal we are sending keys to.  However, the terminal
@@ -1559,32 +1538,33 @@ terminal_loop(int blocking)
 		break;
 	update_cursor(curbuf->b_term, FALSE);
 
+	c = term_vgetc();
+	if (!term_use_loop())
+	{
+	    /* Job finished while waiting for a character.  Push back the
+	     * received character. */
+	    if (c != K_IGNORE)
+		vungetc(c);
+	    break;
+	}
+	if (c == K_IGNORE)
+	    continue;
+
 #ifdef UNIX
 	/*
 	 * The shell or another program may change the tty settings.  Getting
 	 * them for every typed character is a bit of overhead, but it's needed
-	 * for the first CR typed, e.g. when Vim starts in a shell.
+	 * for the first character typed, e.g. when Vim starts in a shell.
 	 */
 	if (isatty(tty_fd))
 	{
 	    ttyinfo_T info;
 
-	    /* Get the current backspace and enter characters of the pty. */
+	    /* Get the current backspace character of the pty. */
 	    if (get_tty_info(tty_fd, &info) == OK)
-	    {
 		term_backspace_char = info.backspace;
-		term_enter_char = info.enter;
-		term_nl_does_cr = info.nl_does_cr;
-	    }
 	}
 #endif
-
-	c = term_vgetc();
-	if (!term_use_loop())
-	    /* job finished while waiting for a character */
-	    break;
-	if (c == K_IGNORE)
-	    continue;
 
 #ifdef WIN3264
 	/* On Windows winpty handles CTRL-C, don't send a CTRL_C_EVENT.
