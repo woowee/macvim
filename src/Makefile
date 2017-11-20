@@ -3862,17 +3862,12 @@ objects/hangulin.o: hangulin.c vim.h auto/config.h feature.h os_unix.h \
  ex_cmds.h spell.h proto.h globals.h farsi.h arabic.h
 objects/if_lua.o: if_lua.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
  ascii.h keymap.h term.h macros.h option.h structs.h regexp.h gui.h \
-<<<<<<< HEAD
- gui_beval.h proto/gui_beval.pro alloc.h ex_cmds.h spell.h proto.h \
- globals.h farsi.h arabic.h
-objects/if_lua52.o: if_lua52.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
- ascii.h keymap.h term.h macros.h option.h structs.h regexp.h gui.h \
- gui_beval.h proto/gui_beval.pro alloc.h ex_cmds.h spell.h proto.h \
- globals.h farsi.h arabic.h
-=======
  alloc.h beval.h proto/beval.pro proto/gui_beval.pro ex_cmds.h spell.h \
  proto.h globals.h farsi.h arabic.h
->>>>>>> macvim/master
+objects/if_lua52.o: if_lua52.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
+ ascii.h keymap.h term.h macros.h option.h structs.h regexp.h gui.h \
+ alloc.h beval.h proto/beval.pro proto/gui_beval.pro ex_cmds.h spell.h \
+ proto.h globals.h farsi.h arabic.h
 objects/if_mzsch.o: if_mzsch.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h option.h structs.h \
  regexp.h gui.h alloc.h beval.h proto/beval.pro proto/gui_beval.pro \
