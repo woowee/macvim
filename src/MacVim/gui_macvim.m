@@ -1297,7 +1297,7 @@ mch_set_mouse_shape(int shape)
 
 // -- Input Method ----------------------------------------------------------
 
-#if defined(USE_IM_CONTROL)
+#if defined(FEAT_MBYTE)
 
     void
 im_set_position(int row, int col)
@@ -1338,7 +1338,7 @@ gui_im_get_status(void)
     return [[MMBackend sharedInstance] imState];
 }
 
-#endif // defined(USE_IM_CONTROL)
+#endif // defined(FEAT_MBYTE)
 
 
 
