@@ -498,9 +498,11 @@ static void TrackUserActivity(UINT uMsg);
  *
  * These LOGFONT used for IME.
  */
-#ifdef FEAT_MBYTE
+#if defined(FEAT_MBYTE_IME) || defined(GLOBAL_IME)
 /* holds LOGFONT for 'guifontwide' if available, otherwise 'guifont' */
 static LOGFONT norm_logfont;
+#endif
+#ifdef FEAT_MBYTE_IME
 /* holds LOGFONT for 'guifont' always. */
 static LOGFONT sub_logfont;
 #endif
@@ -3362,6 +3364,8 @@ gui_mch_init_font(char_u *font_name, int fontset UNUSED)
 	font_name = (char_u *)lf.lfFaceName;
 #if defined(FEAT_MBYTE_IME) || defined(GLOBAL_IME)
     norm_logfont = lf;
+#endif
+#ifdef FEAT_MBYTE_IME
     sub_logfont = lf;
 #endif
 #ifdef FEAT_MBYTE_IME
@@ -5799,53 +5803,15 @@ gui_mch_set_sp_color(guicolor_T color)
     gui.currSpColor = color;
 }
 
-    void
-w32_set_transparency(HWND hwnd, BYTE bAlpha)
-{
-    FWINLAYER pfLayer;
-    HANDLE hDll;
-
-    if (!hwnd)
-	hwnd = s_hwnd;
-
-    /* Turn off transpareny */
-    if (bAlpha == 255)
-    {
-	SetWindowLong(hwnd, GWL_EXSTYLE, ~WS_EX_LAYERED &
-		GetWindowLong(hwnd, GWL_EXSTYLE));
-	return;
-    }
-
-    /* Obtain pointer to function set transparecy rate */
-    if (!(hDll = LoadLibrary("user32.dll")))
-	return;
-    pfLayer = (FWINLAYER)GetProcAddress(hDll, "SetLayeredWindowAttributes");
-
-    if (pfLayer)
-    {
-	SetWindowLong(hwnd, GWL_EXSTYLE, WS_EX_LAYERED |
-		GetWindowLong(hwnd, GWL_EXSTYLE));
-	pfLayer(hwnd, 0, bAlpha, LWA_ALPHA);
-    }
-
-    FreeLibrary(hDll);
-}
-
-    void
-gui_mch_set_transparency(int alpha)
-{
-    w32_set_transparency(NULL, (BYTE)alpha);
-}
-
-#if defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)
+#ifdef FEAT_MBYTE_IME
 /*
  * Multi-byte handling, originally by Sung-Hoon Baek.
  * First static functions (no prototypes generated).
  */
-#ifdef _MSC_VER
-# include <ime.h>   /* Apparently not needed for Cygwin, MingW or Borland. */
-#endif
-#include <imm.h>
+# ifdef _MSC_VER
+#  include <ime.h>   /* Apparently not needed for Cygwin, MingW or Borland. */
+# endif
+# include <imm.h>
 
 /*
  * handle WM_IME_NOTIFY message
@@ -5997,7 +5963,7 @@ GetResultStr(HWND hwnd, int GCS, int *lenp)
 #endif
 
 /* For global functions we need prototypes. */
-#if (defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)) || defined(PROTO)
+#if defined(FEAT_MBYTE_IME) || defined(PROTO)
 
 /*
  * set font to IM.
@@ -6122,7 +6088,7 @@ im_get_status(void)
     return status;
 }
 
-#endif /* FEAT_MBYTE && FEAT_MBYTE_IME */
+#endif /* FEAT_MBYTE_IME */
 
 #if defined(FEAT_MBYTE) && !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
 /* Win32 with GLOBAL IME */
