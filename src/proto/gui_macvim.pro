@@ -230,11 +230,6 @@ int is_valid_macaction(char_u *action);
 void gui_macvim_wait_for_startup();
 void gui_macvim_get_window_layout(int *count, int *layout);
 
-void im_set_position(int row, int col);
-void im_set_control(int enable);
-void gui_im_set_active(int active);
-int gui_im_get_status(void);
-
     void
 gui_mch_find_dialog(exarg_T *eap);
     void

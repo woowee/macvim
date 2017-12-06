@@ -1327,12 +1327,8 @@ im_set_control(int enable)
 
 
     void
-gui_im_set_active(int active)
+im_set_active(int active)
 {
-    // Don't enable IM if imdisableactivate is true.
-    if (p_imdisableactivate && active)
-        return;
-
 #if defined(FEAT_EVAL)
     if (USE_IMACTIVATEFUNC)
     {
@@ -1344,6 +1340,10 @@ gui_im_set_active(int active)
     }
 #endif
 
+    // Don't enable IM if imdisableactivate is true.
+    if (p_imdisableactivate && active)
+        return;
+
     // Tell frontend to enable/disable IM (called e.g. when the mode changes).
     if (!p_imdisable) {
         int msgid = active ? ActivateKeyScriptMsgID : DeactivateKeyScriptMsgID;
@@ -1354,7 +1354,7 @@ gui_im_set_active(int active)
 
 
     int
-gui_im_get_status(void)
+im_get_status(void)
 {
 # ifdef FEAT_EVAL
     if (USE_IMSTATUSFUNC)
