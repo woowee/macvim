@@ -2323,7 +2323,6 @@ nfa_regconcat(void)
     static int
 nfa_regbranch(void)
 {
-    int		ch;
     int		old_post_pos;
 
     old_post_pos = (int)(post_ptr - post_start);
@@ -2332,11 +2331,13 @@ nfa_regbranch(void)
     if (nfa_regconcat() == FAIL)
 	return FAIL;
 
-    ch = peekchr();
     /* Try next concats */
-    while (ch == Magic('&'))
+    while (peekchr() == Magic('&'))
     {
 	skipchr();
+	/* if concat is empty do emit a node */
+	if (old_post_pos == (int)(post_ptr - post_start))
+	    EMIT(NFA_EMPTY);
 	EMIT(NFA_NOPEN);
 	EMIT(NFA_PREV_ATOM_NO_WIDTH);
 	old_post_pos = (int)(post_ptr - post_start);
@@ -2346,7 +2347,6 @@ nfa_regbranch(void)
 	if (old_post_pos == (int)(post_ptr - post_start))
 	    EMIT(NFA_EMPTY);
 	EMIT(NFA_CONCAT);
-	ch = peekchr();
     }
 
     /* if a branch is empty, emit one node for it */
