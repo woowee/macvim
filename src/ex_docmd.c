@@ -8058,6 +8058,16 @@ alist_set(
     int		fnum_len)
 {
     int		i;
+    static int  recursive = 0;
+
+    if (recursive)
+    {
+#ifdef FEAT_AUTOCMD
+	EMSG(_(e_au_recursive));
+#endif
+	return;
+    }
+    ++recursive;
 
     alist_clear(al);
     if (ga_grow(&al->al_ga, count) == OK)
@@ -8087,6 +8097,8 @@ alist_set(
 	FreeWild(count, files);
     if (al == &global_alist)
 	arg_had_last = FALSE;
+
+    --recursive;
 }
 
 /*
@@ -9048,11 +9060,19 @@ ex_cd(exarg_T *eap)
 	    EMSG(_(e_failed));
 	else
 	{
-	    post_chdir(eap->cmdidx == CMD_lcd || eap->cmdidx == CMD_lchdir);
+	    int is_local_chdir = eap->cmdidx == CMD_lcd
+						  || eap->cmdidx == CMD_lchdir;
+
+	    post_chdir(is_local_chdir);
 
 	    /* Echo the new current directory if the command was typed. */
 	    if (KeyTyped || p_verbose >= 5)
 		ex_pwd(eap);
+#ifdef FEAT_AUTOCMD
+	    apply_autocmds(EVENT_DIRCHANGED,
+		    is_local_chdir ? (char_u *)"window" : (char_u *)"global",
+		    new_dir, FALSE, curbuf);
+#endif
 	}
 	vim_free(tofree);
     }
@@ -9932,7 +9952,7 @@ ex_mkrc(
 			*dirnow = NUL;
 		    if (*dirnow != NUL && (ssop_flags & SSOP_SESDIR))
 		    {
-			if (vim_chdirfile(fname) == OK)
+			if (vim_chdirfile(fname, NULL) == OK)
 			    shorten_fnames(TRUE);
 		    }
 		    else if (*dirnow != NUL
