@@ -3470,9 +3470,10 @@ static int briopt_check(win_T *wp);
  * Initialize the options, first part.
  *
  * Called only once from main(), just after creating the first buffer.
+ * If "clean_arg" is TRUE Vim was started with --clean.
  */
     void
-set_init_1(void)
+set_init_1(int clean_arg)
 {
     char_u	*p;
     int		opt_idx;
@@ -3681,6 +3682,24 @@ set_init_1(void)
      * value.  Also set the global value for local options.
      */
     set_options_default(0);
+
+#ifdef CLEAN_RUNTIMEPATH
+    if (clean_arg)
+    {
+	opt_idx = findoption((char_u *)"runtimepath");
+	if (opt_idx >= 0)
+	{
+	    options[opt_idx].def_val[VI_DEFAULT] = (char_u *)CLEAN_RUNTIMEPATH;
+	    p_rtp = (char_u *)CLEAN_RUNTIMEPATH;
+	}
+	opt_idx = findoption((char_u *)"packpath");
+	if (opt_idx >= 0)
+	{
+	    options[opt_idx].def_val[VI_DEFAULT] = (char_u *)CLEAN_RUNTIMEPATH;
+	    p_pp = (char_u *)CLEAN_RUNTIMEPATH;
+	}
+    }
+#endif
 
 #ifdef FEAT_GUI
     if (found_reverse_arg)
@@ -8909,10 +8928,25 @@ set_bool_option(
     /* 'termguicolors' */
     else if ((int *)varp == &p_tgc)
     {
+# ifdef FEAT_VTP
+	/* Do not turn on 'tgc' when 24-bit colors are not supported. */
+	if (!has_vtp_working())
+	{
+	    p_tgc = 0;
+	    return (char_u*)N_("E954: 24-bit colors are not supported on this environment");
+	}
+	swap_tcap();
+# endif
 # ifdef FEAT_GUI
 	if (!gui.in_use && !gui.starting)
 # endif
 	    highlight_gui_started();
+# ifdef FEAT_VTP
+	control_console_color_rgb();
+	/* reset t_Co */
+	if (STRCMP(T_NAME, "win32") == 0)
+	    set_termname(T_NAME);
+# endif
     }
 #endif
 

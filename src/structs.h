@@ -101,7 +101,10 @@ typedef struct {
 # endif
 # define guicolor_T long
 # define INVALCOLOR ((guicolor_T)0x1ffffff)
+    /* only used for cterm.bg_rgb and cterm.fg_rgb: use cterm color */
+# define CTERMCOLOR ((guicolor_T)0x1fffffe)
 #endif
+#define COLOR_INVALID(x) ((x) == INVALCOLOR || (x) == CTERMCOLOR)
 
 /*
  * marks: positions in a file
@@ -3352,6 +3355,7 @@ typedef struct
 
     int		evim_mode;		/* started as "evim" */
     char_u	*use_vimrc;		/* vimrc from -u argument */
+    int		clean;			/* --clean argument */
 
     int		n_commands;		     /* no. of commands from + or -c */
     char_u	*commands[MAX_ARG_CMDS];     /* commands from + or -c arg. */
