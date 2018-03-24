@@ -1164,6 +1164,18 @@ mch_setmouse(int on)
     SetConsoleMode(g_hConIn, cmodein);
 }
 
+
+#if defined(FEAT_BEVAL_TERM) || defined(PROTO)
+/*
+ * Called when 'balloonevalterm' changed.
+ */
+    void
+mch_bevalterm_changed(void)
+{
+    mch_setmouse(g_fMouseActive);
+}
+#endif
+
 /*
  * Decode a MOUSE_EVENT.  If it's a valid event, return MOUSE_LEFT,
  * MOUSE_MIDDLE, or MOUSE_RIGHT for a click; MOUSE_DRAG for a mouse
@@ -1243,7 +1255,7 @@ decode_mouse_event(
 
     if (pmer->dwEventFlags == MOUSE_MOVED)
     {
-	/* ignore MOUSE_MOVED events if (x, y) hasn't changed.	(We get these
+	/* Ignore MOUSE_MOVED events if (x, y) hasn't changed.	(We get these
 	 * events even when the mouse moves only within a char cell.) */
 	if (s_xOldMouse == g_xMouse && s_yOldMouse == g_yMouse)
 	    return FALSE;
@@ -1252,11 +1264,20 @@ decode_mouse_event(
     /* If no buttons are pressed... */
     if ((pmer->dwButtonState & ((1 << cButtons) - 1)) == 0)
     {
+	nButton = MOUSE_RELEASE;
+
 	/* If the last thing returned was MOUSE_RELEASE, ignore this */
 	if (s_fReleased)
-	    return FALSE;
+	{
+#ifdef FEAT_BEVAL_TERM
+	    /* do return mouse move events when we want them */
+	    if (p_bevalterm)
+		nButton = MOUSE_DRAG;
+	    else
+#endif
+		return FALSE;
+	}
 
-	nButton = MOUSE_RELEASE;
 	s_fReleased = TRUE;
     }
     else    /* one or more buttons pressed */
@@ -1787,7 +1808,6 @@ mch_inchar(
 	 */
 	if (!WaitForChar(p_ut, FALSE))
 	{
-#ifdef FEAT_AUTOCMD
 	    if (trigger_cursorhold() && maxlen >= 3)
 	    {
 		buf[0] = K_SPECIAL;
@@ -1795,7 +1815,6 @@ mch_inchar(
 		buf[2] = (int)KE_CURSORHOLD;
 		return 3;
 	    }
-#endif
 	    before_blocking();
 	}
     }
@@ -4469,7 +4488,7 @@ mch_system_piped(char *cmd, int options)
     int		c;
     int		noread_cnt = 0;
     garray_T	ga;
-    int	    delay = 1;
+    int		delay = 1;
     DWORD	buffer_off = 0;	/* valid bytes in buffer[] */
     char	*p = NULL;
 
@@ -4763,6 +4782,81 @@ mch_system(char *cmd, int options)
 
 #endif
 
+#if defined(FEAT_GUI) && defined(FEAT_TERMINAL)
+/*
+ * Use a terminal window to run a shell command in.
+ */
+    static int
+mch_call_shell_terminal(
+    char_u	*cmd,
+    int		options UNUSED)	/* SHELL_*, see vim.h */
+{
+    jobopt_T	opt;
+    char_u	*newcmd = NULL;
+    typval_T	argvar[2];
+    long_u	cmdlen;
+    int		retval = -1;
+    buf_T	*buf;
+    aco_save_T	aco;
+    oparg_T	oa;		/* operator arguments */
+
+    if (cmd == NULL)
+	cmdlen = STRLEN(p_sh) + 1;
+    else
+	cmdlen = STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 10;
+    newcmd = lalloc(cmdlen, TRUE);
+    if (newcmd == NULL)
+	return 255;
+    if (cmd == NULL)
+    {
+	STRCPY(newcmd, p_sh);
+	ch_log(NULL, "starting terminal to run a shell");
+    }
+    else
+    {
+	vim_snprintf((char *)newcmd, cmdlen, "%s %s %s", p_sh, p_shcf, cmd);
+	ch_log(NULL, "starting terminal for system command '%s'", cmd);
+    }
+
+    init_job_options(&opt);
+
+    argvar[0].v_type = VAR_STRING;
+    argvar[0].vval.v_string = newcmd;
+    argvar[1].v_type = VAR_UNKNOWN;
+    buf = term_start(argvar, NULL, &opt, TERM_START_SYSTEM);
+    if (buf == NULL)
+	return 255;
+
+    /* Find a window to make "buf" curbuf. */
+    aucmd_prepbuf(&aco, buf);
+
+    clear_oparg(&oa);
+    while (term_use_loop())
+    {
+	if (oa.op_type == OP_NOP && oa.regname == NUL && !VIsual_active)
+	{
+	    /* If terminal_loop() returns OK we got a key that is handled
+	     * in Normal model. We don't do redrawing anyway. */
+	    if (terminal_loop(TRUE) == OK)
+		normal_cmd(&oa, TRUE);
+	}
+	else
+	    normal_cmd(&oa, TRUE);
+    }
+    retval = 0;
+    ch_log(NULL, "system command finished");
+
+    /* restore curwin/curbuf and a few other things */
+    aucmd_restbuf(&aco);
+
+    wait_return(TRUE);
+    do_buffer(DOBUF_WIPE, DOBUF_FIRST, FORWARD, buf->b_fnum, TRUE);
+
+    vim_free(newcmd);
+    return retval;
+}
+#endif
+
 /*
  * Either execute a command by calling the shell or start a new shell
  */
@@ -4830,6 +4924,19 @@ mch_call_shell(
     {
 	fprintf(fdDump, "mch_call_shell(\"%s\", %d)\n", cmd, options);
 	fflush(fdDump);
+    }
+#endif
+#if defined(FEAT_GUI) && defined(FEAT_TERMINAL)
+    /* TODO: make the terminal window work with input or output redirected. */
+    if (vim_strchr(p_go, GO_TERMINAL) != NULL
+	 && (options & (SHELL_FILTER|SHELL_DOOUT|SHELL_WRITE|SHELL_READ)) == 0)
+    {
+	/* Use a terminal window to run the command in. */
+	x = mch_call_shell_terminal(cmd, options);
+#ifdef FEAT_TITLE
+	resettitle();
+#endif
+	return x;
     }
 #endif
 
@@ -7378,10 +7485,15 @@ fix_arg_enc(void)
 	/* Now expand wildcards in the arguments. */
 	/* Temporarily add '(' and ')' to 'isfname'.  These are valid
 	 * filename characters but are excluded from 'isfname' to make
-	 * "gf" work on a file name in parenthesis (e.g.: see vim.h). */
+	 * "gf" work on a file name in parenthesis (e.g.: see vim.h).
+	 * Also, unset wildignore to not be influenced by this option.
+	 * The arguments specified in command-line should be kept even if
+	 * encoding options were changed. */
 	do_cmdline_cmd((char_u *)":let SaVe_ISF = &isf|set isf+=(,)");
+	do_cmdline_cmd((char_u *)":let SaVe_WIG = &wig|set wig=");
 	alist_expand(fnum_list, used_alist_count);
 	do_cmdline_cmd((char_u *)":let &isf = SaVe_ISF|unlet SaVe_ISF");
+	do_cmdline_cmd((char_u *)":let &wig = SaVe_WIG|unlet SaVe_WIG");
     }
 
     /* If wildcard expansion failed, we are editing the first file of the

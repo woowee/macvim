@@ -6164,9 +6164,11 @@ screen_line(
 	    hl = ScreenAttrs[off_to + CHAR_CELLS];
 	    if (hl > HL_ALL)
 		hl = syn_attr2attr(hl);
-# ifndef FEAT_GUI_MACVIM /* see comment on subpixel antialiasing */
-	    if (hl & HL_BOLD)
+	    if ((hl & HL_BOLD)
+# ifdef FEAT_GUI_MACVIM /* see comment on subpixel antialiasing */
+		    || gui.in_use
 # endif
+		    )
 		redraw_this = TRUE;
 	}
 #endif
@@ -6297,9 +6299,11 @@ screen_line(
 		hl = ScreenAttrs[off_to];
 		if (hl > HL_ALL)
 		    hl = syn_attr2attr(hl);
-# ifndef FEAT_GUI_MACVIM /* see comment on subpixel antialiasing */
-		if (hl & HL_BOLD)
+		if ((hl & HL_BOLD)
+# ifdef FEAT_GUI_MACVIM /* see comment on subpixel antialiasing */
+			|| gui.in_use
 # endif
+			)
 		    redraw_next = TRUE;
 	    }
 #endif
@@ -6385,9 +6389,11 @@ screen_line(
 	    if (gui.in_use && (col > startCol || !redraw_this))
 	    {
 		hl = ScreenAttrs[off_to];
-# ifndef FEAT_GUI_MACVIM /* see comment on subpixel antialiasing */
-		if (hl > HL_ALL || (hl & HL_BOLD))
+		if (hl > HL_ALL || (hl & HL_BOLD)
+# ifdef FEAT_GUI_MACVIM /* see comment on subpixel antialiasing */
+			|| gui.in_use
 # endif
+			)
 		{
 		    int prev_cells = 1;
 # ifdef FEAT_MBYTE
@@ -7589,9 +7595,11 @@ screen_puts_len(
 
 		if (n > HL_ALL)
 		    n = syn_attr2attr(n);
-# ifndef FEAT_GUI_MACVIM /* see comment on subpixel antialiasing */
-		if (n & HL_BOLD)
+		if ((n & HL_BOLD)
+# ifdef FEAT_GUI_MACVIM /* see comment on subpixel antialiasing */
+			|| gui.in_use
 # endif
+			)
 		    force_redraw_next = TRUE;
 	    }
 #endif
@@ -8137,7 +8145,7 @@ screen_start_highlight(int attr)
 			term_bg_color(aep->ae_u.cterm.bg_color - 1);
 		}
 
-		if (t_colors <= 1)
+		if (!IS_CTERM)
 		{
 		    if (aep->ae_u.term.start != NULL)
 			out_str(aep->ae_u.term.start);
@@ -8671,21 +8679,22 @@ screen_fill(
 # endif
 		   )
 		{
-# ifndef FEAT_GUI_MACVIM
+# ifdef FEAT_GUI_MACVIM
+		    /* Mac OS X does subpixel antialiasing which often causes a
+		     * glyph to spill over into neighboring cells.  For this
+		     * reason we always clear the neighboring glyphs whenever a
+		     * glyph is cleared, just like other GUIs cope with the
+		     * bold trick. */
+		    if (gui.in_use)
+			force_next = (ScreenLines[off] != ' ');
+		    else
+# endif
 		    if (ScreenLines[off] != ' '
 			    && (ScreenAttrs[off] > HL_ALL
 				|| ScreenAttrs[off] & HL_BOLD))
 			force_next = TRUE;
 		    else
 			force_next = FALSE;
-# else
-		    /* Mac OS X does subpixel antialiasing which often causes a
-		     * glyph to spill over into neighboring cells.  For this
-		     * reason we always clear the neighboring glyphs whenever a
-		     * glyph is cleared, just like other GUIs cope with the
-		     * bold trick. */
-		    force_next = (ScreenLines[off] != ' ');
-# endif
 		}
 #endif
 		ScreenLines[off] = c;
@@ -8792,11 +8801,9 @@ screenalloc(int doclear)
     tabpage_T	    *tp;
     static int	    entered = FALSE;		/* avoid recursiveness */
     static int	    done_outofmem_msg = FALSE;	/* did outofmem message */
-#ifdef FEAT_AUTOCMD
     int		    retry_count = 0;
 
 retry:
-#endif
     /*
      * Allocation of the screen buffers is done only when the size changes and
      * when Rows and Columns have been set and we have started doing full
@@ -8848,10 +8855,8 @@ retry:
      */
     FOR_ALL_TAB_WINDOWS(tp, wp)
 	win_free_lsize(wp);
-#ifdef FEAT_AUTOCMD
     if (aucmd_win != NULL)
 	win_free_lsize(aucmd_win);
-#endif
 
     new_ScreenLines = (schar_T *)lalloc((long_u)(
 			      (Rows + 1) * Columns * sizeof(schar_T)), FALSE);
@@ -8884,11 +8889,9 @@ retry:
 	    goto give_up;
 	}
     }
-#ifdef FEAT_AUTOCMD
     if (aucmd_win != NULL && aucmd_win->w_lines == NULL
 					&& win_alloc_lines(aucmd_win) == FAIL)
 	outofmem = TRUE;
-#endif
 give_up:
 
 #ifdef FEAT_MBYTE
@@ -9057,7 +9060,6 @@ give_up:
     entered = FALSE;
     --RedrawingDisabled;
 
-#ifdef FEAT_AUTOCMD
     /*
      * Do not apply autocommands more than 3 times to avoid an endless loop
      * in case applying autocommands always changes Rows or Columns.
@@ -9069,7 +9071,6 @@ give_up:
 	 * jump back to check if we need to allocate the screen again. */
 	goto retry;
     }
-#endif
 }
 
     void
@@ -9504,7 +9505,17 @@ windgoto(int row, int col)
     void
 setcursor(void)
 {
-    if (redrawing())
+    setcursor_mayforce(FALSE);
+}
+
+/*
+ * Set cursor to its position in the current window.
+ * When "force" is TRUE also when not redrawing.
+ */
+    void
+setcursor_mayforce(int force)
+{
+    if (force || redrawing())
     {
 	validate_cursor();
 	windgoto(W_WINROW(curwin) + curwin->w_wrow,

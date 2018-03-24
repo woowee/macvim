@@ -30,7 +30,7 @@ before_install:
   - brew update || brew update
   - brew install lua@5.1
   - brew install lua
-  - brew install python
+  - brew upgrade python
   - brew install ruby
   - brew install gettext
   - brew tap splhack/splhack

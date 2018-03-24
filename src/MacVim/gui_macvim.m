@@ -293,7 +293,7 @@ gui_mch_init(void)
         [[MMBackend sharedInstance] addToMRU:filenames];
     }
 
-#if defined(MAC_OS_X_VERSION_10_10)
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_10
     {
 	NSOperatingSystemVersion version = {10, 13, 0};
 
@@ -2443,11 +2443,11 @@ gui_mch_destroy_sign(void *sign)
 #ifdef FEAT_BEVAL
 
     BalloonEval *
-gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
-    void	*target;
-    char_u	*mesg;
-    void	(*mesgCB)(BalloonEval *, int);
-    void	*clientData;
+gui_mch_create_beval_area(
+    void	*target,
+    char_u	*mesg,
+    void	(*mesgCB)(BalloonEval *, int),
+    void	*clientData)
 {
     BalloonEval	*beval;
 
@@ -2463,8 +2463,7 @@ gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
 }
 
     void
-gui_mch_enable_beval_area(beval)
-    BalloonEval	*beval;
+gui_mch_enable_beval_area(BalloonEval *beval)
 {
     // Set the balloon delay when enabling balloon eval.
     float delay = p_bdlay/1000.0f - MMBalloonEvalInternalDelay;
@@ -2475,8 +2474,7 @@ gui_mch_enable_beval_area(beval)
 }
 
     void
-gui_mch_disable_beval_area(beval)
-    BalloonEval	*beval;
+gui_mch_disable_beval_area(BalloonEval *beval)
 {
     // NOTE: An empty tool tip indicates that the tool tip window should hide.
     [[MMBackend sharedInstance] queueMessage:SetTooltipMsgID properties:
@@ -2487,9 +2485,7 @@ gui_mch_disable_beval_area(beval)
  * Show a balloon with "mesg".
  */
     void
-gui_mch_post_balloon(beval, mesg)
-    BalloonEval	*beval;
-    char_u	*mesg;
+gui_mch_post_balloon(BalloonEval *beval, char_u *mesg)
 {
     NSString *toolTip = [NSString stringWithVimString:mesg];
     [[MMBackend sharedInstance] setLastToolTip:toolTip];

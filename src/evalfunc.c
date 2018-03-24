@@ -197,6 +197,7 @@ static void f_gettabinfo(typval_T *argvars, typval_T *rettv);
 static void f_gettabvar(typval_T *argvars, typval_T *rettv);
 static void f_gettabwinvar(typval_T *argvars, typval_T *rettv);
 static void f_getwininfo(typval_T *argvars, typval_T *rettv);
+static void f_getwinpos(typval_T *argvars, typval_T *rettv);
 static void f_getwinposx(typval_T *argvars, typval_T *rettv);
 static void f_getwinposy(typval_T *argvars, typval_T *rettv);
 static void f_getwinvar(typval_T *argvars, typval_T *rettv);
@@ -430,6 +431,7 @@ static void f_timer_stopall(typval_T *argvars, typval_T *rettv);
 static void f_tolower(typval_T *argvars, typval_T *rettv);
 static void f_toupper(typval_T *argvars, typval_T *rettv);
 static void f_tr(typval_T *argvars, typval_T *rettv);
+static void f_trim(typval_T *argvars, typval_T *rettv);
 #ifdef FEAT_FLOAT
 static void f_trunc(typval_T *argvars, typval_T *rettv);
 #endif
@@ -642,6 +644,7 @@ static struct fst
     {"gettabvar",	2, 3, f_gettabvar},
     {"gettabwinvar",	3, 4, f_gettabwinvar},
     {"getwininfo",	0, 1, f_getwininfo},
+    {"getwinpos",	0, 1, f_getwinpos},
     {"getwinposx",	0, 0, f_getwinposx},
     {"getwinposy",	0, 0, f_getwinposy},
     {"getwinvar",	2, 3, f_getwinvar},
@@ -740,7 +743,7 @@ static struct fst
     {"pow",		2, 2, f_pow},
 #endif
     {"prevnonblank",	1, 1, f_prevnonblank},
-    {"printf",		2, 19, f_printf},
+    {"printf",		1, 19, f_printf},
     {"pumvisible",	0, 0, f_pumvisible},
 #ifdef FEAT_PYTHON3
     {"py3eval",		1, 1, f_py3eval},
@@ -867,6 +870,8 @@ static struct fst
     {"term_list",	0, 0, f_term_list},
     {"term_scrape",	2, 2, f_term_scrape},
     {"term_sendkeys",	2, 2, f_term_sendkeys},
+    {"term_setkill",	2, 2, f_term_setkill},
+    {"term_setrestore",	2, 2, f_term_setrestore},
     {"term_start",	1, 2, f_term_start},
     {"term_wait",	1, 2, f_term_wait},
 #endif
@@ -897,6 +902,7 @@ static struct fst
     {"tolower",		1, 1, f_tolower},
     {"toupper",		1, 1, f_toupper},
     {"tr",		3, 3, f_tr},
+    {"trim",		1, 2, f_trim},
 #ifdef FEAT_FLOAT
     {"trunc",		1, 1, f_trunc},
 #endif
@@ -2668,9 +2674,7 @@ f_delete(typval_T *argvars, typval_T *rettv)
     static void
 f_did_filetype(typval_T *argvars UNUSED, typval_T *rettv UNUSED)
 {
-#ifdef FEAT_AUTOCMD
     rettv->vval.v_number = did_filetype;
-#endif
 }
 
 /*
@@ -3053,12 +3057,10 @@ f_exists(typval_T *argvars, typval_T *rettv)
     }
     else if (*p == '#')
     {
-#ifdef FEAT_AUTOCMD
 	if (p[1] == '#')
 	    n = autocmd_supported(p + 2);
 	else
 	    n = au_exists(p + 1);
-#endif
     }
     else				/* internal variable */
     {
@@ -5536,6 +5538,38 @@ f_win_screenpos(typval_T *argvars, typval_T *rettv)
 }
 
 /*
+ * "getwinpos({timeout})" function
+ */
+    static void
+f_getwinpos(typval_T *argvars UNUSED, typval_T *rettv)
+{
+    int x = -1;
+    int y = -1;
+
+    if (rettv_list_alloc(rettv) == FAIL)
+	return;
+#ifdef FEAT_GUI
+    if (gui.in_use)
+	(void)gui_mch_get_winpos(&x, &y);
+# if defined(HAVE_TGETENT) && defined(FEAT_TERMRESPONSE)
+    else
+# endif
+#endif
+#if defined(HAVE_TGETENT) && defined(FEAT_TERMRESPONSE)
+    {
+	varnumber_T timeout = 100;
+
+	if (argvars[0].v_type != VAR_UNKNOWN)
+	    timeout = get_tv_number(&argvars[0]);
+	term_get_winpos(&x, &y, timeout);
+    }
+#endif
+    list_append_number(rettv->vval.v_list, (varnumber_T)x);
+    list_append_number(rettv->vval.v_list, (varnumber_T)y);
+}
+
+
+/*
  * "getwinposx()" function
  */
     static void
@@ -5556,7 +5590,7 @@ f_getwinposx(typval_T *argvars UNUSED, typval_T *rettv)
     {
 	int	    x, y;
 
-	if (term_get_winpos(&x, &y) == OK)
+	if (term_get_winpos(&x, &y, (varnumber_T)100) == OK)
 	    rettv->vval.v_number = x;
     }
 #endif
@@ -5583,7 +5617,7 @@ f_getwinposy(typval_T *argvars UNUSED, typval_T *rettv)
     {
 	int	    x, y;
 
-	if (term_get_winpos(&x, &y) == OK)
+	if (term_get_winpos(&x, &y, (varnumber_T)100) == OK)
 	    rettv->vval.v_number = y;
     }
 #endif
@@ -5772,9 +5806,7 @@ f_has(typval_T *argvars, typval_T *rettv)
 #ifdef FEAT_ARABIC
 	"arabic",
 #endif
-#ifdef FEAT_AUTOCMD
 	"autocmd",
-#endif
 #ifdef FEAT_AUTOSERVERNAME
 	"autoservername",
 #endif
@@ -5833,9 +5865,7 @@ f_has(typval_T *argvars, typval_T *rettv)
 #ifdef FEAT_CSCOPE
 	"cscope",
 #endif
-#ifdef FEAT_CURSORBIND
 	"cursorbind",
-#endif
 #ifdef CURSOR_SHAPE
 	"cursorshape",
 #endif
@@ -6098,9 +6128,7 @@ f_has(typval_T *argvars, typval_T *rettv)
 #if defined(FEAT_RUBY) && !defined(DYNAMIC_RUBY)
 	"ruby",
 #endif
-#ifdef FEAT_SCROLLBIND
 	"scrollbind",
-#endif
 #ifdef FEAT_CMDL_INFO
 	"showcmd",
 	"cmdline_info",
@@ -6199,6 +6227,9 @@ f_has(typval_T *argvars, typval_T *rettv)
 #endif
 #ifdef FEAT_VREPLACE
 	"vreplace",
+#endif
+#ifdef FEAT_VTP
+	"vtp",
 #endif
 #ifdef FEAT_WILDIGN
 	"wildignore",
@@ -7035,7 +7066,7 @@ f_job_start(typval_T *argvars, typval_T *rettv)
     rettv->v_type = VAR_JOB;
     if (check_restricted() || check_secure())
 	return;
-    rettv->vval.v_job = job_start(argvars, NULL);
+    rettv->vval.v_job = job_start(argvars, NULL, NULL);
 }
 
 /*
@@ -13230,6 +13261,72 @@ error:
     ga_append(&ga, NUL);
 
     rettv->vval.v_string = ga.ga_data;
+}
+
+/*
+ * "trim({expr})" function
+ */
+    static void
+f_trim(typval_T *argvars, typval_T *rettv)
+{
+    char_u	buf1[NUMBUFLEN];
+    char_u	buf2[NUMBUFLEN];
+    char_u	*head = get_tv_string_buf_chk(&argvars[0], buf1);
+    char_u	*mask = NULL;
+    char_u	*tail;
+    char_u	*prev;
+    char_u	*p;
+    int		c1;
+
+    rettv->v_type = VAR_STRING;
+    if (head == NULL)
+    {
+	rettv->vval.v_string = NULL;
+	return;
+    }
+
+    if (argvars[1].v_type == VAR_STRING)
+	mask = get_tv_string_buf_chk(&argvars[1], buf2);
+
+    while (*head != NUL)
+    {
+	c1 = PTR2CHAR(head);
+	if (mask == NULL)
+	{
+	    if (c1 > ' ' && c1 != 0xa0)
+		break;
+	}
+	else
+	{
+	    for (p = mask; *p != NUL; MB_PTR_ADV(p))
+		if (c1 == PTR2CHAR(p))
+		    break;
+	    if (*p == NUL)
+		break;
+	}
+	MB_PTR_ADV(head);
+    }
+
+    for (tail = head + STRLEN(head); tail > head; tail = prev)
+    {
+	prev = tail;
+	MB_PTR_BACK(head, prev);
+	c1 = PTR2CHAR(prev);
+	if (mask == NULL)
+	{
+	    if (c1 > ' ' && c1 != 0xa0)
+		break;
+	}
+	else
+	{
+	    for (p = mask; *p != NUL; MB_PTR_ADV(p))
+		if (c1 == PTR2CHAR(p))
+		    break;
+	    if (*p == NUL)
+		break;
+	}
+    }
+    rettv->vval.v_string = vim_strnsave(head, (int)(tail - head));
 }
 
 #ifdef FEAT_FLOAT
