@@ -108,10 +108,10 @@ char		*tgetstr(char *, char **);
     /* Change this to "if 1" to debug what happens with termresponse. */
 #  if 0
 #   define DEBUG_TERMRESPONSE
-    static void log_tr(char *msg);
-#   define LOG_TR(msg) log_tr(msg)
+static void log_tr(const char *fmt, ...);
+#   define LOG_TR(msg) log_tr msg
 #  else
-#   define LOG_TR(msg)
+#   define LOG_TR(msg) do { /**/ } while (0)
 #  endif
 
 #  define STATUS_GET	1	/* send request when switching to RAW mode */
@@ -1522,15 +1522,13 @@ may_adjust_color_count(int val)
 	init_highlight(TRUE, FALSE);
 # ifdef DEBUG_TERMRESPONSE
 	{
-	    char buf[100];
-	    int  r = redraw_asap(CLEAR);
+	    int r = redraw_asap(CLEAR);
 
-	    sprintf(buf, "Received t_Co, redraw_asap(): %d", r);
-	    log_tr(buf);
+	    log_tr("Received t_Co, redraw_asap(): %d", r);
 	}
-# else
+#else
 	redraw_asap(CLEAR);
-# endif
+#endif
     }
 }
 #endif
@@ -1954,7 +1952,7 @@ set_termname(char_u *term)
     full_screen = TRUE;		/* we can use termcap codes from now on */
     set_term_defaults();	/* use current values as defaults */
 #ifdef FEAT_TERMRESPONSE
-    LOG_TR("setting crv_status to STATUS_GET");
+    LOG_TR(("setting crv_status to STATUS_GET"));
     crv_status = STATUS_GET;	/* Get terminal version later */
 #endif
 
@@ -2015,11 +2013,6 @@ set_termname(char_u *term)
 
 #ifdef FEAT_TERMRESPONSE
     may_req_termresponse();
-#endif
-
-#if defined(WIN3264) && !defined(FEAT_GUI) && defined(FEAT_TERMGUICOLORS)
-    if (STRCMP(term, "win32") == 0)
-	set_color_count((p_tgc) ? 256 : 16);
 #endif
 
     return OK;
@@ -2367,7 +2360,7 @@ term_7to8bit(char_u *p)
     return 0;
 }
 
-#ifdef FEAT_GUI
+#if defined(FEAT_GUI) || defined(PROTO)
     int
 term_is_gui(char_u *name)
 {
@@ -2829,7 +2822,7 @@ term_get_winpos(int *x, int *y, varnumber_T timeout)
 
     winpos_x = prev_winpos_x;
     winpos_y = prev_winpos_y;
-    if (timeout < 10 && prev_winpos_y >= 0 && prev_winpos_y >= 0)
+    if (timeout < 10 && prev_winpos_y >= 0 && prev_winpos_x >= 0)
     {
 	/* Polling: return previous values if we have them. */
 	*x = winpos_x;
@@ -2859,7 +2852,11 @@ term_color(char_u *s, int n)
     /* Also accept "\e[3%dm" for TERMINFO, it is sometimes used */
     /* Also accept CSI instead of <Esc>[ */
     if (n >= 8 && t_colors >= 16
-	      && ((s[0] == ESC && s[1] == '[') || (s[0] == CSI && (i = 1) == 1))
+	      && ((s[0] == ESC && s[1] == '[')
+#if defined(FEAT_VTP) && defined(FEAT_TERMGUICOLORS)
+		  || (s[0] == ESC && s[1] == '|')
+#endif
+	          || (s[0] == CSI && (i = 1) == 1))
 	      && s[i] != NUL
 	      && (STRCMP(s + i + 1, "%p1%dm") == 0
 		  || STRCMP(s + i + 1, "%dm") == 0)
@@ -2871,7 +2868,11 @@ term_color(char_u *s, int n)
 	char *format = "%s%s%%dm";
 #endif
 	sprintf(buf, format,
-		i == 2 ? IF_EB("\033[", ESC_STR "[") : "\233",
+		i == 2 ?
+#if defined(FEAT_VTP) && defined(FEAT_TERMGUICOLORS)
+		s[1] == '|' ? IF_EB("\033|", ESC_STR "|") :
+#endif
+		IF_EB("\033[", ESC_STR "[") : "\233",
 		s[i] == '3' ? (n >= 16 ? "38;5;" : "9")
 			    : (n >= 16 ? "48;5;" : "10"));
 	OUT_STR(tgoto(buf, 0, n >= 16 ? n : n - 8));
@@ -3516,7 +3517,7 @@ may_req_termresponse(void)
 	    && starting == 0
 	    && *T_CRV != NUL)
     {
-	LOG_TR("Sending CRV request");
+	LOG_TR(("Sending CRV request"));
 	out_str(T_CRV);
 	crv_status = STATUS_SENT;
 	/* check for the characters now, otherwise they might be eaten by
@@ -3547,7 +3548,7 @@ may_req_ambiguous_char_width(void)
     {
 	 char_u	buf[16];
 
-	 LOG_TR("Sending U7 request");
+	 LOG_TR(("Sending U7 request"));
 	 /* Do this in the second row.  In the first row the returned sequence
 	  * may be CSI 1;2R, which is the same as <S-F3>. */
 	 term_windgoto(1, 0);
@@ -3589,7 +3590,7 @@ may_req_bg_color(void)
 	/* Only request foreground if t_RF is set. */
 	if (rfg_status == STATUS_GET && *T_RFG != NUL)
 	{
-	    LOG_TR("Sending FG request");
+	    LOG_TR(("Sending FG request"));
 	    out_str(T_RFG);
 	    rfg_status = STATUS_SENT;
 	    didit = TRUE;
@@ -3599,7 +3600,7 @@ may_req_bg_color(void)
 	/* Only request background if t_RB is set. */
 	if (rbg_status == STATUS_GET && *T_RBG != NUL)
 	{
-	    LOG_TR("Sending BG request");
+	    LOG_TR(("Sending BG request"));
 	    out_str(T_RBG);
 	    rbg_status = STATUS_SENT;
 	    didit = TRUE;
@@ -3617,11 +3618,12 @@ may_req_bg_color(void)
 
 # ifdef DEBUG_TERMRESPONSE
     static void
-log_tr(char *msg)
+log_tr(const char *fmt, ...)
 {
     static FILE *fd_tr = NULL;
     static proftime_T start;
     proftime_T now;
+    va_list ap;
 
     if (fd_tr == NULL)
     {
@@ -3630,11 +3632,14 @@ log_tr(char *msg)
     }
     now = start;
     profile_end(&now);
-    fprintf(fd_tr, "%s: %s %s\n",
-	    profile_msg(&now),
-	    must_redraw == NOT_VALID ? "NV"
-					 : must_redraw == CLEAR ? "CL" : "  ",
-	    msg);
+    fprintf(fd_tr, "%s: %s ", profile_msg(&now),
+					must_redraw == NOT_VALID ? "NV"
+					: must_redraw == CLEAR ? "CL" : "  ");
+    va_start(ap, fmt);
+    vfprintf(fd_tr, fmt, ap);
+    va_end(ap);
+    fputc('\n', fd_tr);
+    fflush(fd_tr);
 }
 # endif
 #endif
@@ -4185,7 +4190,7 @@ switch_to_8bit(void)
 	need_gather = TRUE;		/* need to fill termleader[] */
     }
     detected_8bit = TRUE;
-    LOG_TR("Switching to 8 bit");
+    LOG_TR(("Switching to 8 bit"));
 }
 #endif
 
@@ -4518,7 +4523,7 @@ check_termcode(
 		    }
 		if (i == len)
 		{
-		    LOG_TR("Not enough characters for CRV");
+		    LOG_TR(("Not enough characters for CRV"));
 		    return -1;
 		}
 		if (extra > 0)
@@ -4535,7 +4540,7 @@ check_termcode(
 		    {
 			char *aw = NULL;
 
-			LOG_TR("Received U7 status");
+			LOG_TR(("Received U7 status: %s", tp));
 			u7_status = STATUS_GOT;
 			did_cursorhold = TRUE;
 			if (col == 2)
@@ -4551,13 +4556,9 @@ check_termcode(
 					     (char_u *)aw, 0);
 # ifdef DEBUG_TERMRESPONSE
 			    {
-				char buf[100];
-				int  r = redraw_asap(CLEAR);
+				int r = redraw_asap(CLEAR);
 
-				sprintf(buf,
-					"set 'ambiwidth', redraw_asap(): %d",
-					r);
-				log_tr(buf);
+				log_tr("set 'ambiwidth', redraw_asap(): %d", r);
 			    }
 # else
 			    redraw_asap(CLEAR);
@@ -4578,7 +4579,7 @@ check_termcode(
 		{
 		    int version = col;
 
-		    LOG_TR("Received CRV response");
+		    LOG_TR(("Received CRV response: %s", tp));
 		    crv_status = STATUS_GOT;
 		    did_cursorhold = TRUE;
 
@@ -4604,7 +4605,7 @@ check_termcode(
 			/* if xterm version >= 141 try to get termcap codes */
 			if (version >= 141)
 			{
-			    LOG_TR("Enable checking for XT codes");
+			    LOG_TR(("Enable checking for XT codes"));
 			    check_for_codes = TRUE;
 			    need_gather = TRUE;
 			    req_codes_from_term();
@@ -4694,7 +4695,7 @@ check_termcode(
 				&& *T_CSH != NUL
 				&& *T_CRS != NUL)
 			{
-			    LOG_TR("Sending cursor style request");
+			    LOG_TR(("Sending cursor style request"));
 			    out_str(T_CRS);
 			    rcs_status = STATUS_SENT;
 			    need_flush = TRUE;
@@ -4707,7 +4708,7 @@ check_termcode(
 				&& !is_not_xterm
 				&& *T_CRC != NUL)
 			{
-			    LOG_TR("Sending cursor blink mode request");
+			    LOG_TR(("Sending cursor blink mode request"));
 			    out_str(T_CRC);
 			    rbm_status = STATUS_SENT;
 			    need_flush = TRUE;
@@ -4743,7 +4744,7 @@ check_termcode(
 		{
 		    initial_cursor_blink = (tp[j + 4] == '1');
 		    rbm_status = STATUS_GOT;
-		    LOG_TR("Received cursor blinking mode response");
+		    LOG_TR(("Received cursor blinking mode response: %s", tp));
 		    key_name[0] = (int)KS_EXTRA;
 		    key_name[1] = (int)KE_IGNORE;
 		    slen = i + 1;
@@ -4785,7 +4786,7 @@ check_termcode(
 		    }
 		    if (i == len)
 		    {
-			LOG_TR("not enough characters for winpos");
+			LOG_TR(("not enough characters for winpos"));
 			return -1;
 		    }
 		}
@@ -4831,7 +4832,7 @@ check_termcode(
 				char *newval = (3 * '6' < tp[j+7] + tp[j+12]
 						+ tp[j+17]) ? "light" : "dark";
 
-				LOG_TR("Received RBG response");
+				LOG_TR(("Received RBG response: %s", tp));
 				rbg_status = STATUS_GOT;
 #ifdef FEAT_TERMINAL
 				bg_r = rval;
@@ -4851,7 +4852,7 @@ check_termcode(
 #ifdef FEAT_TERMINAL
 			    else
 			    {
-				LOG_TR("Received RFG response");
+				LOG_TR(("Received RFG response: %s", tp));
 				rfg_status = STATUS_GOT;
 				fg_r = rval;
 				fg_g = gval;
@@ -4872,7 +4873,7 @@ check_termcode(
 		    }
 		if (i == len)
 		{
-		    LOG_TR("not enough characters for RB");
+		    LOG_TR(("not enough characters for RB"));
 		    return -1;
 		}
 	    }
@@ -4946,7 +4947,7 @@ check_termcode(
 			    initial_cursor_shape_blink =
 						   (number & 1) ? FALSE : TRUE;
 			    rcs_status = STATUS_GOT;
-			    LOG_TR("Received cursor shape response");
+			    LOG_TR(("Received cursor shape response: %s", tp));
 
 			    key_name[0] = (int)KS_EXTRA;
 			    key_name[1] = (int)KE_IGNORE;
@@ -4963,7 +4964,7 @@ check_termcode(
 		{
 		    /* These codes arrive many together, each code can be
 		     * truncated at any point. */
-		    LOG_TR("not enough characters for XT");
+		    LOG_TR(("not enough characters for XT"));
 		    return -1;
 		}
 	    }
@@ -5201,10 +5202,13 @@ check_termcode(
 #    ifdef FEAT_GUI
 			&& !gui.in_use
 #    endif
-			&& (mouse_code == 0x23 || mouse_code == 0x24))
+			&& (mouse_code == 0x23 || mouse_code == 0x24
+			    || mouse_code == 0x40 || mouse_code == 0x41))
 		{
-		    /* Apparently used by rxvt scroll wheel. */
-		    wheel_code = mouse_code - 0x23 + MOUSEWHEEL_LOW;
+		    /* Apparently 0x23 and 0x24 are used by rxvt scroll wheel.
+		     * And 0x40 and 0x41 are used by some xterm emulator. */
+		    wheel_code = mouse_code - (mouse_code >= 0x40 ? 0x40 : 0x23)
+							      + MOUSEWHEEL_LOW;
 		}
 #   endif
 
@@ -5913,7 +5917,7 @@ check_termcode(
     }
 
 #ifdef FEAT_TERMRESPONSE
-    LOG_TR("normal character");
+    LOG_TR(("normal character"));
 #endif
 
     return 0;			    /* no match found */
@@ -6396,15 +6400,10 @@ req_more_codes_from_term(void)
      * many, there can be a buffer overflow somewhere. */
     while (xt_index_out < xt_index_in + 10 && key_names[xt_index_out] != NULL)
     {
-# ifdef DEBUG_TERMRESPONSE
-	char dbuf[100];
+	char *key_name = key_names[xt_index_out];
 
-	sprintf(dbuf, "Requesting XT %d: %s",
-				       xt_index_out, key_names[xt_index_out]);
-	log_tr(dbuf);
-# endif
-	sprintf(buf, "\033P+q%02x%02x\033\\",
-		      key_names[xt_index_out][0], key_names[xt_index_out][1]);
+	LOG_TR(("Requesting XT %d: %s", xt_index_out, key_name));
+	sprintf(buf, "\033P+q%02x%02x\033\\", key_name[0], key_name[1]);
 	out_str_nf((char_u *)buf);
 	++xt_index_out;
     }
@@ -6447,14 +6446,9 @@ got_code_from_term(char_u *code, int len)
 		break;
 	    }
 	}
-# ifdef DEBUG_TERMRESPONSE
-	{
-	    char buf[100];
 
-	    sprintf(buf, "Received XT %d: %s", xt_index_in, (char *)name);
-	    log_tr(buf);
-	}
-# endif
+	LOG_TR(("Received XT %d: %s", xt_index_in, (char *)name));
+
 	if (key_names[i] != NULL)
 	{
 	    for (i = 8; (c = hexhex2nr(code + i)) >= 0; i += 2)
@@ -6655,26 +6649,38 @@ update_tcap(int attr)
 }
 
 # ifdef FEAT_TERMGUICOLORS
+#  define KSSIZE 20
 struct ks_tbl_s
 {
-    int  code;	    /* value of KS_ */
-    char *vtp;	    /* code in vtp mode */
-    char *buf;	    /* buffer in non-vtp mode */
-    char *vbuf;	    /* buffer in vtp mode */
+    int  code;		/* value of KS_ */
+    char *vtp;		/* code in vtp mode */
+    char *vtp2;		/* code in vtp2 mode */
+    char buf[KSSIZE];   /* save buffer in non-vtp mode */
+    char vbuf[KSSIZE];  /* save buffer in vtp mode */
+    char v2buf[KSSIZE]; /* save buffer in vtp2 mode */
+    char arr[KSSIZE];   /* real buffer */
 };
 
 static struct ks_tbl_s ks_tbl[] =
 {
-    {(int)KS_ME,  "\033|0m" },	/* normal */
-    {(int)KS_MR,  "\033|7m" },	/* reverse */
-    {(int)KS_MD,  "\033|1m" },	/* bold */
-    {(int)KS_SO,  "\033|91m"},	/* standout: bright red text */
-    {(int)KS_SE,  "\033|39m"},	/* standout end: default color */
-    {(int)KS_CZH, "\033|95m"},	/* italic: bright magenta text */
-    {(int)KS_CZR, "\033|0m",},	/* italic end */
-    {(int)KS_US,  "\033|4m",},	/* underscore */
-    {(int)KS_UE,  "\033|24m"},	/* underscore end */
-    {(int)KS_NAME, NULL}
+    {(int)KS_ME,  "\033|0m",  "\033|0m"},   /* normal */
+    {(int)KS_MR,  "\033|7m",  "\033|7m"},   /* reverse */
+    {(int)KS_MD,  "\033|1m",  "\033|1m"},   /* bold */
+    {(int)KS_SO,  "\033|91m", "\033|91m"},  /* standout: bright red text */
+    {(int)KS_SE,  "\033|39m", "\033|39m"},  /* standout end: default color */
+    {(int)KS_CZH, "\033|95m", "\033|95m"},  /* italic: bright magenta text */
+    {(int)KS_CZR, "\033|0m",  "\033|0m"},   /* italic end */
+    {(int)KS_US,  "\033|4m",  "\033|4m"},   /* underscore */
+    {(int)KS_UE,  "\033|24m", "\033|24m"},  /* underscore end */
+#  ifdef TERMINFO
+    {(int)KS_CAB, "\033|%p1%db", "\033|%p14%dm"}, /* set background color */
+    {(int)KS_CAF, "\033|%p1%df", "\033|%p13%dm"}, /* set foreground color */
+#  else
+    {(int)KS_CAB, "\033|%db", "\033|4%dm"}, /* set background color */
+    {(int)KS_CAF, "\033|%df", "\033|3%dm"}, /* set foreground color */
+#  endif
+    {(int)KS_CCO, "16", "256"},     /* colors */
+    {(int)KS_NAME}		    /* terminator */
 };
 
     static struct builtin_term *
@@ -6699,57 +6705,85 @@ swap_tcap(void)
 {
 # ifdef FEAT_TERMGUICOLORS
     static int		init_done = FALSE;
-    static int		last_tgc;
+    static int		curr_mode;
     struct ks_tbl_s	*ks;
     struct builtin_term *bt;
+    int			mode;
+    enum
+    {
+	CMODEINDEX,
+	CMODE24,
+	CMODE256
+    };
 
     /* buffer initialization */
     if (!init_done)
     {
-	for (ks = ks_tbl; ks->vtp != NULL; ks++)
+	for (ks = ks_tbl; ks->code != (int)KS_NAME; ks++)
 	{
 	    bt = find_first_tcap(DEFAULT_TERM, ks->code);
 	    if (bt != NULL)
 	    {
-		ks->buf = bt->bt_string;
-		ks->vbuf = ks->vtp;
+		STRNCPY(ks->buf, bt->bt_string, KSSIZE);
+		STRNCPY(ks->vbuf, ks->vtp, KSSIZE);
+		STRNCPY(ks->v2buf, ks->vtp2, KSSIZE);
+
+		STRNCPY(ks->arr, bt->bt_string, KSSIZE);
+		bt->bt_string = &ks->arr[0];
 	    }
 	}
 	init_done = TRUE;
-	last_tgc = p_tgc;
-	return;
+	curr_mode = CMODEINDEX;
     }
 
-    if (last_tgc != p_tgc)
+    if (p_tgc)
+	mode = CMODE24;
+    else if (t_colors >= 256)
+	mode = CMODE256;
+    else
+	mode = CMODEINDEX;
+
+    for (ks = ks_tbl; ks->code != (int)KS_NAME; ks++)
     {
-	if (p_tgc)
+	bt = find_first_tcap(DEFAULT_TERM, ks->code);
+	if (bt != NULL)
 	{
-	    /* switch to special character sequence */
-	    for (ks = ks_tbl; ks->vtp != NULL; ks++)
+	    switch (curr_mode)
 	    {
-		bt = find_first_tcap(DEFAULT_TERM, ks->code);
-		if (bt != NULL)
-		{
-		    ks->buf = bt->bt_string;
-		    bt->bt_string = ks->vbuf;
-		}
+	    case CMODEINDEX:
+		STRNCPY(&ks->buf[0], bt->bt_string, KSSIZE);
+		break;
+	    case CMODE24:
+		STRNCPY(&ks->vbuf[0], bt->bt_string, KSSIZE);
+		break;
+	    default:
+		STRNCPY(&ks->v2buf[0], bt->bt_string, KSSIZE);
 	    }
 	}
-	else
+    }
+
+    if (mode != curr_mode)
+    {
+	for (ks = ks_tbl; ks->code != (int)KS_NAME; ks++)
 	{
-	    /* switch to index color */
-	    for (ks = ks_tbl; ks->vtp != NULL; ks++)
+	    bt = find_first_tcap(DEFAULT_TERM, ks->code);
+	    if (bt != NULL)
 	    {
-		bt = find_first_tcap(DEFAULT_TERM, ks->code);
-		if (bt != NULL)
+		switch (mode)
 		{
-		    ks->vbuf = bt->bt_string;
-		    bt->bt_string = ks->buf;
+		case CMODEINDEX:
+		    STRNCPY(bt->bt_string, &ks->buf[0], KSSIZE);
+		    break;
+		case CMODE24:
+		    STRNCPY(bt->bt_string, &ks->vbuf[0], KSSIZE);
+		    break;
+		default:
+		    STRNCPY(bt->bt_string, &ks->v2buf[0], KSSIZE);
 		}
 	    }
 	}
 
-	last_tgc = p_tgc;
+	curr_mode = mode;
     }
 # endif
 }
@@ -6933,5 +6967,83 @@ gui_get_rgb_color_cmn(int r, int g, int b)
     if (color > 0xffffff)
 	return INVALCOLOR;
     return color;
+}
+#endif
+
+#if (defined(WIN3264) && !defined(FEAT_GUI_W32)) || defined(FEAT_TERMINAL) \
+	|| defined(PROTO)
+static int cube_value[] = {
+    0x00, 0x5F, 0x87, 0xAF, 0xD7, 0xFF
+};
+
+static int grey_ramp[] = {
+    0x08, 0x12, 0x1C, 0x26, 0x30, 0x3A, 0x44, 0x4E, 0x58, 0x62, 0x6C, 0x76,
+    0x80, 0x8A, 0x94, 0x9E, 0xA8, 0xB2, 0xBC, 0xC6, 0xD0, 0xDA, 0xE4, 0xEE
+};
+
+# ifdef FEAT_TERMINAL
+#  include "libvterm/include/vterm.h"  // for VTERM_ANSI_INDEX_NONE
+# else
+#  define VTERM_ANSI_INDEX_NONE 0
+# endif
+
+static uint8_t ansi_table[16][4] = {
+//   R    G    B   idx
+  {  0,   0,   0,  1}, // black
+  {224,   0,   0,  2}, // dark red
+  {  0, 224,   0,  3}, // dark green
+  {224, 224,   0,  4}, // dark yellow / brown
+  {  0,   0, 224,  5}, // dark blue
+  {224,   0, 224,  6}, // dark magenta
+  {  0, 224, 224,  7}, // dark cyan
+  {224, 224, 224,  8}, // light grey
+
+  {128, 128, 128,  9}, // dark grey
+  {255,  64,  64, 10}, // light red
+  { 64, 255,  64, 11}, // light green
+  {255, 255,  64, 12}, // yellow
+  { 64,  64, 255, 13}, // light blue
+  {255,  64, 255, 14}, // light magenta
+  { 64, 255, 255, 15}, // light cyan
+  {255, 255, 255, 16}, // white
+};
+
+    void
+cterm_color2rgb(int nr, uint8_t *r, uint8_t *g, uint8_t *b, uint8_t *ansi_idx)
+{
+    int idx;
+
+    if (nr < 16)
+    {
+	*r = ansi_table[nr][0];
+	*g = ansi_table[nr][1];
+	*b = ansi_table[nr][2];
+	*ansi_idx = ansi_table[nr][3];
+    }
+    else if (nr < 232)
+    {
+	/* 216 color cube */
+	idx = nr - 16;
+	*r = cube_value[idx / 36 % 6];
+	*g = cube_value[idx / 6  % 6];
+	*b = cube_value[idx      % 6];
+	*ansi_idx = VTERM_ANSI_INDEX_NONE;
+    }
+    else if (nr < 256)
+    {
+	/* 24 grey scale ramp */
+	idx = nr - 232;
+	*r = grey_ramp[idx];
+	*g = grey_ramp[idx];
+	*b = grey_ramp[idx];
+	*ansi_idx = VTERM_ANSI_INDEX_NONE;
+    }
+    else
+    {
+	*r = 0;
+	*g = 0;
+	*b = 0;
+	*ansi_idx = 0;
+    }
 }
 #endif

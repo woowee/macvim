@@ -1383,7 +1383,7 @@ doESCkey:
 		goto doESCkey;
 	    }
 #endif
-	    if (ins_eol(c) && !p_im)
+	    if (ins_eol(c) == FAIL && !p_im)
 		goto doESCkey;	    /* out of memory */
 	    auto_format(FALSE, FALSE);
 	    inserted_space = FALSE;
@@ -3665,7 +3665,9 @@ ins_compl_set_original_text(char_u *str)
 {
     char_u	*p;
 
-    /* Replace the original text entry. */
+    /* Replace the original text entry.
+     * The ORIGINAL_TEXT flag is either at the first item or might possibly be
+     * at the last item for backward completion */
     if (compl_first_match->cp_flags & ORIGINAL_TEXT)	/* safety check */
     {
 	p = vim_strsave(str);
@@ -3674,6 +3676,16 @@ ins_compl_set_original_text(char_u *str)
 	    vim_free(compl_first_match->cp_str);
 	    compl_first_match->cp_str = p;
 	}
+    }
+    else if (compl_first_match->cp_prev != NULL
+	    && (compl_first_match->cp_prev->cp_flags & ORIGINAL_TEXT))
+    {
+       p = vim_strsave(str);
+       if (p != NULL)
+       {
+           vim_free(compl_first_match->cp_prev->cp_str);
+           compl_first_match->cp_prev->cp_str = p;
+       }
     }
 }
 
@@ -10226,7 +10238,7 @@ ins_tab(void)
 
 /*
  * Handle CR or NL in insert mode.
- * Return TRUE when out of memory or can't undo.
+ * Return FAIL when out of memory or can't undo.
  */
     static int
 ins_eol(int c)
@@ -10234,9 +10246,9 @@ ins_eol(int c)
     int	    i;
 
     if (echeck_abbr(c + ABBR_OFF))
-	return FALSE;
+	return OK;
     if (stop_arrow() == FAIL)
-	return TRUE;
+	return FAIL;
     undisplay_dollar();
 
     /*
@@ -10291,7 +10303,7 @@ ins_eol(int c)
     foldOpenCursor();
 #endif
 
-    return (!i);
+    return i;
 }
 
 #ifdef FEAT_DIGRAPHS

@@ -954,8 +954,11 @@ readfile(
 
 		if (mch_stat((char *)swap_fname, &swap_st) >= 0
 			&& st.st_gid != swap_st.st_gid
+# ifdef HAVE_FCHOWN
 			&& fchown(curbuf->b_ml.ml_mfp->mf_fd, -1, st.st_gid)
-									 == -1)
+# endif
+									  == -1
+		   )
 		    swap_mode &= 0600;
 	    }
 
@@ -1459,28 +1462,42 @@ retry:
 	 * The amount is limited by the fact that read() only can read
 	 * upto max_unsigned characters (and other things).
 	 */
+	if (!skip_read)
+	{
+#if VIM_SIZEOF_INT > 2
+# if defined(SSIZE_MAX) && (SSIZE_MAX < 0x10000L)
+		size = SSIZE_MAX;		    /* use max I/O size, 52K */
+# else
+		/* Use buffer >= 64K.  Add linerest to double the size if the
+		 * line gets very long, to avoid a lot of copying. But don't
+		 * read more than 1 Mbyte at a time, so we can be interrupted.
+		 */
+		size = 0x10000L + linerest;
+		if (size > 0x100000L)
+		    size = 0x100000L;
+# endif
+#else
+		size = 0x7ff0L - linerest;	    /* limit buffer to 32K */
+#endif
+	}
+
+	/* Protect against the argument of lalloc() going negative. */
+	if (
 #if VIM_SIZEOF_INT <= 2
-	if (linerest >= 0x7ff0)
+	    linerest >= 0x7ff0
+#else
+	    size < 0 || size + linerest + 1 < 0 || linerest >= MAXCOL
+#endif
+	   )
 	{
 	    ++split;
 	    *ptr = NL;		    /* split line by inserting a NL */
 	    size = 1;
 	}
 	else
-#endif
 	{
 	    if (!skip_read)
 	    {
-#if VIM_SIZEOF_INT > 2
-# if defined(SSIZE_MAX) && (SSIZE_MAX < 0x10000L)
-		size = SSIZE_MAX;		    /* use max I/O size, 52K */
-# else
-		size = 0x10000L;		    /* use buffer >= 64K */
-# endif
-#else
-		size = 0x7ff0L - linerest;	    /* limit buffer to 32K */
-#endif
-
 		for ( ; size >= 10; size = (long)((long_u)size >> 1))
 		{
 		    if ((new_buffer = lalloc((long_u)(size + linerest + 1),
@@ -1642,7 +1659,7 @@ retry:
 
 			/* If the crypt layer is buffering, not producing
 			 * anything yet, need to read more. */
-			if (size > 0 && decrypted_size == 0)
+			if (decrypted_size == 0)
 			    continue;
 
 			if (linerest == 0)
@@ -3032,22 +3049,22 @@ readfile_linenr(
     int
 prep_exarg(exarg_T *eap, buf_T *buf)
 {
-    eap->cmd = alloc((unsigned)(STRLEN(buf->b_p_ff)
+    eap->cmd = alloc(15
 #ifdef FEAT_MBYTE
-		+ STRLEN(buf->b_p_fenc)
+		+ (unsigned)STRLEN(buf->b_p_fenc)
 #endif
-						 + 15));
+	    );
     if (eap->cmd == NULL)
 	return FAIL;
 
 #ifdef FEAT_MBYTE
-    sprintf((char *)eap->cmd, "e ++ff=%s ++enc=%s", buf->b_p_ff, buf->b_p_fenc);
-    eap->force_enc = 14 + (int)STRLEN(buf->b_p_ff);
+    sprintf((char *)eap->cmd, "e ++enc=%s", buf->b_p_fenc);
+    eap->force_enc = 8;
     eap->bad_char = buf->b_bad_char;
 #else
-    sprintf((char *)eap->cmd, "e ++ff=%s", buf->b_p_ff);
+    sprintf((char *)eap->cmd, "e");
 #endif
-    eap->force_ff = 7;
+    eap->force_ff = *buf->b_p_ff;
 
     eap->force_bin = buf->b_p_bin ? FORCE_BIN : FORCE_NOBIN;
     eap->read_edit = FALSE;
@@ -5572,7 +5589,7 @@ msg_add_lines(
 	*p++ = ' ';
     if (shortmess(SHM_LINES))
 	vim_snprintf((char *)p, IOSIZE - (p - IObuff),
-		"%ldL, %lldC", lnum, (varnumber_T)nchars);
+		"%ldL, %lldC", lnum, (long long)nchars);
     else
     {
 	if (lnum == 1)
@@ -5584,7 +5601,7 @@ msg_add_lines(
 	    STRCPY(p, _("1 character"));
 	else
 	    vim_snprintf((char *)p, IOSIZE - (p - IObuff),
-		    _("%lld characters"), (varnumber_T)nchars);
+		    _("%lld characters"), (long long)nchars);
     }
 }
 
@@ -6403,7 +6420,7 @@ shorten_fname(char_u *full_path, char_u *dir_name)
 }
 
 /*
- * Shorten filenames for all buffers.
+ * Shorten filename of a buffer.
  * When "force" is TRUE: Use full path from now on for files currently being
  * edited, both for file name and swap file name.  Try to shorten the file
  * names a bit, if safe to do so.
@@ -6412,34 +6429,44 @@ shorten_fname(char_u *full_path, char_u *dir_name)
  * name.
  */
     void
+shorten_buf_fname(buf_T *buf, char_u *dirname, int force)
+{
+    char_u	*p;
+
+    if (buf->b_fname != NULL
+#ifdef FEAT_QUICKFIX
+	    && !bt_nofile(buf)
+#endif
+	    && !path_with_url(buf->b_fname)
+	    && (force
+		|| buf->b_sfname == NULL
+		|| mch_isFullName(buf->b_sfname)))
+    {
+	VIM_CLEAR(buf->b_sfname);
+	p = shorten_fname(buf->b_ffname, dirname);
+	if (p != NULL)
+	{
+	    buf->b_sfname = vim_strsave(p);
+	    buf->b_fname = buf->b_sfname;
+	}
+	if (p == NULL || buf->b_fname == NULL)
+	    buf->b_fname = buf->b_ffname;
+    }
+}
+
+/*
+ * Shorten filenames for all buffers.
+ */
+    void
 shorten_fnames(int force)
 {
     char_u	dirname[MAXPATHL];
     buf_T	*buf;
-    char_u	*p;
 
     mch_dirname(dirname, MAXPATHL);
     FOR_ALL_BUFFERS(buf)
     {
-	if (buf->b_fname != NULL
-#ifdef FEAT_QUICKFIX
-		&& !bt_nofile(buf)
-#endif
-		&& !path_with_url(buf->b_fname)
-		&& (force
-		    || buf->b_sfname == NULL
-		    || mch_isFullName(buf->b_sfname)))
-	{
-	    VIM_CLEAR(buf->b_sfname);
-	    p = shorten_fname(buf->b_ffname, dirname);
-	    if (p != NULL)
-	    {
-		buf->b_sfname = vim_strsave(p);
-		buf->b_fname = buf->b_sfname;
-	    }
-	    if (p == NULL || buf->b_fname == NULL)
-		buf->b_fname = buf->b_ffname;
-	}
+	shorten_buf_fname(buf, dirname, force);
 
 	/* Always make the swap file name a full path, a "nofile" buffer may
 	 * also have a swap file. */
@@ -8008,6 +8035,7 @@ static struct event_name
     {"CmdwinLeave",	EVENT_CMDWINLEAVE},
     {"CmdUndefined",	EVENT_CMDUNDEFINED},
     {"ColorScheme",	EVENT_COLORSCHEME},
+    {"ColorSchemePre",	EVENT_COLORSCHEMEPRE},
     {"CompleteDone",	EVENT_COMPLETEDONE},
     {"CursorHold",	EVENT_CURSORHOLD},
     {"CursorHoldI",	EVENT_CURSORHOLDI},
@@ -9753,7 +9781,8 @@ apply_autocmds_group(
      */
     if (fname_io == NULL)
     {
-	if (event == EVENT_COLORSCHEME || event == EVENT_OPTIONSET)
+	if (event == EVENT_COLORSCHEME || event == EVENT_COLORSCHEMEPRE
+						   || event == EVENT_OPTIONSET)
 	    autocmd_fname = NULL;
 	else if (fname != NULL && !ends_excmd(*fname))
 	    autocmd_fname = fname;
@@ -9812,15 +9841,25 @@ apply_autocmds_group(
 	 * ColorScheme, QuickFixCmd* or DirChanged */
 	if (event == EVENT_FILETYPE
 		|| event == EVENT_SYNTAX
+		|| event == EVENT_CMDLINECHANGED
+		|| event == EVENT_CMDLINEENTER
+		|| event == EVENT_CMDLINELEAVE
+		|| event == EVENT_CMDWINENTER
+		|| event == EVENT_CMDWINLEAVE
+		|| event == EVENT_CMDUNDEFINED
 		|| event == EVENT_FUNCUNDEFINED
 		|| event == EVENT_REMOTEREPLY
 		|| event == EVENT_SPELLFILEMISSING
 		|| event == EVENT_QUICKFIXCMDPRE
 		|| event == EVENT_COLORSCHEME
+		|| event == EVENT_COLORSCHEMEPRE
 		|| event == EVENT_OPTIONSET
 		|| event == EVENT_QUICKFIXCMDPOST
 		|| event == EVENT_DIRCHANGED)
+	{
 	    fname = vim_strsave(fname);
+	    autocmd_fname_full = TRUE; /* don't expand it later */
+	}
 	else
 	    fname = FullName_save(fname, FALSE);
     }

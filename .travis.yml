@@ -4,14 +4,14 @@ dist: trusty
 os:
   - osx
 
-osx_image: xcode9.2
+osx_image: xcode9.3
 
 compiler:
   - clang
 
 env:
   - MACOSX_DEPLOYMENT_TARGET=10.9
-    VERSIONER_PERL_VERSION=5.16
+    VERSIONER_PERL_VERSION=5.18
     VERSIONER_PYTHON_VERSION=2.7
     LUA_INC=/lua5.1
     LUA52_INC=/lua5.3

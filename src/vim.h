@@ -793,7 +793,8 @@ extern int (*dyn_libintl_putenv)(const char *envstring);
 #define EXPAND_PACKADD		45
 #define EXPAND_MESSAGES		46
 #define EXPAND_MAPCLEAR		47
-#define EXPAND_MACACTION	48
+#define EXPAND_ARGLIST		48
+#define EXPAND_MACACTION	49
 
 /* Values for exmode_active (0 is no exmode) */
 #define EXMODE_NORMAL		1
@@ -1292,6 +1293,7 @@ enum auto_event
     EVENT_CMDWINENTER,		/* after entering the cmdline window */
     EVENT_CMDWINLEAVE,		/* before leaving the cmdline window */
     EVENT_COLORSCHEME,		/* after loading a colorscheme */
+    EVENT_COLORSCHEMEPRE,	/* before loading a colorscheme */
     EVENT_COMPLETEDONE,		/* after finishing insert complete */
     EVENT_CURSORHOLD,		/* cursor in same position for a while */
     EVENT_CURSORHOLDI,		/* idem, in Insert mode */
@@ -2100,6 +2102,10 @@ typedef struct _stat64 stat_T;
 typedef struct stat stat_T;
 #endif
 
+#if defined(__GNUC__) && !defined(__MINGW32__)
+# define USE_PRINTF_FORMAT_ATTRIBUTE
+#endif
+
 typedef enum
 {
     ASSERT_EQUAL,
@@ -2165,8 +2171,9 @@ typedef enum {
 # define number_width(x) 7
 #endif
 
-/* This must come after including proto.h */
-#if !(defined(FEAT_MBYTE) && defined(WIN3264))
+/* This must come after including proto.h.
+ * For VMS this is defined in macros.h. */
+#if !(defined(FEAT_MBYTE) && defined(WIN3264)) && !defined(VMS)
 # define mch_open(n, m, p)	open((n), (m), (p))
 # define mch_fopen(n, p)	fopen((n), (p))
 #endif
@@ -2196,16 +2203,16 @@ typedef enum {
 #ifdef FEAT_BROWSE
 # ifdef BACKSLASH_IN_FILENAME
 #  define BROWSE_FILTER_MACROS \
-	(char_u *)"Vim macro files (*.vim)\t*.vim\nAll Files (*.*)\t*.*\n"
-#  define BROWSE_FILTER_ALL_FILES (char_u *)"All Files (*.*)\t*.*\n"
+	(char_u *)N_("Vim macro files (*.vim)\t*.vim\nAll Files (*.*)\t*.*\n")
+#  define BROWSE_FILTER_ALL_FILES (char_u *)N_("All Files (*.*)\t*.*\n")
 #  define BROWSE_FILTER_DEFAULT \
-	(char_u *)"All Files (*.*)\t*.*\nC source (*.c, *.h)\t*.c;*.h\nC++ source (*.cpp, *.hpp)\t*.cpp;*.hpp\nVB code (*.bas, *.frm)\t*.bas;*.frm\nVim files (*.vim, _vimrc, _gvimrc)\t*.vim;_vimrc;_gvimrc\n"
+	(char_u *)N_("All Files (*.*)\t*.*\nC source (*.c, *.h)\t*.c;*.h\nC++ source (*.cpp, *.hpp)\t*.cpp;*.hpp\nVB code (*.bas, *.frm)\t*.bas;*.frm\nVim files (*.vim, _vimrc, _gvimrc)\t*.vim;_vimrc;_gvimrc\n")
 # else
 #  define BROWSE_FILTER_MACROS \
-	(char_u *)"Vim macro files (*.vim)\t*.vim\nAll Files (*)\t*\n"
-#  define BROWSE_FILTER_ALL_FILES (char_u *)"All Files (*)\t*\n"
+	(char_u *)N_("Vim macro files (*.vim)\t*.vim\nAll Files (*)\t*\n")
+#  define BROWSE_FILTER_ALL_FILES (char_u *)N_("All Files (*)\t*\n")
 #  define BROWSE_FILTER_DEFAULT \
-	(char_u *)"All Files (*)\t*\nC source (*.c, *.h)\t*.c;*.h\nC++ source (*.cpp, *.hpp)\t*.cpp;*.hpp\nVim files (*.vim, _vimrc, _gvimrc)\t*.vim;_vimrc;_gvimrc\n"
+	(char_u *)N_("All Files (*)\t*\nC source (*.c, *.h)\t*.c;*.h\nC++ source (*.cpp, *.hpp)\t*.cpp;*.hpp\nVim files (*.vim, _vimrc, _gvimrc)\t*.vim;_vimrc;_gvimrc\n")
 # endif
 # define BROWSE_SAVE 1	    /* flag for do_browse() */
 # define BROWSE_DIR 2	    /* flag for do_browse() */
@@ -2467,12 +2474,6 @@ typedef enum {
 
 /* Character used as separated in autoload function/variable names. */
 #define AUTOLOAD_CHAR '#'
-
-#ifdef FEAT_EVAL
-# define SET_NO_HLSEARCH(flag) no_hlsearch = (flag); set_vim_var_nr(VV_HLSEARCH, !no_hlsearch && p_hls)
-#else
-# define SET_NO_HLSEARCH(flag) no_hlsearch = (flag)
-#endif
 
 #ifdef FEAT_JOB_CHANNEL
 # define MAX_OPEN_CHANNELS 10

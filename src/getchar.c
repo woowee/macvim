@@ -2059,7 +2059,7 @@ vgetorpeek(int advance)
 		    c = inchar(typebuf.tb_buf, typebuf.tb_buflen - 1, 0L);
 		    /*
 		     * If inchar() returns TRUE (script file was active) or we
-		     * are inside a mapping, get out of insert mode.
+		     * are inside a mapping, get out of Insert mode.
 		     * Otherwise we behave like having gotten a CTRL-C.
 		     * As a result typing CTRL-C in insert mode will
 		     * really insert a CTRL-C.
@@ -2755,6 +2755,10 @@ vgetorpeek(int advance)
 		     * cmdline window. */
 		    if (p_im && (State & INSERT))
 			c = Ctrl_L;
+#ifdef FEAT_TERMINAL
+		    else if (terminal_is_active())
+			c = K_CANCEL;
+#endif
 		    else if ((State & CMDLINE)
 #ifdef FEAT_CMDWIN
 			    || (cmdwin_type > 0 && tc == ESC)
@@ -2898,8 +2902,8 @@ vgetorpeek(int advance)
 	    }	    /* for (;;) */
 	}	/* if (!character from stuffbuf) */
 
-			/* if advance is FALSE don't loop on NULs */
-    } while (c < 0 || (advance && c == NUL));
+	/* if advance is FALSE don't loop on NULs */
+    } while ((c < 0 && c != K_CANCEL) || (advance && c == NUL));
 
     /*
      * The "INSERT" message is taken care of here:
@@ -4119,7 +4123,7 @@ map_to_exists_mode(char_u *rhs, int mode, int abbr)
     mapblock_T	*mp;
     int		hash;
 # ifdef FEAT_LOCALMAP
-    int		expand_buffer = FALSE;
+    int		exp_buffer = FALSE;
 
     validate_maphash();
 
@@ -4134,14 +4138,14 @@ map_to_exists_mode(char_u *rhs, int mode, int abbr)
 		if (hash > 0)		/* there is only one abbr list */
 		    break;
 #ifdef FEAT_LOCALMAP
-		if (expand_buffer)
+		if (exp_buffer)
 		    mp = curbuf->b_first_abbr;
 		else
 #endif
 		    mp = first_abbr;
 	    }
 # ifdef FEAT_LOCALMAP
-	    else if (expand_buffer)
+	    else if (exp_buffer)
 		mp = curbuf->b_maphash[hash];
 # endif
 	    else
@@ -4154,9 +4158,9 @@ map_to_exists_mode(char_u *rhs, int mode, int abbr)
 	    }
 	}
 # ifdef FEAT_LOCALMAP
-	if (expand_buffer)
+	if (exp_buffer)
 	    break;
-	expand_buffer = TRUE;
+	exp_buffer = TRUE;
     }
 # endif
 
