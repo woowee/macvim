@@ -385,7 +385,7 @@ static long	p_wm;
 static char_u	*p_keymap;
 #endif
 #ifdef FEAT_TERMINAL
-static long	p_twsl;
+static long	p_twsl;		/* 'termwinscroll' */
 #endif
 
 /* Saved values for when 'bin' is set. */
@@ -2865,36 +2865,6 @@ static struct vimoption options[] =
 			    {(char_u *)FALSE, (char_u *)FALSE}
 #endif
 			    SCRIPTID_INIT},
-    /* TODO: remove this deprecated entry */
-    {"terminalscroll", "tlsl", P_NUM|P_VI_DEF|P_VIM|P_RBUF,
-#ifdef FEAT_TERMINAL
-			    (char_u *)&p_twsl, PV_TWSL,
-			    {(char_u *)10000L, (char_u *)10000L}
-#else
-			    (char_u *)NULL, PV_NONE,
-			    {(char_u *)NULL, (char_u *)0L}
-#endif
-			    SCRIPTID_INIT},
-    /* TODO: remove this deprecated entry */
-    {"termkey",	    "tk",   P_STRING|P_ALLOCED|P_RWIN|P_VI_DEF,
-#ifdef FEAT_TERMINAL
-			    (char_u *)VAR_WIN, PV_TWK,
-			    {(char_u *)"", (char_u *)NULL}
-#else
-			    (char_u *)NULL, PV_NONE,
-			    {(char_u *)NULL, (char_u *)0L}
-#endif
-			    SCRIPTID_INIT},
-    /* TODO: remove this deprecated entry */
-    {"termsize", "tms",	    P_STRING|P_ALLOCED|P_RWIN|P_VI_DEF,
-#ifdef FEAT_TERMINAL
-			    (char_u *)VAR_WIN, PV_TWS,
-			    {(char_u *)"", (char_u *)NULL}
-#else
-			    (char_u *)NULL, PV_NONE,
-			    {(char_u *)NULL, (char_u *)0L}
-#endif
-			    SCRIPTID_INIT},
     {"termwinkey", "twk",   P_STRING|P_ALLOCED|P_RWIN|P_VI_DEF,
 #ifdef FEAT_TERMINAL
 			    (char_u *)VAR_WIN, PV_TWK,
@@ -3381,7 +3351,7 @@ static char *(p_bsdir_values[]) = {"current", "last", "buffer", NULL};
 static char *(p_scbopt_values[]) = {"ver", "hor", "jump", NULL};
 static char *(p_debug_values[]) = {"msg", "throw", "beep", NULL};
 static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
-static char *(p_buftype_values[]) = {"nofile", "nowrite", "quickfix", "help", "terminal", "acwrite", NULL};
+static char *(p_buftype_values[]) = {"nofile", "nowrite", "quickfix", "help", "terminal", "acwrite", "prompt", NULL};
 static char *(p_bufhidden_values[]) = {"hide", "unload", "delete", "wipe", NULL};
 static char *(p_bs_values[]) = {"indent", "eol", "start", NULL};
 #ifdef FEAT_FOLDING
@@ -3407,9 +3377,6 @@ static void did_set_option(int opt_idx, int opt_flags, int new_value);
 static char_u *illegal_char(char_u *, int);
 #ifdef FEAT_CMDWIN
 static char_u *check_cedit(void);
-#endif
-#ifdef FEAT_TITLE
-static void did_set_title(int icon);
 #endif
 static char_u *option_expand(int opt_idx, char_u *val);
 static void didset_options(void);
@@ -3948,23 +3915,17 @@ set_option_default(
 	dvi = ((flags & P_VI_DEF) || compatible) ? VI_DEFAULT : VIM_DEFAULT;
 	if (flags & P_STRING)
 	{
-	    /* skip 'termkey' and 'termsize, they are duplicates of
-	     * 'termwinkey' and 'termwinsize' */
-	    if (STRCMP(options[opt_idx].fullname, "termkey") != 0
-		    && STRCMP(options[opt_idx].fullname, "termsize") != 0)
+	    /* Use set_string_option_direct() for local options to handle
+	     * freeing and allocating the value. */
+	    if (options[opt_idx].indir != PV_NONE)
+		set_string_option_direct(NULL, opt_idx,
+				 options[opt_idx].def_val[dvi], opt_flags, 0);
+	    else
 	    {
-		/* Use set_string_option_direct() for local options to handle
-		 * freeing and allocating the value. */
-		if (options[opt_idx].indir != PV_NONE)
-		    set_string_option_direct(NULL, opt_idx,
-				     options[opt_idx].def_val[dvi], opt_flags, 0);
-		else
-		{
-		    if ((opt_flags & OPT_FREE) && (flags & P_ALLOCED))
-			free_string_option(*(char_u **)(varp));
-		    *(char_u **)varp = options[opt_idx].def_val[dvi];
-		    options[opt_idx].flags &= ~P_ALLOCED;
-		}
+		if ((opt_flags & OPT_FREE) && (flags & P_ALLOCED))
+		    free_string_option(*(char_u **)(varp));
+		*(char_u **)varp = options[opt_idx].def_val[dvi];
+		options[opt_idx].flags &= ~P_ALLOCED;
 	    }
 	}
 	else if (flags & P_NUM)
@@ -5553,27 +5514,14 @@ check_cedit(void)
  * the old value back.
  */
     static void
-did_set_title(
-    int	    icon)	    /* Did set icon instead of title */
+did_set_title(void)
 {
     if (starting != NO_SCREEN
 #ifdef FEAT_GUI
 	    && !gui.starting
 #endif
 				)
-    {
 	maketitle();
-	if (icon)
-	{
-	    if (!p_icon)
-		mch_restore_title(2);
-	}
-	else
-	{
-	    if (!p_title)
-		mch_restore_title(1);
-	}
-    }
 }
 #endif
 
@@ -6233,7 +6181,7 @@ did_set_string_option(
     /* set when changing an option that only requires a redraw in the GUI */
     int		redraw_gui_only = FALSE;
 #endif
-    int		ft_changed = FALSE;
+    int		value_changed = FALSE;
 #if defined(FEAT_VTP) && defined(FEAT_TERMGUICOLORS)
     int		did_swaptcap = FALSE;
 #endif
@@ -7142,8 +7090,7 @@ did_set_string_option(
 	else
 	    stl_syntax &= ~flagval;
 # endif
-	did_set_title(varp == &p_iconstring);
-
+	did_set_title();
     }
 #endif
 
@@ -7657,7 +7604,7 @@ did_set_string_option(
 	if (!valid_filetype(*varp))
 	    errmsg = e_invarg;
 	else
-	    ft_changed = STRCMP(oldval, *varp) != 0;
+	    value_changed = STRCMP(oldval, *varp) != 0;
     }
 
 #ifdef FEAT_SYN_HL
@@ -7665,6 +7612,8 @@ did_set_string_option(
     {
 	if (!valid_filetype(*varp))
 	    errmsg = e_invarg;
+	else
+	    value_changed = STRCMP(oldval, *varp) != 0;
     }
 #endif
 
@@ -7785,8 +7734,14 @@ did_set_string_option(
 	/* When 'syntax' is set, load the syntax of that name */
 	if (varp == &(curbuf->b_p_syn))
 	{
-	    apply_autocmds(EVENT_SYNTAX, curbuf->b_p_syn,
-					       curbuf->b_fname, TRUE, curbuf);
+	    static int syn_recursive = 0;
+
+	    ++syn_recursive;
+	    // Only pass TRUE for "force" when the value changed or not used
+	    // recursively, to avoid endless recurrence.
+	    apply_autocmds(EVENT_SYNTAX, curbuf->b_p_syn, curbuf->b_fname,
+		    value_changed || syn_recursive == 1, curbuf);
+	    --syn_recursive;
 	}
 #endif
 	else if (varp == &(curbuf->b_p_ft))
@@ -7794,11 +7749,17 @@ did_set_string_option(
 	    /* 'filetype' is set, trigger the FileType autocommand.
 	     * Skip this when called from a modeline and the filetype was
 	     * already set to this value. */
-	    if (!(opt_flags & OPT_MODELINE) || ft_changed)
+	    if (!(opt_flags & OPT_MODELINE) || value_changed)
 	    {
+		static int ft_recursive = 0;
+
+		++ft_recursive;
 		did_filetype = TRUE;
-		apply_autocmds(EVENT_FILETYPE, curbuf->b_p_ft,
-					       curbuf->b_fname, TRUE, curbuf);
+		// Only pass TRUE for "force" when the value changed or not
+		// used recursively, to avoid endless recurrence.
+		apply_autocmds(EVENT_FILETYPE, curbuf->b_p_ft, curbuf->b_fname,
+				   value_changed || ft_recursive == 1, curbuf);
+		--ft_recursive;
 		/* Just in case the old "curbuf" is now invalid. */
 		if (varp != &(curbuf->b_p_ft))
 		    varp = NULL;
@@ -8653,14 +8614,9 @@ set_bool_option(
 
 #ifdef FEAT_TITLE
     /* when 'title' changed, may need to change the title; same for 'icon' */
-    else if ((int *)varp == &p_title)
+    else if ((int *)varp == &p_title || (int *)varp == &p_icon)
     {
-	did_set_title(FALSE);
-    }
-
-    else if ((int *)varp == &p_icon)
-    {
-	did_set_title(TRUE);
+	did_set_title();
     }
 #endif
 
@@ -9051,6 +9007,7 @@ set_num_option(
      */
     if (pp == &p_wh || pp == &p_hh)
     {
+	// 'winheight' and 'helpheight'
 	if (p_wh < 1)
 	{
 	    errmsg = e_positive;
@@ -9076,10 +9033,9 @@ set_num_option(
 		win_setheight((int)p_hh);
 	}
     }
-
-    /* 'winminheight' */
     else if (pp == &p_wmh)
     {
+	// 'winminheight'
 	if (p_wmh < 0)
 	{
 	    errmsg = e_positive;
@@ -9094,6 +9050,7 @@ set_num_option(
     }
     else if (pp == &p_wiw)
     {
+	// 'winwidth'
 	if (p_wiw < 1)
 	{
 	    errmsg = e_positive;
@@ -9109,10 +9066,9 @@ set_num_option(
 	if (!ONE_WINDOW && curwin->w_width < p_wiw)
 	    win_setwidth((int)p_wiw);
     }
-
-    /* 'winminwidth' */
     else if (pp == &p_wmw)
     {
+	// 'winminwidth'
 	if (p_wmw < 0)
 	{
 	    errmsg = e_positive;
@@ -9123,7 +9079,7 @@ set_num_option(
 	    errmsg = e_winwidth;
 	    p_wmw = p_wiw;
 	}
-	win_setminheight();
+	win_setminwidth();
     }
 
     /* (re)set last window status line */
@@ -12756,6 +12712,10 @@ check_opt_wim(void)
 can_bs(
     int		what)	    /* BS_INDENT, BS_EOL or BS_START */
 {
+#ifdef FEAT_JOB_CHANNEL
+    if (what == BS_START && bt_prompt(curbuf))
+	return FALSE;
+#endif
     switch (*p_bs)
     {
 	case '2':	return TRUE;

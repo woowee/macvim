@@ -5275,22 +5275,51 @@ win32_build_env(dict_T *env, garray_T *gap, int is_terminal)
 	}
     }
 
-# ifdef FEAT_CLIENTSERVER
-    if (is_terminal)
+# if defined(FEAT_CLIENTSERVER) || defined(FEAT_TERMINAL)
     {
+#  ifdef FEAT_CLIENTSERVER
 	char_u	*servername = get_vim_var_str(VV_SEND_SERVER);
-	size_t	lval = STRLEN(servername);
-	size_t	n;
+	size_t	servername_len = STRLEN(servername);
+#  endif
+#  ifdef FEAT_TERMINAL
+	char_u	*version = get_vim_var_str(VV_VERSION);
+	size_t	version_len = STRLEN(version);
+#  endif
+	// size of "VIM_SERVERNAME=" and value,
+	// plus "VIM_TERMINAL=" and value,
+	// plus two terminating NULs
+	size_t	n = 0
+#  ifdef FEAT_CLIENTSERVER
+		    + 15 + servername_len
+#  endif
+#  ifdef FEAT_TERMINAL
+		    + 13 + version_len + 2
+#  endif
+		    ;
 
-	if (ga_grow(gap, (int)(14 + lval + 2)) == OK)
+	if (ga_grow(gap, (int)n) == OK)
 	{
+#  ifdef FEAT_CLIENTSERVER
 	    for (n = 0; n < 15; n++)
 		*((WCHAR*)gap->ga_data + gap->ga_len++) =
 		    (WCHAR)"VIM_SERVERNAME="[n];
-	    for (n = 0; n < lval; n++)
+	    for (n = 0; n < servername_len; n++)
 		*((WCHAR*)gap->ga_data + gap->ga_len++) =
 		    (WCHAR)servername[n];
 	    *((WCHAR*)gap->ga_data + gap->ga_len++) = L'\0';
+#  endif
+#  ifdef FEAT_TERMINAL
+	    if (is_terminal)
+	    {
+		for (n = 0; n < 13; n++)
+		    *((WCHAR*)gap->ga_data + gap->ga_len++) =
+			(WCHAR)"VIM_TERMINAL="[n];
+		for (n = 0; n < version_len; n++)
+		    *((WCHAR*)gap->ga_data + gap->ga_len++) =
+			(WCHAR)version[n];
+		*((WCHAR*)gap->ga_data + gap->ga_len++) = L'\0';
+	    }
+#  endif
 	}
     }
 # endif
@@ -6847,7 +6876,6 @@ default_shell(void)
 mch_access(char *n, int p)
 {
     HANDLE	hFile;
-    DWORD	am;
     int		retval = -1;	    /* default: fail */
 #ifdef FEAT_MBYTE
     WCHAR	*wn = NULL;
@@ -6931,16 +6959,22 @@ mch_access(char *n, int p)
     }
     else
     {
+	// Don't consider a file read-only if another process has opened it.
+	DWORD share_mode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+
 	/* Trying to open the file for the required access does ACL, read-only
 	 * network share, and file attribute checks.  */
-	am = ((p & W_OK) ? GENERIC_WRITE : 0)
-		| ((p & R_OK) ? GENERIC_READ : 0);
+	DWORD access_mode = ((p & W_OK) ? GENERIC_WRITE : 0)
+					     | ((p & R_OK) ? GENERIC_READ : 0);
+
 #ifdef FEAT_MBYTE
 	if (wn != NULL)
-	    hFile = CreateFileW(wn, am, 0, NULL, OPEN_EXISTING, 0, NULL);
+	    hFile = CreateFileW(wn, access_mode, share_mode,
+						 NULL, OPEN_EXISTING, 0, NULL);
 	else
 #endif
-	    hFile = CreateFile(n, am, 0, NULL, OPEN_EXISTING, 0, NULL);
+	    hFile = CreateFile(n, access_mode, share_mode,
+						 NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	    goto getout;
 	CloseHandle(hFile);
@@ -7661,7 +7695,7 @@ vtp_sgr_bulks(
 ctermtoxterm(
     int cterm)
 {
-    uint8_t r, g, b, idx;
+    char_u r, g, b, idx;
 
     cterm_color2rgb(cterm, &r, &g, &b, &idx);
     return (((int)r << 16) | ((int)g << 8) | (int)b);

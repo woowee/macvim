@@ -1488,7 +1488,7 @@ struct jobvar_S
     int		jv_copyID;
 
     channel_T	*jv_channel;	/* channel for I/O, reference counted */
-    char_u	**jv_argv;	/* command line used to start the job */
+    char	**jv_argv;	/* command line used to start the job */
 };
 
 /*
@@ -2365,6 +2365,15 @@ struct file_buffer
 
     int		b_shortname;	/* this file has an 8.3 file name */
 
+#ifdef FEAT_JOB_CHANNEL
+    char_u	*b_prompt_text;	     // set by prompt_setprompt()
+    char_u	*b_prompt_callback;  // set by prompt_setcallback()
+    partial_T	*b_prompt_partial;   // set by prompt_setcallback()
+    char_u	*b_prompt_interrupt;   // set by prompt_setinterrupt()
+    partial_T	*b_prompt_int_partial; // set by prompt_setinterrupt()
+    int		b_prompt_insert;     // value for restart_edit when entering
+				     // a prompt buffer window.
+#endif
 #ifdef FEAT_MZSCHEME
     void	*b_mzscheme_ref; /* The MzScheme reference to this buffer */
 #endif
@@ -3445,3 +3454,9 @@ typedef struct {
     int		save_opcount;
     tasave_T	tabuf;
 } save_state_T;
+
+typedef struct {
+    varnumber_T vv_prevcount;
+    varnumber_T vv_count;
+    varnumber_T vv_count1;
+} vimvars_save_T;

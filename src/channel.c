@@ -488,7 +488,7 @@ channel_read_fd(int fd)
  */
 #ifdef FEAT_GUI_X11
     static void
-messageFromServer(XtPointer clientData,
+messageFromServerX11(XtPointer clientData,
 		  int *unused1 UNUSED,
 		  XtInputId *unused2 UNUSED)
 {
@@ -499,7 +499,7 @@ messageFromServer(XtPointer clientData,
 #ifdef FEAT_GUI_GTK
 # if GTK_CHECK_VERSION(3,0,0)
     static gboolean
-messageFromServer(GIOChannel *unused1 UNUSED,
+messageFromServerGtk3(GIOChannel *unused1 UNUSED,
 		  GIOCondition unused2 UNUSED,
 		  gpointer clientData)
 {
@@ -509,7 +509,7 @@ messageFromServer(GIOChannel *unused1 UNUSED,
 }
 # else
     static void
-messageFromServer(gpointer clientData,
+messageFromServerGtk2(gpointer clientData,
 		  gint unused1 UNUSED,
 		  GdkInputCondition unused2 UNUSED)
 {
@@ -529,41 +529,48 @@ channel_gui_register_one(channel_T *channel, ch_part_T part)
 	return;
 
 # ifdef FEAT_GUI_X11
-    /* Tell notifier we are interested in being called
-     * when there is input on the editor connection socket. */
+    /* Tell notifier we are interested in being called when there is input on
+     * the editor connection socket. */
     if (channel->ch_part[part].ch_inputHandler == (XtInputId)NULL)
+    {
+	ch_log(channel, "Registering part %s with fd %d",
+		part_names[part], channel->ch_part[part].ch_fd);
+
 	channel->ch_part[part].ch_inputHandler = XtAppAddInput(
 		(XtAppContext)app_context,
 		channel->ch_part[part].ch_fd,
 		(XtPointer)(XtInputReadMask + XtInputExceptMask),
-		messageFromServer,
+		messageFromServerX11,
 		(XtPointer)(long)channel->ch_part[part].ch_fd);
+    }
 # else
 #  ifdef FEAT_GUI_GTK
-    /* Tell gdk we are interested in being called when there
-     * is input on the editor connection socket. */
+    /* Tell gdk we are interested in being called when there is input on the
+     * editor connection socket. */
     if (channel->ch_part[part].ch_inputHandler == 0)
-#   if GTK_CHECK_VERSION(3,0,0)
     {
+	ch_log(channel, "Registering part %s with fd %d",
+		part_names[part], channel->ch_part[part].ch_fd);
+#   if GTK_CHECK_VERSION(3,0,0)
 	GIOChannel *chnnl = g_io_channel_unix_new(
 		(gint)channel->ch_part[part].ch_fd);
 
 	channel->ch_part[part].ch_inputHandler = g_io_add_watch(
 		chnnl,
 		G_IO_IN|G_IO_HUP|G_IO_ERR|G_IO_PRI,
-		messageFromServer,
+		messageFromServerGtk3,
 		GINT_TO_POINTER(channel->ch_part[part].ch_fd));
 
 	g_io_channel_unref(chnnl);
-    }
 #   else
 	channel->ch_part[part].ch_inputHandler = gdk_input_add(
 		(gint)channel->ch_part[part].ch_fd,
 		(GdkInputCondition)
 			     ((int)GDK_INPUT_READ + (int)GDK_INPUT_EXCEPTION),
-		messageFromServer,
+		messageFromServerGtk2,
 		(gpointer)(long)channel->ch_part[part].ch_fd);
 #   endif
+    }
 #  else
 #   ifdef FEAT_GUI_MACVIM
     /* Tell Core Foundation we are interested in being called when there
@@ -609,6 +616,7 @@ channel_gui_unregister_one(channel_T *channel, ch_part_T part)
 # ifdef FEAT_GUI_X11
     if (channel->ch_part[part].ch_inputHandler != (XtInputId)NULL)
     {
+	ch_log(channel, "Unregistering part %s", part_names[part]);
 	XtRemoveInput(channel->ch_part[part].ch_inputHandler);
 	channel->ch_part[part].ch_inputHandler = (XtInputId)NULL;
     }
@@ -616,6 +624,7 @@ channel_gui_unregister_one(channel_T *channel, ch_part_T part)
 #  ifdef FEAT_GUI_GTK
     if (channel->ch_part[part].ch_inputHandler != 0)
     {
+	ch_log(channel, "Unregistering part %s", part_names[part]);
 #   if GTK_CHECK_VERSION(3,0,0)
 	g_source_remove(channel->ch_part[part].ch_inputHandler);
 #   else
@@ -3271,7 +3280,16 @@ ch_close_part_on_error(
 			      (int)STRLEN(DETACH_MSG_RAW), FALSE, "PUT ");
 
     /* When reading is not possible close this part of the channel.  Don't
-     * close the channel yet, there may be something to read on another part. */
+     * close the channel yet, there may be something to read on another part.
+     * When stdout and stderr use the same FD we get the error only on one of
+     * them, also close the other. */
+    if (part == PART_OUT || part == PART_ERR)
+    {
+	ch_part_T other = part == PART_OUT ? PART_ERR : PART_OUT;
+
+	if (channel->ch_part[part].ch_fd == channel->ch_part[other].ch_fd)
+	    ch_close_part(channel, other);
+    }
     ch_close_part(channel, part);
 
 #ifdef FEAT_GUI
@@ -5157,6 +5175,25 @@ job_still_useful(job_T *job)
     return job_need_end_check(job) || job_channel_still_useful(job);
 }
 
+#if defined(GUI_MAY_FORK) || defined(PROTO)
+/*
+ * Return TRUE when there is any running job that we care about.
+ */
+    int
+job_any_running()
+{
+    job_T	*job;
+
+    for (job = first_job; job != NULL; job = job->jv_next)
+	if (job_still_useful(job))
+	{
+	    ch_log(NULL, "GUI not forking because a job is running");
+	    return TRUE;
+	}
+    return FALSE;
+}
+#endif
+
 #if !defined(USE_ARGV) || defined(PROTO)
 /*
  * Escape one argument for an external command.
@@ -5530,7 +5567,11 @@ job_check_ended(void)
  * Returns NULL when out of memory.
  */
     job_T *
-job_start(typval_T *argvars, char **argv_arg, jobopt_T *opt_arg)
+job_start(
+	typval_T    *argvars,
+	char	    **argv_arg,
+	jobopt_T    *opt_arg,
+	int	    is_terminal UNUSED)
 {
     job_T	*job;
     char_u	*cmd = NULL;
@@ -5624,7 +5665,7 @@ job_start(typval_T *argvars, char **argv_arg, jobopt_T *opt_arg)
 	/* Make a copy of argv_arg for job->jv_argv. */
 	for (i = 0; argv_arg[i] != NULL; i++)
 	    argc++;
-	argv = (char **)alloc(sizeof(char_u *) * (argc + 1));
+	argv = (char **)alloc(sizeof(char *) * (argc + 1));
 	if (argv == NULL)
 	    goto theend;
 	for (i = 0; i < argc; i++)
@@ -5667,7 +5708,7 @@ job_start(typval_T *argvars, char **argv_arg, jobopt_T *opt_arg)
     }
 
     /* Save the command used to start the job. */
-    job->jv_argv = (char_u **)argv;
+    job->jv_argv = argv;
 
 #ifdef USE_ARGV
     if (ch_log_active())
@@ -5684,7 +5725,7 @@ job_start(typval_T *argvars, char **argv_arg, jobopt_T *opt_arg)
 	ch_log(NULL, "Starting job: %s", (char *)ga.ga_data);
 	ga_clear(&ga);
     }
-    mch_job_start(argv, job, &opt);
+    mch_job_start(argv, job, &opt, is_terminal);
 #else
     ch_log(NULL, "Starting job: %s", (char *)cmd);
     mch_job_start((char *)cmd, job, &opt);
@@ -5698,7 +5739,7 @@ theend:
 #ifndef USE_ARGV
     vim_free(ga.ga_data);
 #endif
-    if ((char_u **)argv != job->jv_argv)
+    if (argv != job->jv_argv)
 	vim_free(argv);
     free_job_options(&opt);
     return job;
@@ -5772,7 +5813,7 @@ job_info(job_T *job, dict_T *dict)
 	dict_add_list(dict, "cmd", l);
 	if (job->jv_argv != NULL)
 	    for (i = 0; job->jv_argv[i] != NULL; i++)
-		list_append_string(l, job->jv_argv[i], -1);
+		list_append_string(l, (char_u *)job->jv_argv[i], -1);
     }
 }
 
@@ -5839,6 +5880,64 @@ job_stop(job_T *job, typval_T *argvars, char *type)
     /* We don't try freeing the job, obviously the caller still has a
      * reference to it. */
     return 1;
+}
+
+    void
+invoke_prompt_callback(void)
+{
+    typval_T	rettv;
+    int		dummy;
+    typval_T	argv[2];
+    char_u	*text;
+    char_u	*prompt;
+    linenr_T	lnum = curbuf->b_ml.ml_line_count;
+
+    // Add a new line for the prompt before invoking the callback, so that
+    // text can always be inserted above the last line.
+    ml_append(lnum, (char_u  *)"", 0, FALSE);
+    curwin->w_cursor.lnum = lnum + 1;
+    curwin->w_cursor.col = 0;
+
+    if (curbuf->b_prompt_callback == NULL || *curbuf->b_prompt_callback == NUL)
+	return;
+    text = ml_get(lnum);
+    prompt = prompt_text();
+    if (STRLEN(text) >= STRLEN(prompt))
+	text += STRLEN(prompt);
+    argv[0].v_type = VAR_STRING;
+    argv[0].vval.v_string = vim_strsave(text);
+    argv[1].v_type = VAR_UNKNOWN;
+
+    call_func(curbuf->b_prompt_callback,
+	      (int)STRLEN(curbuf->b_prompt_callback),
+	      &rettv, 1, argv, NULL, 0L, 0L, &dummy, TRUE,
+	      curbuf->b_prompt_partial, NULL);
+    clear_tv(&argv[0]);
+    clear_tv(&rettv);
+}
+
+/*
+ * Return TRUE when the interrupt callback was invoked.
+ */
+    int
+invoke_prompt_interrupt(void)
+{
+    typval_T	rettv;
+    int		dummy;
+    typval_T	argv[1];
+
+    if (curbuf->b_prompt_interrupt == NULL
+					|| *curbuf->b_prompt_interrupt == NUL)
+	return FALSE;
+    argv[0].v_type = VAR_UNKNOWN;
+
+    got_int = FALSE; // don't skip executing commands
+    call_func(curbuf->b_prompt_interrupt,
+	      (int)STRLEN(curbuf->b_prompt_interrupt),
+	      &rettv, 0, argv, NULL, 0L, 0L, &dummy, TRUE,
+	      curbuf->b_prompt_int_partial, NULL);
+    clear_tv(&rettv);
+    return TRUE;
 }
 
 # ifdef FEAT_GUI_MACVIM

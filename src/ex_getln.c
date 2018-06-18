@@ -3601,10 +3601,25 @@ gotocmdline(int clr)
     static int
 ccheck_abbr(int c)
 {
+    int spos = 0;
+
     if (p_paste || no_abbr)	    /* no abbreviations or in paste mode */
 	return FALSE;
 
-    return check_abbr(c, ccline.cmdbuff, ccline.cmdpos, 0);
+    /* Do not consider '<,'> be part of the mapping, skip leading whitespace.
+     * Actually accepts any mark. */
+    while (VIM_ISWHITE(ccline.cmdbuff[spos]) && spos < ccline.cmdlen)
+	spos++;
+    if (ccline.cmdlen - spos > 5
+	    && ccline.cmdbuff[spos] == '\''
+	    && ccline.cmdbuff[spos + 2] == ','
+	    && ccline.cmdbuff[spos + 3] == '\'')
+	spos += 5;
+    else
+	/* check abbreviation from the beginning of the commandline */
+	spos = 0;
+
+    return check_abbr(c, ccline.cmdbuff, ccline.cmdpos, spos);
 }
 
 #if defined(FEAT_CMDL_COMPL) || defined(PROTO)
@@ -5164,7 +5179,7 @@ expand_shellcmd(
 {
     char_u	*pat;
     int		i;
-    char_u	*path;
+    char_u	*path = NULL;
     int		mustfree = FALSE;
     garray_T    ga;
     char_u	*buf = alloc(MAXPATHL);
@@ -5173,6 +5188,9 @@ expand_shellcmd(
     int		flags = flagsarg;
     int		ret;
     int		did_curdir = FALSE;
+    hashtab_T	found_ht;
+    hashitem_T	*hi;
+    hash_T	hash;
 
     if (buf == NULL)
 	return FAIL;
@@ -5186,15 +5204,14 @@ expand_shellcmd(
 
     flags |= EW_FILE | EW_EXEC | EW_SHELLCMD;
 
-    /* For an absolute name we don't use $PATH. */
-    if (mch_isFullName(pat))
-	path = (char_u *)" ";
-    else if ((pat[0] == '.' && (vim_ispathsep(pat[1])
-			    || (pat[1] == '.' && vim_ispathsep(pat[2])))))
+    if (pat[0] == '.' && (vim_ispathsep(pat[1])
+			       || (pat[1] == '.' && vim_ispathsep(pat[2]))))
 	path = (char_u *)".";
     else
     {
-	path = vim_getenv((char_u *)"PATH", &mustfree);
+	/* For an absolute name we don't use $PATH. */
+	if (!mch_isFullName(pat))
+	    path = vim_getenv((char_u *)"PATH", &mustfree);
 	if (path == NULL)
 	    path = (char_u *)"";
     }
@@ -5205,6 +5222,7 @@ expand_shellcmd(
      * current directory, to find "subdir/cmd".
      */
     ga_init2(&ga, (int)sizeof(char *), 10);
+    hash_init(&found_ht);
     for (s = path; ; s = e)
     {
 	if (*s == NUL)
@@ -5216,9 +5234,6 @@ expand_shellcmd(
 	}
 	else if (*s == '.')
 	    did_curdir = TRUE;
-
-	if (*s == ' ')
-	    ++s;	/* Skip space used for absolute path name. */
 
 #if defined(MSWIN)
 	e = vim_strchr(s, ';');
@@ -5246,15 +5261,23 @@ expand_shellcmd(
 	    {
 		for (i = 0; i < *num_file; ++i)
 		{
-		    s = (*file)[i];
-		    if (STRLEN(s) > l)
+		    char_u *name = (*file)[i];
+
+		    if (STRLEN(name) > l)
 		    {
-			/* Remove the path again. */
-			STRMOVE(s, s + l);
-			((char_u **)ga.ga_data)[ga.ga_len++] = s;
+			// Check if this name was already found.
+			hash = hash_hash(name + l);
+			hi = hash_lookup(&found_ht, name + l, hash);
+			if (HASHITEM_EMPTY(hi))
+			{
+			    // Remove the path that was prepended.
+			    STRMOVE(name, name + l);
+			    ((char_u **)ga.ga_data)[ga.ga_len++] = name;
+			    hash_add_item(&found_ht, hi, name, hash);
+			    name = NULL;
+			}
 		    }
-		    else
-			vim_free(s);
+		    vim_free(name);
 		}
 		vim_free(*file);
 	    }
@@ -5269,12 +5292,13 @@ expand_shellcmd(
     vim_free(pat);
     if (mustfree)
 	vim_free(path);
+    hash_clear(&found_ht);
     return OK;
 }
 
 
 # if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL)
-static void * call_user_expand_func(void *(*user_expand_func)(char_u *, int, char_u **, int), expand_T	*xp, int *num_file, char_u ***file);
+static void * call_user_expand_func(void *(*user_expand_func)(char_u *, int, typval_T *, int), expand_T	*xp, int *num_file, char_u ***file);
 
 /*
  * Call "user_expand_func()" to invoke a user defined Vim script function and
@@ -5282,15 +5306,15 @@ static void * call_user_expand_func(void *(*user_expand_func)(char_u *, int, cha
  */
     static void *
 call_user_expand_func(
-    void	*(*user_expand_func)(char_u *, int, char_u **, int),
+    void	*(*user_expand_func)(char_u *, int, typval_T *, int),
     expand_T	*xp,
     int		*num_file,
     char_u	***file)
 {
     int		keep = 0;
-    char_u	num[50];
-    char_u	*args[3];
+    typval_T	args[4];
     int		save_current_SID = current_SID;
+    char_u	*pat = NULL;
     void	*ret;
     struct cmdline_info	    save_ccline;
 
@@ -5305,10 +5329,15 @@ call_user_expand_func(
 	ccline.cmdbuff[ccline.cmdlen] = 0;
     }
 
-    args[0] = vim_strnsave(xp->xp_pattern, xp->xp_pattern_len);
-    args[1] = xp->xp_line;
-    sprintf((char *)num, "%d", xp->xp_col);
-    args[2] = num;
+    pat = vim_strnsave(xp->xp_pattern, xp->xp_pattern_len);
+
+    args[0].v_type = VAR_STRING;
+    args[0].vval.v_string = pat;
+    args[1].v_type = VAR_STRING;
+    args[1].vval.v_string = xp->xp_line;
+    args[2].v_type = VAR_NUMBER;
+    args[2].vval.v_number = xp->xp_col;
+    args[3].v_type = VAR_UNKNOWN;
 
     /* Save the cmdline, we don't know what the function may do. */
     save_ccline = ccline;
@@ -5323,7 +5352,7 @@ call_user_expand_func(
     if (ccline.cmdbuff != NULL)
 	ccline.cmdbuff[ccline.cmdlen] = keep;
 
-    vim_free(args[0]);
+    vim_free(pat);
     return ret;
 }
 

@@ -3836,9 +3836,20 @@ get_firstwin(TabPageObject *tabObject)
     else
 	return firstwin;
 }
+
+// Use the same order as in the WindowAttr() function.
 static char *WindowAttrs[] = {
-    "buffer", "cursor", "height", "vars", "options", "number", "row", "col",
-    "tabpage", "valid",
+    "buffer",
+    "cursor",
+    "height",
+    "row",
+    "width",
+    "col",
+    "vars",
+    "options",
+    "number",
+    "tabpage",
+    "valid",
     NULL
 };
 
@@ -6333,9 +6344,12 @@ init_structs(void)
     OutputType.tp_alloc = call_PyType_GenericAlloc;
     OutputType.tp_new = call_PyType_GenericNew;
     OutputType.tp_free = call_PyObject_Free;
+    OutputType.tp_base = &PyStdPrinter_Type;
 #else
     OutputType.tp_getattr = (getattrfunc)OutputGetattr;
     OutputType.tp_setattr = (setattrfunc)OutputSetattr;
+    // Disabled, because this causes a crash in test86
+    // OutputType.tp_base = &PyFile_Type;
 #endif
 
     vim_memset(&IterType, 0, sizeof(IterType));

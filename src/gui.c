@@ -37,8 +37,7 @@ static void gui_set_fg_color(char_u *name);
 static void gui_set_bg_color(char_u *name);
 static win_T *xy2win(int x, int y);
 
-#if defined(UNIX) && !(defined(FEAT_GUI_MAC) || defined(FEAT_GUI_MACVIM))
-# define MAY_FORK
+#ifdef GUI_MAY_FORK
 static void gui_do_fork(void);
 
 static int gui_read_child_pipe(int fd);
@@ -49,8 +48,7 @@ enum {
     GUI_CHILD_OK,
     GUI_CHILD_FAILED
 };
-
-#endif /* MAY_FORK */
+#endif
 
 static void gui_attempt_start(void);
 
@@ -88,14 +86,20 @@ gui_start(void)
 
     ++recursive;
 
-#ifdef MAY_FORK
+#ifdef GUI_MAY_FORK
     /*
      * Quit the current process and continue in the child.
      * Makes "gvim file" disconnect from the shell it was started in.
      * Don't do this when Vim was started with "-f" or the 'f' flag is present
      * in 'guioptions'.
+     * Don't do this when there is a running job, we can only get the status
+     * of a child from the parent.
      */
-    if (gui.dofork && !vim_strchr(p_go, GO_FORG) && recursive <= 1)
+    if (gui.dofork && !vim_strchr(p_go, GO_FORG) && recursive <= 1
+# ifdef FEAT_JOB_CHANNEL
+	    && !job_any_running()
+# endif
+	    )
     {
 	gui_do_fork();
     }
@@ -183,7 +187,7 @@ gui_attempt_start(void)
     --recursive;
 }
 
-#ifdef MAY_FORK
+#ifdef GUI_MAY_FORK
 
 /* for waitpid() */
 # if defined(HAVE_SYS_WAIT_H) || defined(HAVE_UNION_WAIT)
@@ -338,7 +342,7 @@ gui_read_child_pipe(int fd)
     return GUI_CHILD_FAILED;
 }
 
-#endif /* MAY_FORK */
+#endif /* GUI_MAY_FORK */
 
 /*
  * Call this when vim starts up, whether or not the GUI is started
@@ -2474,16 +2478,11 @@ gui_outstr_nowrap(
 #ifdef FEAT_GUI_GTK
     /* The value returned is the length in display cells */
     len = gui_gtk2_draw_string(gui.row, col, s, len, draw_flags);
+#elif defined(FEAT_GUI_MACVIM)
+    /* The value returned is the length in display cells */
+    len = gui_macvim_draw_string(gui.row, col, s, len, draw_flags);
 #else
 # ifdef FEAT_MBYTE
-#  ifdef FEAT_GUI_MACVIM
-    if (use_gui_macvim_draw_string)
-    {
-	/* The value returned is the length in display cells */
-	len = gui_macvim_draw_string(gui.row, col, s, len, draw_flags);
-    }
-    else
-#  endif
     if (enc_utf8)
     {
 	int	start;		/* index of bytes to be drawn */
@@ -2517,9 +2516,6 @@ gui_outstr_nowrap(
 		cells += cn;
 	    if (!comping || sep_comp)
 	    {
-#  ifdef FEAT_GUI_MACVIM
-		curr_wide = (cn > 1);
-#  else
 		if (cn > 1
 #  ifdef FEAT_XFONTSET
 			&& fontset == NOFONTSET
@@ -2528,7 +2524,6 @@ gui_outstr_nowrap(
 		    curr_wide = TRUE;
 		else
 		    curr_wide = FALSE;
-#  endif
 	    }
 	    cl = utf_ptr2len(s + i);
 	    if (cl == 0)	/* hit end of string */
@@ -2560,13 +2555,7 @@ gui_outstr_nowrap(
 		    if (prev_wide)
 			gui_mch_set_font(wide_font);
 		    gui_mch_draw_string(gui.row, scol, s + start, thislen,
-#  ifdef FEAT_GUI_MACVIM
-				    cells,
-				    draw_flags | (prev_wide ? DRAW_WIDE : 0)
-# else
-				    draw_flag
-#  endif
-				    );
+								  draw_flags);
 		    if (prev_wide)
 			gui_mch_set_font(font);
 		    start += thislen;
@@ -2596,17 +2585,13 @@ gui_outstr_nowrap(
 	    /* Draw a composing char on top of the previous char. */
 	    if (comping && sep_comp)
 	    {
-#  if !defined(FEAT_GUI_MACVIM) && \
-	(defined(__APPLE_CC__) && TARGET_API_MAC_CARBON)
+#  if defined(__APPLE_CC__) && TARGET_API_MAC_CARBON
 		/* Carbon ATSUI autodraws composing char over previous char */
 		gui_mch_draw_string(gui.row, scol, s + i, cl,
 						    draw_flags | DRAW_TRANSP);
 #  else
 		gui_mch_draw_string(gui.row, scol - cn, s + i, cl,
-#  ifdef FEAT_GUI_MACVIM
-					            0,
-#  endif
-					draw_flags | DRAW_TRANSP | DRAW_COMP);
+						    draw_flags | DRAW_TRANSP);
 #  endif
 		start = i + cl;
 	    }
@@ -2618,11 +2603,7 @@ gui_outstr_nowrap(
     else
 # endif
     {
-	gui_mch_draw_string(gui.row, col, s, len,
-#  ifdef FEAT_GUI_MACVIM
-						len,
-#  endif
-						draw_flags);
+	gui_mch_draw_string(gui.row, col, s, len, draw_flags);
 # ifdef FEAT_MBYTE
 	if (enc_dbcs == DBCS_JPNU)
 	{
@@ -5248,8 +5229,6 @@ gui_update_screen(void)
 #endif
 
 #if defined(FIND_REPLACE_DIALOG) || defined(PROTO)
-static void concat_esc(garray_T *gap, char_u *text, int what);
-
 /*
  * Get the text to use in a find/replace dialog.  Uses the last search pattern
  * if the argument is empty.
@@ -5314,31 +5293,6 @@ get_find_dialog_text(
 }
 
 /*
- * Concatenate "text" to grow array "gap", escaping "what" with a backslash.
- */
-    static void
-concat_esc(garray_T *gap, char_u *text, int what)
-{
-    while (*text != NUL)
-    {
-#ifdef FEAT_MBYTE
-	int l = (*mb_ptr2len)(text);
-
-	if (l > 1)
-	{
-	    while (--l >= 0)
-		ga_append(gap, *text++);
-	    continue;
-	}
-#endif
-	if (*text == what)
-	    ga_append(gap, '\\');
-	ga_append(gap, *text);
-	++text;
-    }
-}
-
-/*
  * Handle the press of a button in the find-replace dialog.
  * Return TRUE when something was added to the input buffer.
  */
@@ -5380,10 +5334,11 @@ gui_do_findrepl(
 	ga_concat(&ga, (char_u *)"\\c");
     if (flags & FRD_WHOLE_WORD)
 	ga_concat(&ga, (char_u *)"\\<");
-    if (type == FRD_REPLACEALL || down)
-	concat_esc(&ga, find_text, '/');	/* escape slashes */
-    else
-	concat_esc(&ga, find_text, '?');	/* escape '?' */
+    /* escape / and \ */
+    p = vim_strsave_escaped(find_text, (char_u *)"/\\");
+    if (p != NULL)
+        ga_concat(&ga, p);
+    vim_free(p);
     if (flags & FRD_WHOLE_WORD)
 	ga_concat(&ga, (char_u *)"\\>");
 
@@ -5446,8 +5401,20 @@ gui_do_findrepl(
 	if (type == FRD_REPLACE)
 	    searchflags += SEARCH_START;
 	i = msg_scroll;
-	(void)do_search(NULL, down ? '/' : '?', ga.ga_data, 1L,
-						      searchflags, NULL, NULL);
+	if (down)
+	{
+	    (void)do_search(NULL, '/', ga.ga_data, 1L, searchflags, NULL, NULL);
+	}
+	else
+	{
+	    /* We need to escape '?' if and only if we are searching in the up
+	     * direction */
+	    p = vim_strsave_escaped(ga.ga_data, (char_u *)"?");
+	    if (p != NULL)
+	        (void)do_search(NULL, '?', p, 1L, searchflags, NULL, NULL);
+	    vim_free(p);
+	}
+
 	msg_scroll = i;	    /* don't let an error message set msg_scroll */
     }
 
