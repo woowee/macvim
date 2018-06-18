@@ -4159,7 +4159,11 @@ wait4pid(pid_t child, waitstatus *status)
  * Set the environment for a child process.
  */
     static void
-set_child_environment(long rows, long columns, char *term)
+set_child_environment(
+	long	rows,
+	long	columns,
+	char	*term,
+	int	is_terminal UNUSED)
 {
 # ifdef HAVE_SETENV
     char	envbuf[50];
@@ -4169,6 +4173,9 @@ set_child_environment(long rows, long columns, char *term)
     static char	envbuf_Lines[20];
     static char	envbuf_Columns[20];
     static char	envbuf_Colors[20];
+#  ifdef FEAT_TERMINAL
+    static char	envbuf_Version[20];
+#  endif
 #  ifdef FEAT_CLIENTSERVER
     static char	envbuf_Servername[60];
 #  endif
@@ -4189,6 +4196,13 @@ set_child_environment(long rows, long columns, char *term)
     setenv("COLUMNS", (char *)envbuf, 1);
     sprintf((char *)envbuf, "%ld", colors);
     setenv("COLORS", (char *)envbuf, 1);
+#  ifdef FEAT_TERMINAL
+    if (is_terminal)
+    {
+	sprintf((char *)envbuf, "%ld",  (long)get_vim_var_nr(VV_VERSION));
+	setenv("VIM_TERMINAL", (char *)envbuf, 1);
+    }
+#  endif
 #  ifdef FEAT_CLIENTSERVER
     setenv("VIM_SERVERNAME", serverName == NULL ? "" : (char *)serverName, 1);
 #  endif
@@ -4209,6 +4223,14 @@ set_child_environment(long rows, long columns, char *term)
     putenv(envbuf_Columns);
     vim_snprintf(envbuf_Colors, sizeof(envbuf_Colors), "COLORS=%ld", colors);
     putenv(envbuf_Colors);
+#  ifdef FEAT_TERMINAL
+    if (is_terminal)
+    {
+	vim_snprintf(envbuf_Version, sizeof(envbuf_Version),
+			 "VIM_TERMINAL=%ld", (long)get_vim_var_nr(VV_VERSION));
+	putenv(envbuf_Version);
+    }
+#  endif
 #  ifdef FEAT_CLIENTSERVER
     vim_snprintf(envbuf_Servername, sizeof(envbuf_Servername),
 	    "VIM_SERVERNAME=%s", serverName == NULL ? "" : (char *)serverName);
@@ -4218,9 +4240,9 @@ set_child_environment(long rows, long columns, char *term)
 }
 
     static void
-set_default_child_environment(void)
+set_default_child_environment(int is_terminal)
 {
-    set_child_environment(Rows, Columns, "dumb");
+    set_child_environment(Rows, Columns, "dumb", is_terminal);
 }
 #endif
 
@@ -4683,7 +4705,7 @@ mch_call_shell_fork(
 #  endif
 		}
 # endif
-		set_default_child_environment();
+		set_default_child_environment(FALSE);
 
 		/*
 		 * stderr is only redirected when using the GUI, so that a
@@ -5361,7 +5383,7 @@ mch_call_shell(
 
 #if defined(FEAT_JOB_CHANNEL) || defined(PROTO)
     void
-mch_job_start(char **argv, job_T *job, jobopt_T *options)
+mch_job_start(char **argv, job_T *job, jobopt_T *options, int is_terminal)
 {
     pid_t	pid;
     int		fd_in[2] = {-1, -1};	/* for stdin */
@@ -5509,11 +5531,12 @@ mch_job_start(char **argv, job_T *job, jobopt_T *options)
 	    set_child_environment(
 		    (long)options->jo_term_rows,
 		    (long)options->jo_term_cols,
-		    term);
+		    term,
+		    is_terminal);
 	}
 	else
 # endif
-	    set_default_child_environment();
+	    set_default_child_environment(is_terminal);
 
 	if (options->jo_env != NULL)
 	{
@@ -5642,8 +5665,15 @@ mch_job_start(char **argv, job_T *job, jobopt_T *options)
 			? INVALID_FD : fd_in[1] < 0 ? pty_master_fd : fd_in[1];
 	int out_fd = use_file_for_out || use_null_for_out
 		      ? INVALID_FD : fd_out[0] < 0 ? pty_master_fd : fd_out[0];
+	/* When using pty_master_fd only set it for stdout, do not duplicate it
+	 * for stderr, it only needs to be read once. */
 	int err_fd = use_out_for_err || use_file_for_err || use_null_for_err
-		      ? INVALID_FD : fd_err[0] < 0 ? pty_master_fd : fd_err[0];
+		      ? INVALID_FD
+		      : fd_err[0] >= 0
+		         ? fd_err[0]
+		         : (out_fd == pty_master_fd
+				 ? INVALID_FD
+				 : pty_master_fd);
 
 	channel_set_pipes(channel, in_fd, out_fd, err_fd);
 	channel_set_job(channel, job, options);
@@ -5701,6 +5731,9 @@ mch_job_status(job_T *job)
     if (wait_pid == -1)
     {
 	/* process must have exited */
+	if (job->jv_status < JOB_ENDED)
+	    ch_log(job->jv_channel, "Job no longer exists: %s",
+							      strerror(errno));
 	goto return_dead;
     }
     if (wait_pid == 0)
@@ -5709,21 +5742,22 @@ mch_job_status(job_T *job)
     {
 	/* LINTED avoid "bitwise operation on signed value" */
 	job->jv_exitval = WEXITSTATUS(status);
+	if (job->jv_status < JOB_ENDED)
+	    ch_log(job->jv_channel, "Job exited with %d", job->jv_exitval);
 	goto return_dead;
     }
     if (WIFSIGNALED(status))
     {
 	job->jv_exitval = -1;
+	if (job->jv_status < JOB_ENDED)
+	    ch_log(job->jv_channel, "Job terminated by a signal");
 	goto return_dead;
     }
     return "run";
 
 return_dead:
     if (job->jv_status < JOB_ENDED)
-    {
-	ch_log(job->jv_channel, "Job ended");
 	job->jv_status = JOB_ENDED;
-    }
     return "dead";
 }
 
@@ -5857,7 +5891,9 @@ mch_create_pty_channel(job_T *job, jobopt_T *options)
     job->jv_channel = channel;  /* ch_refcount was set by add_channel() */
     channel->ch_keep_open = TRUE;
 
-    channel_set_pipes(channel, pty_master_fd, pty_master_fd, pty_master_fd);
+    /* Only set the pty_master_fd for stdout, do not duplicate it for stderr,
+     * it only needs to be read once. */
+    channel_set_pipes(channel, pty_master_fd, pty_master_fd, INVALID_FD);
     channel_set_job(channel, job, options);
     return OK;
 }

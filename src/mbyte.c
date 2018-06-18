@@ -4808,12 +4808,11 @@ iconv_end(void)
     static void
 call_imactivatefunc(int active)
 {
-    char_u *argv[1];
+    typval_T argv[2];
 
-    if (active)
-	argv[0] = (char_u *)"1";
-    else
-	argv[0] = (char_u *)"0";
+    argv[0].v_type = VAR_NUMBER;
+    argv[0].vval.v_number = active ? 1 : 0;
+    argv[1].v_type = VAR_UNKNOWN;
     (void)call_func_retnr(p_imaf, 1, argv, FALSE);
 }
 
@@ -6453,7 +6452,7 @@ im_set_active(int active_arg)
 
 #  ifdef FEAT_GUI
     void
-im_set_position(int row, int col)
+im_set_position(int row UNUSED, int col UNUSED)
 {
 }
 #  endif
